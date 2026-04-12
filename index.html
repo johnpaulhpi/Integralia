@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 6</title>
+    <title>Integralia: The Shattered Weave - Phase 7</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -27,15 +27,12 @@
         @keyframes drip { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(15px); opacity: 0; } }
         .svg-drip { animation: drip 2s ease-in infinite; }
 
-        /* Particle Burst System */
         @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
         .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
         
-        /* The Black Hole Consume Animation */
         @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(90deg); filter: blur(20px); opacity: 0; } }
         .animate-consume { animation: consume 0.8s ease-in forwards; pointer-events: none; }
 
-        /* The Slash Animation */
         @keyframes slash {
             0% { clip-path: inset(0 100% 0 0); opacity: 1; }
             50% { clip-path: inset(0 0 0 0); opacity: 1; }
@@ -47,11 +44,7 @@
             transform: rotate(-25deg); animation: slash 0.3s ease-out forwards; z-index: 60; pointer-events: none;
         }
 
-        /* The Bleeding Sacrifice Animation */
-        @keyframes bleed {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            100% { transform: translateY(40px) scale(0.3); opacity: 0; }
-        }
+        @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(40px) scale(0.3); opacity: 0; } }
         .blood-drop {
             position: absolute; bottom: 0; width: 6px; height: 10px; border-radius: 50%;
             background-color: #ef4444; box-shadow: 0 0 5px #ef4444;
@@ -76,7 +69,7 @@
                     catch (e) { console.error("KaTeX error:", e); }
                 }
             }, [equation, inline]);
-            return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md`}></div>;
+            return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md pointer-events-none`}></div>;
         };
 
         const ParticleBurst = ({ type }) => {
@@ -95,16 +88,13 @@
             return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
-        const BattleCard = ({ card, isActive, isSacrificeTarget, onClick, isSlashing, isShattering, isConsumed }) => {
+        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed }) => {
             const renderVisual = () => {
                 if (card.name === 'Sina') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
-                            {/* Dark Blue Outer Cell Wall */}
                             <circle cx="50" cy="50" r="45" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="2" opacity="0.9" />
-                            {/* Inner Cytoplasm */}
                             <circle cx="50" cy="50" r="32" fill="#3b82f6" opacity="0.5" />
-                            {/* Yellow Nucleus (The hidden Cosine core) */}
                             <polygon points="50,25 70,60 30,60" fill="#eab308" />
                         </svg>
                     );
@@ -118,6 +108,14 @@
                             <circle cx="48" cy="78" r="1.5" fill="#60a5fa" className="svg-drip" />
                         </svg>
                     );
+                } else if (card.name === 'Compound') {
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)] svg-pulse">
+                            <polygon points="50,5 95,50 50,95 5,50" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
+                            <path d="M 20 50 L 80 50 M 50 20 L 50 80" stroke="#34d399" strokeWidth="2" strokeDasharray="4 4" />
+                            <circle cx="50" cy="50" r="15" fill="#059669" />
+                        </svg>
+                    );
                 } else if (card.name === 'U-State') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
@@ -128,14 +126,13 @@
                 } else {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-md">
-                            <rect x="20" y="20" width="60" height="60" rx="8" fill="#9ca3af" />
-                            <rect x="30" y="30" width="40" height="40" rx="4" fill="#6b7280" />
+                            <rect x="20" y="20" width="60" height="60" rx="8" fill="#4b5563" />
+                            <circle cx="50" cy="50" r="15" fill="#9ca3af" />
                         </svg>
                     );
                 }
             };
 
-            // Custom Backgrounds based on Card Type
             let baseBg = 'bg-gray-900/90';
             let baseBorder = 'border-gray-700 hover:border-gray-500 hover:bg-gray-800';
             
@@ -145,10 +142,14 @@
             } else if (card.name === 'Cosa') {
                 baseBg = 'bg-yellow-950/60';
                 baseBorder = 'border-yellow-900 hover:border-yellow-700 hover:bg-yellow-900/60';
+            } else if (card.name === 'Compound') {
+                baseBg = 'bg-emerald-950/60';
+                baseBorder = 'border-emerald-900 hover:border-emerald-700 hover:bg-emerald-900/60';
             }
 
             let borderClass = baseBorder;
             if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105';
+            if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
             if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-105';
 
             return (
@@ -157,11 +158,17 @@
                         
                         {isSlashing && <div className="animate-slash"></div>}
 
-                        {card.modifier && (
-                            <div className="absolute -top-4 -left-4 w-9 h-9 rounded bg-indigo-900 border-2 border-indigo-500 flex items-center justify-center text-indigo-200 font-bold shadow-lg z-50">
-                                <MathEquation equation={card.modifier} size="text-sm" inline={true} />
+                        {/* Identity Cycle Sigil */}
+                        {card.canCycle && (
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
+                                className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-[0_0_15px_rgba(16,185,129,0.5)] z-50 hover:bg-emerald-700 hover:scale-110 transition-transform cursor-pointer"
+                                title="Cycle Identity"
+                            >
+                                ⟳
                             </div>
                         )}
+
                         {card.power > 1 && (
                             <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
                                 {card.power}
@@ -181,7 +188,6 @@
                         <div className="h-[60px] w-full bg-black/40 border-t border-gray-800/50 rounded-b-xl p-2 flex items-center justify-center relative">
                             <p className="text-[10px] text-gray-300 text-center leading-tight">{card.ability}</p>
                             
-                            {/* The Bleeding Effect */}
                             {isSacrificeTarget && (
                                 <>
                                     <div className="blood-drop drop-1"></div>
@@ -197,23 +203,37 @@
 
         const IntegraliaGame = () => {
             const [bossCards, setBossCards] = useState([
-                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, ability: "Squishy Exterior: Vulnerable to the Slice technique." },
-                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, ability: "Armored Core: A hard shell that resists basic disruption." }
+                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, ability: "Squishy Exterior: Vulnerable to the Slice technique.", canCycle: false },
+                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, ability: "Armored Core: A hard shell that resists basic disruption.", canCycle: false }
             ]);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, vessel: { available: true } });
+            const [handCards, setHandCards] = useState({ slice: { available: true }, vessel: { available: true }, needle: { available: true }, ripper: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
             
             const [slashingId, setSlashingId] = useState(null);
             const [shatteringId, setShatteringId] = useState(null);
+            const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
-            const [uData, setUData] = useState({ cardId: null, requiredDu: null });
-
             const [logs, setLogs] = useState(["The Dark Wizard deploys a tangled weave: sin³(x)cos²(x)."]);
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+
+            const handleCycle = (cardId) => {
+                setBossCards(prev => prev.map(c => {
+                    if (c.id === cardId && c.name === 'Residue') {
+                        if (c.baseTex === '(1-\\cos^2(x))') {
+                            addLog("Identity cycled: The Residue reverts to its Sinusoidal form.");
+                            return { ...c, baseTex: '\\sin^2(x)', baseMath: 'sin(x)^2' };
+                        } else {
+                            addLog("Identity cycled: The Sine armor hardens back into a Residue.");
+                            return { ...c, baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)' };
+                        }
+                    }
+                    return c;
+                }));
+            };
 
             const handleBossCardClick = (card) => {
                 // SLICE MECHANIC
@@ -232,7 +252,7 @@
                                 const targetIdx = newCards.findIndex(c => c.id === card.id);
                                 newCards[targetIdx] = { ...card, power: 1, ability: "Exposed Core: Bleeding and ready for harvest." };
                                 newCards.splice(targetIdx + 1, 0, {
-                                    id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, ability: "Fissure: Generated from sliced armor."
+                                    id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: Generated from sliced armor. Can be cycled."
                                 });
                                 setBossCards(newCards);
                                 setShatteringId(null);
@@ -245,16 +265,73 @@
                     }
                 }
 
+                // WEAVER'S NEEDLE - Step 1
+                if (activeMode === 'stitch_1') {
+                    if (card.name === 'Residue' || card.name === 'Cosa') {
+                        setStitchTargetId(card.id);
+                        setActiveMode('stitch_2');
+                        addLog(`Selected ${card.name} as the first thread. Select the second target to stitch.`);
+                    } else {
+                        addLog("The needle can only thread Residues and Cores.");
+                    }
+                }
+                
+                // WEAVER'S NEEDLE - Step 2
+                else if (activeMode === 'stitch_2') {
+                    if (card.id === stitchTargetId) {
+                        addLog("Cannot stitch a card to itself.");
+                        return;
+                    }
+                    const target1 = bossCards.find(c => c.id === stitchTargetId);
+                    const target2 = card;
+                    
+                    if ((target1.name === 'Residue' && target2.name === 'Cosa') || (target1.name === 'Cosa' && target2.name === 'Residue')) {
+                        addLog("Weaving the threads... polynomial expansion successful!");
+                        
+                        // Create the stitched compound
+                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
+                        newCards.push({
+                            id: `compound-${Date.now()}`, name: 'Compound', baseTex: '\\cos^2(x) - \\cos^4(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Stitched Weave: Two identities expanded into one."
+                        });
+                        
+                        setBossCards(newCards);
+                        setStitchTargetId(null);
+                        setActiveMode(null);
+                        setHandCards(prev => ({ ...prev, needle: { available: false } }));
+                    } else {
+                        addLog("These identities cannot be stitched together.");
+                        setActiveMode('stitch_1');
+                        setStitchTargetId(null);
+                    }
+                }
+
+                // THREADRIPPER
+                if (activeMode === 'unstitch') {
+                    if (card.name === 'Compound') {
+                        addLog("Threadripper cuts the weave! The polynomial is factored back down.");
+                        const newCards = bossCards.filter(c => c.id !== card.id);
+                        // Re-insert the original two components
+                        newCards.push({ id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: Factored out of a compound." });
+                        newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core: Recovered from the weave." });
+                        
+                        setBossCards(newCards);
+                        setActiveMode(null);
+                        setHandCards(prev => ({ ...prev, ripper: { available: false }, needle: { available: true } })); // Give needle back
+                    } else {
+                        addLog("The Threadripper can only be used on a Stitched Compound.");
+                    }
+                }
+
                 // VESSEL MECHANIC - STEP 1
                 if (activeMode === 'vessel_u') {
-                    try {
-                        const derivative = math.derivative(card.baseMath, 'x').toString();
-                        setUData({ cardId: card.id, requiredDu: derivative });
-                        addLog(`Bound ${card.baseTex} as 'u'. Math.js engine detects du = ${derivative}.`);
+                    if (card.name === 'Cosa' || card.name === 'Compound') {
+                        // Hardcode the U selection for simplicity in the prototype based on cos(x)
+                        const derivative = '-sin(x)'; 
+                        addLog(`Bound underlying structure cos(x) as 'u'. Math.js detects du = ${derivative}.`);
                         addLog(`The U-Vessel demands a blood sacrifice matching this derivative!`);
                         setActiveMode('vessel_du');
-                    } catch (e) {
-                        addLog("The Vessel rejects this target.");
+                    } else {
+                        addLog("The Vessel rejects this target. It seeks the Armored Core.");
                     }
                 }
 
@@ -265,8 +342,12 @@
                         setConsumeAll(true);
                         
                         setTimeout(() => {
+                            // If they stitched it first, it's u^2 - u^4. If not, it's (1-u^2)u^2
+                            const hasCompound = bossCards.some(c => c.name === 'Compound');
+                            const finalEq = hasCompound ? '-\\int(u^2 - u^4) \\, du' : '-\\int(1-u^2)u^2 \\, du';
+                            
                             setBossCards([{
-                                id: 'final-u', name: 'U-State', baseTex: '-\\int(1-u^2)u^2 \\, du', baseMath: '-(1-u^2)u^2', power: 1, ability: "Integrable State: The weave is broken. Victory is imminent."
+                                id: 'final-u', name: 'U-State', baseTex: finalEq, baseMath: '', power: 1, canCycle: false, ability: "Integrable State: The weave is broken. Victory is imminent."
                             }]);
                             setConsumeAll(false);
                             setActiveMode(null);
@@ -283,7 +364,7 @@
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
                     <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
                         <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
-                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Phase 6: Blood & Steel</p>
+                        <p className="text-sm text-emerald-500 uppercase tracking-widest">Phase 7: The Artificer's Loom</p>
                     </header>
 
                     <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50 overflow-hidden">
@@ -297,9 +378,11 @@
                             {bossCards.map((card) => (
                                 <BattleCard 
                                     key={card.id} card={card}
-                                    isActive={activeMode === 'vessel_u' || activeMode === 'slice'}
+                                    isActive={activeMode === 'vessel_u' || activeMode === 'slice' || activeMode === 'stitch_1' || activeMode === 'unstitch'}
+                                    isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
                                     isSacrificeTarget={activeMode === 'vessel_du' && card.name === 'Sina' && card.power === 1}
                                     onClick={() => handleBossCardClick(card)}
+                                    onCycle={handleCycle}
                                     isSlashing={slashingId === card.id}
                                     isShattering={shatteringId === card.id}
                                     isConsumed={consumeAll}
@@ -325,27 +408,55 @@
 
                     <div className="w-full">
                         <div className="grid grid-cols-4 gap-6">
+                            {/* Slice */}
                             <button 
-                                onClick={() => { setActiveMode('slice'); addLog("Slice primed. Target an odd-powered Primal spirit."); }}
+                                onClick={() => { setActiveMode('slice'); setStitchTargetId(null); addLog("Slice primed. Target an odd-powered Primal spirit."); }}
                                 disabled={!handCards.slice.available}
-                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                <span className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">Machine</span>
-                                <span className="text-white font-bold text-lg mb-2">Slice</span>
-                                <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
-                                    Slices an exponent layer off a Primal spirit, turning the shattered armor into a Residue card.
+                                <span className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">Machine</span>
+                                <span className="text-white font-bold text-base mb-1">Slice</span>
+                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
+                                    Slices an exponent off a Primal spirit, creating a Residue card.
                                 </div>
                             </button>
 
+                            {/* Weaver's Needle */}
                             <button 
-                                onClick={() => { setActiveMode('vessel_u'); addLog("U-Vessel deployed. Select an armored card to bind as 'u'."); }}
-                                disabled={!handCards.vessel.available}
-                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-red-600 bg-gray-800 card-hover hover:border-red-400 hover:shadow-lg hover:shadow-red-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
+                                onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); addLog("Weaver's Needle equipped. Select the first component to stitch."); }}
+                                disabled={!handCards.needle.available}
+                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-emerald-600 bg-gray-800 card-hover hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                                <span className="text-red-400 text-xs font-bold uppercase tracking-widest mb-1">Artifact</span>
-                                <span className="text-white font-bold text-lg mb-2">U-Vessel</span>
-                                <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
-                                    Traps a card as 'u'. Demands a blood sacrifice matching its derivative to collapse the Weave.
+                                <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Artifact</span>
+                                <span className="text-white font-bold text-base mb-1">Weaver's Needle</span>
+                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
+                                    Stitches a Residue and a Core into a single polynomial expansion.
+                                </div>
+                            </button>
+
+                            {/* Threadripper */}
+                            <button 
+                                onClick={() => { setActiveMode('unstitch'); setStitchTargetId(null); addLog("Threadripper equipped. Select a Compound to factor apart."); }}
+                                disabled={!handCards.ripper.available}
+                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-fuchsia-600 bg-gray-800 card-hover hover:border-fuchsia-400 hover:shadow-lg hover:shadow-fuchsia-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <span className="text-fuchsia-400 text-[10px] font-bold uppercase tracking-widest mb-1">Tool</span>
+                                <span className="text-white font-bold text-base mb-1">Threadripper</span>
+                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
+                                    Unravels a stitched compound back into its individual factors.
+                                </div>
+                            </button>
+
+                            {/* U-Vessel */}
+                            <button 
+                                onClick={() => { setActiveMode('vessel_u'); setStitchTargetId(null); addLog("U-Vessel deployed. Select an armored card to bind as 'u'."); }}
+                                disabled={!handCards.vessel.available}
+                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-red-600 bg-gray-800 card-hover hover:border-red-400 hover:shadow-lg hover:shadow-red-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <span className="text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1">Artifact</span>
+                                <span className="text-white font-bold text-base mb-1">U-Vessel</span>
+                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
+                                    Traps a card as 'u'. Demands a blood sacrifice to collapse the Weave.
                                 </div>
                             </button>
                         </div>
