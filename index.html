@@ -148,7 +148,7 @@
             ]);
 
             const [handCards, setHandCards] = useState({ peel: { available: true }, vessel: { available: true } });
-            const [activeMode, setActiveMode] = useState(null); // 'peel', 'vessel_u', 'vessel_du'
+            const [activeMode, setActiveMode] = useState(null);
             
             const [shatteringId, setShatteringId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
@@ -161,7 +161,6 @@
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
 
             const handleBossCardClick = (card) => {
-                // PEEL MECHANIC
                 if (activeMode === 'peel') {
                     if (card.name === 'Sina' && card.power % 2 !== 0) {
                         setShatteringId(card.id);
@@ -183,7 +182,6 @@
                     }
                 }
 
-                // VESSEL MECHANIC - STEP 1 (Select U)
                 if (activeMode === 'vessel_u') {
                     try {
                         const derivative = math.derivative(card.baseMath, 'x').toString();
@@ -196,9 +194,7 @@
                     }
                 }
 
-                // VESSEL MECHANIC - STEP 2 (Sacrifice DU)
                 if (activeMode === 'vessel_du') {
-                    // For the prototype, we check if they click the exposed Sine card
                     if (card.name === 'Sina' && card.power === 1) {
                         addLog("Sacrifice accepted! The U-Vessel consumes the weave!");
                         setConsumeAll(true);
@@ -211,7 +207,7 @@
                             setActiveMode(null);
                             setHandCards(prev => ({ ...prev, vessel: { available: false } }));
                             addLog("VICTORY! The equation is now a basic polynomial.");
-                        }, 800); // Wait for black hole animation
+                        }, 800);
                     } else {
                         addLog("Invalid sacrifice. The Vessel requires the derivative of your 'u'.");
                     }
@@ -225,11 +221,9 @@
                         <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Phase 5: Peel & Sacrifice</p>
                     </header>
 
-                    {/* BOSS LANE */}
                     <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50 overflow-hidden">
                         <h2 className="absolute top-4 text-purple-400 text-sm font-bold tracking-widest">THE WIZARD'S LANE</h2>
                         
-                        {/* The Black Hole Background (appears during sacrifice) */}
                         <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
 
                         <div className="flex flex-row items-center justify-center gap-8 flex-wrap mt-4 min-h-[280px] z-20">
@@ -249,7 +243,6 @@
                         </div>
                     </div>
 
-                    {/* BATTLE LOG */}
                     <div className="w-full bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden h-32 mb-6 z-10">
                         <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">Battle Log</h3>
                         <div className="overflow-y-auto mt-6 flex-1 pr-2 log-scroll">
@@ -264,7 +257,6 @@
                         </div>
                     </div>
 
-                    {/* PLAYER HAND */}
                     <div className="w-full">
                         <div className="grid grid-cols-4 gap-6">
                             <button 
