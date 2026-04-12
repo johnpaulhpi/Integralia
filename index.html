@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 9</title>
+    <title>Integralia: The Shattered Weave - Phase 9.1</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -24,7 +24,6 @@
         @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.03); opacity: 1; } }
         .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
 
-        /* Particle Burst System */
         @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
         .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
         
@@ -88,7 +87,7 @@
             return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
-        const BattleCard = ({ card, isActive, isSacrificeTarget, onClick, onCycle, isSlashing, isShattering, isConsumed }) => {
+        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed }) => {
             const renderVisual = () => {
                 if (card.name === 'Sina') {
                     return (
@@ -138,6 +137,7 @@
 
             let borderClass = baseBorder;
             if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.5)] scale-105';
+            if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
             if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.7)] scale-105 animate-pulse';
 
             return (
@@ -146,7 +146,6 @@
                         
                         {isSlashing && <div className="animate-slash"></div>}
 
-                        {/* Top Labels */}
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">
                             {card.type}
                         </div>
@@ -177,8 +176,7 @@
                         <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2.5 flex items-center justify-center relative">
                             <p className="text-[10px] text-gray-400 text-center leading-tight italic">"{card.ability}"</p>
                             
-                            {/* Permanent Bleed for Residues OR triggered Sacrifice Bleed */}
-                            {(card.name === 'Residue' || isSacrificeTarget) && (
+                            {(card.isBleeding || isSacrificeTarget) && (
                                 <>
                                     <div className="blood-drop drop-1"></div>
                                     <div className="blood-drop drop-2"></div>
@@ -194,14 +192,15 @@
         const IntegraliaGame = () => {
             const [mana, setMana] = useState(0);
             const [bossCards, setBossCards] = useState([
-                { id: 'sina-1', name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Vulnerable to Slicing." },
-                { id: 'cosa-1', name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core." }
+                { id: 'sina-1', name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Vulnerable to Slicing.", isBleeding: false },
+                { id: 'cosa-1', name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core.", isBleeding: false }
             ]);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, stitch: { available: true }, altar: { available: true } });
+            const [handCards, setHandCards] = useState({ slice: { available: true }, needle: { available: true }, altar: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
             const [slashingId, setSlashingId] = useState(null);
             const [shatteringId, setShatteringId] = useState(null);
+            const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
             const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Refine the components to extract mana."]);
@@ -215,10 +214,10 @@
                         setMana(m => m + 10);
                         if (c.name === 'Sina') {
                             addLog("Identity Cycled: Extracting mana from the Sine shell.");
-                            return { ...c, name: 'Residue', type: 'Used', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Bleeding Mana." };
+                            return { ...c, name: 'Residue', type: 'Used', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Unstable identity." };
                         } else {
                             addLog("Identity Cycled: Hardening Residue back into a Core.");
-                            return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Unstable Armor." };
+                            return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', canCycle: true, ability: "Restored Armor." };
                         }
                     }
                     return c;
@@ -226,6 +225,7 @@
             };
 
             const handleBossCardClick = (card) => {
+                // SLICE LOGIC
                 if (activeMode === 'slice' && card.power > 1) {
                     setSlashingId(card.id);
                     addLog(`Slicing ${card.name}... extracting initial mana.`);
@@ -236,8 +236,26 @@
                         setTimeout(() => {
                             const newCards = [...bossCards];
                             const idx = newCards.findIndex(c => c.id === card.id);
-                            newCards[idx] = { ...card, power: card.power - 1, canCycle: (card.name === 'Sina' && card.power - 1 === 2) };
-                            newCards.splice(idx + 1, 0, { id: `s-${Date.now()}`, name: card.name, type: card.type, baseTex: card.baseTex, baseMath: card.baseMath, power: 1, canCycle: false, ability: "Cleaved Fragment." });
+                            
+                            newCards[idx] = { 
+                                ...card, 
+                                power: card.power - 1, 
+                                canCycle: (card.name === 'Sina' && card.power - 1 === 2),
+                                isBleeding: false 
+                            };
+                            
+                            newCards.splice(idx + 1, 0, { 
+                                id: `cleaved-${Date.now()}`, 
+                                name: card.name, 
+                                type: card.type, 
+                                baseTex: card.baseTex, 
+                                baseMath: card.baseMath, 
+                                power: 1, 
+                                canCycle: false, 
+                                ability: "Cleaved Fragment. Bleeding mana.", 
+                                isBleeding: true 
+                            });
+                            
                             setBossCards(newCards);
                             setShatteringId(null);
                             setActiveMode(null);
@@ -246,12 +264,48 @@
                     }, 300);
                 }
 
+                // WEAVER'S NEEDLE LOGIC
+                if (activeMode === 'stitch_1') {
+                    setStitchTargetId(card.id);
+                    setActiveMode('stitch_2');
+                    addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch exponents.`);
+                } else if (activeMode === 'stitch_2') {
+                    if (card.id === stitchTargetId) {
+                        addLog("Cannot stitch a card to itself.");
+                        return;
+                    }
+                    const target1 = bossCards.find(c => c.id === stitchTargetId);
+                    const target2 = card;
+                    if (target1.name === target2.name) {
+                        addLog(`Stitching identical spirits... Exponents combined!`);
+                        const newPower = target1.power + target2.power;
+                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
+                        newCards.push({
+                            ...target1,
+                            id: `stitched-${Date.now()}`,
+                            power: newPower,
+                            canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
+                            isBleeding: false,
+                            ability: `Combined Exponent: The weave grows thicker.`
+                        });
+                        setBossCards(newCards);
+                        setStitchTargetId(null);
+                        setActiveMode(null);
+                        setHandCards(prev => ({ ...prev, needle: { available: false } }));
+                    } else {
+                        addLog("Incompatible spirits. Stitching requires matching identities.");
+                        setActiveMode('stitch_1');
+                        setStitchTargetId(null);
+                    }
+                }
+
+                // ALTAR LOGIC
                 if (activeMode === 'altar_u' && card.type === 'Core') {
                     addLog(`Binding Core ${card.name} to the Altar. Blood sacrifice required!`);
                     setActiveMode('altar_du');
                 }
 
-                if (activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1) {
+                if (activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1 && card.isBleeding) {
                     addLog("Blood Sacrifice accepted! Collapsing the weave for maximum extraction.");
                     setConsumeAll(true);
                     setMana(m => m + 100);
@@ -259,7 +313,7 @@
                         setBossCards([{
                             id: 'fin', name: 'Refined Solution', type: 'Refined',
                             baseTex: '-\\left[\\frac{\\cos^3(x)}{3} - \\frac{\\cos^5(x)}{5}\\right] + C',
-                            power: 1, canCycle: false, ability: "Mana Refined. Weave Dissolved."
+                            baseMath: '', power: 1, canCycle: false, ability: "Mana Refined. Weave Dissolved.", isBleeding: false
                         }]);
                         setConsumeAll(false);
                         setActiveMode(null);
@@ -299,8 +353,9 @@
                             {bossCards.map((card) => (
                                 <BattleCard 
                                     key={card.id} card={card}
-                                    isActive={activeMode === 'altar_u' || activeMode === 'slice'}
-                                    isSacrificeTarget={activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1}
+                                    isActive={activeMode === 'altar_u' || activeMode === 'slice' || activeMode === 'stitch_1'}
+                                    isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
+                                    isSacrificeTarget={activeMode === 'altar_du' && card.name === 'Sina' && card.isBleeding}
                                     onClick={() => handleBossCardClick(card)}
                                     onCycle={handleCycle}
                                     isSlashing={slashingId === card.id}
@@ -312,14 +367,16 @@
                         </div>
                     </div>
 
-                    <div className="w-full grid grid-cols-3 gap-8 mb-8">
-                        <div className="col-span-1 h-32 bg-gray-950 border border-white/5 rounded-2xl p-4 relative overflow-hidden">
-                            <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Refinement Log</h3>
-                            <div className="overflow-y-auto h-20 log-scroll pr-2">
+                    {/* Controls Section */}
+                    <div className="w-full flex flex-col gap-6 mb-8">
+                        {/* Expanded Battle Log */}
+                        <div className="w-full h-48 bg-gray-950 border border-white/5 rounded-2xl p-6 relative overflow-hidden flex flex-col">
+                            <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Refinement Log</h3>
+                            <div className="overflow-y-auto flex-1 log-scroll pr-4">
                                 <ul className="space-y-2">
                                     {logs.map((log, idx) => (
-                                        <li key={idx} className={`text-[11px] leading-tight ${idx === logs.length - 1 ? 'text-blue-400 font-bold' : 'text-gray-600'}`}>
-                                            <span className="opacity-30 mr-1">></span>{log}
+                                        <li key={idx} className={`text-xs leading-relaxed ${idx === logs.length - 1 ? 'text-blue-400 font-bold' : 'text-gray-500'}`}>
+                                            <span className="opacity-30 mr-2">></span>{log}
                                         </li>
                                     ))}
                                     <div ref={logEndRef} />
@@ -327,24 +384,28 @@
                             </div>
                         </div>
 
-                        <div className="col-span-2 grid grid-cols-3 gap-4">
+                        {/* Tools Grid */}
+                        <div className="w-full grid grid-cols-3 gap-6">
                             <button onClick={() => { setActiveMode('slice'); addLog("Slice Primed: Target an Exponent."); }} disabled={!handCards.slice.available}
-                                className="p-4 rounded-2xl border-2 border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
+                                className="p-5 rounded-2xl border-2 border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
                                 <span className="text-blue-500 text-[10px] font-black uppercase mb-1">Machine</span>
-                                <span className="text-white font-bold text-lg group-hover:text-blue-400">Slice</span>
-                                <p className="text-[10px] text-gray-500 mt-auto leading-none">Cleave exponents to release mana.</p>
+                                <span className="text-white font-bold text-xl group-hover:text-blue-400">Slice</span>
+                                <p className="text-xs text-gray-500 mt-3 leading-relaxed">Cleave exponents to release mana and fragment components.</p>
+                            </button>
+
+                            <button onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); addLog("Weaver's Needle equipped. Select the first component to stitch."); }} disabled={!handCards.needle.available}
+                                className="p-5 rounded-2xl border-2 border-emerald-900 bg-gray-950 hover:border-emerald-500 hover:bg-emerald-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
+                                <span className="text-emerald-500 text-[10px] font-black uppercase mb-1">Artifact</span>
+                                <span className="text-white font-bold text-xl group-hover:text-emerald-400">Weaver's Needle</span>
+                                <p className="text-xs text-gray-500 mt-3 leading-relaxed">Stitches identical spirits together, combining their exponents.</p>
                             </button>
 
                             <button onClick={() => { setActiveMode('altar_u'); addLog("Sacrificial Altar Active: Select a CORE."); }} disabled={!handCards.altar.available}
-                                className="p-4 rounded-2xl border-2 border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
+                                className="p-5 rounded-2xl border-2 border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
                                 <span className="text-red-500 text-[10px] font-black uppercase mb-1">Artifact</span>
-                                <span className="text-white font-bold text-lg group-hover:text-red-400">Sacrificial Altar</span>
-                                <p className="text-[10px] text-gray-500 mt-auto leading-none">Substantiate Core with a blood sacrifice.</p>
+                                <span className="text-white font-bold text-xl group-hover:text-red-400">Sacrificial Altar</span>
+                                <p className="text-xs text-gray-500 mt-3 leading-relaxed">Substantiate a Core with a blood sacrifice to refine the weave.</p>
                             </button>
-
-                            <div className="border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center opacity-20">
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Locked</span>
-                            </div>
                         </div>
                     </div>
                 </div>
