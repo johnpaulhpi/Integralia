@@ -222,7 +222,6 @@
                         setSlashingId(card.id);
                         addLog("Slice initiated! The blade strikes true.");
                         
-                        // First the slash animation plays, THEN it shatters
                         setTimeout(() => {
                             setSlashingId(null);
                             setShatteringId(card.id);
@@ -239,8 +238,8 @@
                                 setShatteringId(null);
                                 setActiveMode(null);
                                 setHandCards(prev => ({ ...prev, slice: { available: false } }));
-                            }, 500); // Wait for shatter particles
-                        }, 300); // Length of the sword slash
+                            }, 500);
+                        }, 300);
                     } else {
                         addLog("Ineffective. Slice requires an odd-powered Primal spirit.");
                     }
