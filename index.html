@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 8</title>
+    <title>Integralia: The Shattered Weave - Phase 9</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -14,24 +14,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
 
     <style>
-        body { background-color: #111827; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        body { background-color: #030712; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
         .card-hover:hover { transform: translateY(-5px); transition: transform 0.2s ease-in-out; }
         
         .log-scroll::-webkit-scrollbar { width: 8px; }
-        .log-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 4px; }
-        .log-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .log-scroll::-webkit-scrollbar-track { background: #111827; border-radius: 4px; }
+        .log-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
         
-        @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } }
+        @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.03); opacity: 1; } }
         .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
 
-        @keyframes drip { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(15px); opacity: 0; } }
-        .svg-drip { animation: drip 2s ease-in infinite; }
-
+        /* Particle Burst System */
         @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
         .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
         
-        @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(90deg); filter: blur(20px); opacity: 0; } }
-        .animate-consume { animation: consume 0.8s ease-in forwards; pointer-events: none; }
+        @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(180deg); filter: blur(20px); opacity: 0; } }
+        .animate-consume { animation: consume 1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
 
         @keyframes slash {
             0% { clip-path: inset(0 100% 0 0); opacity: 1; }
@@ -39,20 +37,22 @@
             100% { clip-path: inset(0 0 0 100%); opacity: 0; }
         }
         .animate-slash {
-            position: absolute; top: 45%; left: -20%; right: -20%; height: 6px;
-            background: white; box-shadow: 0 0 15px 5px rgba(255,255,255,0.8);
-            transform: rotate(-25deg); animation: slash 0.3s ease-out forwards; z-index: 60; pointer-events: none;
+            position: absolute; top: 45%; left: -20%; right: -20%; height: 8px;
+            background: white; box-shadow: 0 0 20px 8px rgba(255,255,255,0.9);
+            transform: rotate(-25deg); animation: slash 0.4s ease-out forwards; z-index: 60; pointer-events: none;
         }
 
-        @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(40px) scale(0.3); opacity: 0; } }
+        @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(60px) scale(0.3); opacity: 0; } }
         .blood-drop {
-            position: absolute; bottom: 0; width: 6px; height: 10px; border-radius: 50%;
-            background-color: #ef4444; box-shadow: 0 0 5px #ef4444;
-            animation: bleed 1s infinite ease-in; z-index: 45; pointer-events: none;
+            position: absolute; bottom: 0; width: 6px; height: 12px; border-radius: 50%;
+            background-color: #dc2626; box-shadow: 0 0 8px #dc2626;
+            animation: bleed 1.2s infinite ease-in; z-index: 45; pointer-events: none;
         }
         .drop-1 { left: 20%; animation-delay: 0.1s; }
-        .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 12px; }
+        .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 14px; }
         .drop-3 { left: 80%; animation-delay: 0.3s; }
+
+        .mana-bar-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     </style>
 </head>
 <body>
@@ -61,7 +61,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        const MathEquation = ({ equation, size = "text-3xl", inline = false }) => {
+        const MathEquation = ({ equation, size = "text-3xl", inline = false, color = "text-yellow-400" }) => {
             const containerRef = useRef();
             useEffect(() => {
                 if (containerRef.current && equation) {
@@ -69,11 +69,11 @@
                     catch (e) { console.error("KaTeX error:", e); }
                 }
             }, [equation, inline]);
-            return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md pointer-events-none`}></div>;
+            return <div ref={containerRef} className={`${size} ${color} drop-shadow-md pointer-events-none`}></div>;
         };
 
         const ParticleBurst = ({ type }) => {
-            const colorClass = type === 'Sina' ? 'bg-blue-500' : 'bg-yellow-500';
+            const colorClass = (type === 'Sina' || type === 'Residue') ? 'bg-blue-500' : 'bg-yellow-500';
             const particles = Array.from({ length: 15 }).map((_, i) => {
                 const angle = Math.random() * Math.PI * 2;
                 const distance = 40 + Math.random() * 60;
@@ -82,13 +82,13 @@
                 const ty = Math.sin(angle) * distance + 'px';
                 return (
                     <div key={i} className={`particle ${colorClass} shadow-[0_0_10px_currentColor]`}
-                        style={{ width: size, height: size, '--tx': tx, '--ty': ty, clipPath: type === 'Sina' ? 'circle(50%)' : 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
+                        style={{ width: size, height: size, '--tx': tx, '--ty': ty, clipPath: 'circle(50%)' }} />
                 );
             });
             return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
-        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed }) => {
+        const BattleCard = ({ card, isActive, isSacrificeTarget, onClick, onCycle, isSlashing, isShattering, isConsumed }) => {
             const renderVisual = () => {
                 if (card.name === 'Sina') {
                     return (
@@ -104,67 +104,56 @@
                             <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
                             <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
                             <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
-                            <path d="M 45 65 Q 45 70 42 70 Q 39 70 39 65 Q 39 60 42 58 Q 45 60 45 65 Z" fill="#3b82f6" />
-                            <circle cx="48" cy="78" r="1.5" fill="#60a5fa" className="svg-drip" />
+                            <circle cx="48" cy="78" r="1.5" fill="#60a5fa" />
                         </svg>
                     );
                 } else if (card.name === 'Residue') {
                     return (
-                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)] svg-pulse">
+                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                             <polygon points="50,5 95,50 50,95 5,50" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
-                            <path d="M 20 50 L 80 50 M 50 20 L 50 80" stroke="#34d399" strokeWidth="2" strokeDasharray="4 4" />
-                            <circle cx="50" cy="50" r="15" fill="#059669" />
+                            <path d="M 30 50 L 70 50 M 50 30 L 50 70" stroke="#34d399" strokeWidth="2" opacity="0.5" />
                         </svg>
                     );
-                } else if (card.name === 'U-State') {
+                } else if (card.name === 'Refined Solution') {
                     return (
-                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
-                            <circle cx="50" cy="50" r="40" fill="none" stroke="#a855f7" strokeWidth="4" strokeDasharray="10 5" />
-                            <text x="50" y="65" fontSize="40" fill="#d8b4fe" textAnchor="middle" fontFamily="serif" fontStyle="italic">u</text>
-                        </svg>
-                    );
-                } else {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-md">
-                            <rect x="20" y="20" width="60" height="60" rx="8" fill="#4b5563" />
-                            <circle cx="50" cy="50" r="15" fill="#9ca3af" />
+                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(59,130,246,0.8)] svg-pulse">
+                            <circle cx="50" cy="50" r="42" fill="none" stroke="#60a5fa" strokeWidth="3" strokeDasharray="5 5" />
+                            <path d="M 30 50 L 70 50 M 50 30 L 50 70" stroke="#fff" strokeWidth="4" />
                         </svg>
                     );
                 }
+                return null;
             };
 
-            let baseBg = 'bg-gray-900/90';
-            let baseBorder = 'border-gray-700 hover:border-gray-500 hover:bg-gray-800';
+            let baseBg = 'bg-gray-900/95';
+            let baseBorder = 'border-gray-800 hover:border-gray-600 hover:bg-gray-800';
             
-            if (card.name === 'Sina') {
-                baseBg = 'bg-blue-950/60';
-                baseBorder = 'border-blue-900 hover:border-blue-700 hover:bg-blue-900/60';
-            } else if (card.name === 'Cosa') {
-                baseBg = 'bg-yellow-950/60';
-                baseBorder = 'border-yellow-900 hover:border-yellow-700 hover:bg-yellow-900/60';
+            if (card.type === 'Core') {
+                baseBg = card.name === 'Sina' ? 'bg-blue-950/40' : 'bg-yellow-950/40';
+                baseBorder = card.name === 'Sina' ? 'border-blue-900' : 'border-yellow-900';
             } else if (card.name === 'Residue') {
-                baseBg = 'bg-emerald-950/60';
-                baseBorder = 'border-emerald-900 hover:border-emerald-700 hover:bg-emerald-900/60';
+                baseBg = 'bg-emerald-950/40';
+                baseBorder = 'border-emerald-900 shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]';
             }
 
             let borderClass = baseBorder;
-            if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105';
-            if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
-            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-105 animate-pulse';
+            if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.5)] scale-105';
+            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.7)] scale-105 animate-pulse';
 
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''}`}>
-                    <div onClick={onClick} className={`relative flex flex-col w-[180px] h-[260px] rounded-xl border-2 transition-all overflow-visible cursor-pointer z-40 ${baseBg} ${borderClass}`}>
+                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${baseBg} ${borderClass}`}>
                         
                         {isSlashing && <div className="animate-slash"></div>}
 
-                        {/* Identity Cycle Sigil */}
+                        {/* Top Labels */}
+                        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">
+                            {card.type}
+                        </div>
+
                         {card.canCycle && (
-                            <div 
-                                onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
-                                className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-[0_0_15px_rgba(16,185,129,0.5)] z-50 hover:bg-emerald-700 hover:scale-110 transition-transform cursor-pointer"
-                                title="Cycle Identity"
-                            >
+                            <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
+                                className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">
                                 ⟳
                             </div>
                         )}
@@ -175,20 +164,21 @@
                             </div>
                         )}
 
-                        <div className="h-[90px] w-full border-b border-gray-800/50 flex items-center justify-center relative bg-gradient-to-b from-gray-800/50 to-transparent rounded-t-xl overflow-visible">
+                        <div className="h-[100px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible">
                             {isShattering && <ParticleBurst type={card.name} />}
                             <div className={isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>{renderVisual()}</div>
                         </div>
 
                         <div className="flex-1 flex flex-col items-center justify-center px-2">
-                            <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
-                            <div className="pointer-events-none scale-90"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
+                            <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
+                            <div className="pointer-events-none scale-95"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
                         </div>
 
-                        <div className="h-[60px] w-full bg-black/40 border-t border-gray-800/50 rounded-b-xl p-2 flex items-center justify-center relative">
-                            <p className="text-[10px] text-gray-300 text-center leading-tight">{card.ability}</p>
+                        <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2.5 flex items-center justify-center relative">
+                            <p className="text-[10px] text-gray-400 text-center leading-tight italic">"{card.ability}"</p>
                             
-                            {isSacrificeTarget && (
+                            {/* Permanent Bleed for Residues OR triggered Sacrifice Bleed */}
+                            {(card.name === 'Residue' || isSacrificeTarget) && (
                                 <>
                                     <div className="blood-drop drop-1"></div>
                                     <div className="blood-drop drop-2"></div>
@@ -202,20 +192,19 @@
         };
 
         const IntegraliaGame = () => {
+            const [mana, setMana] = useState(0);
             const [bossCards, setBossCards] = useState([
-                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Squishy Exterior: Vulnerable to the Slice technique." },
-                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core: A hard shell that resists basic disruption." }
+                { id: 'sina-1', name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Vulnerable to Slicing." },
+                { id: 'cosa-1', name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core." }
             ]);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, stitch: { available: true }, vessel: { available: true } });
+            const [handCards, setHandCards] = useState({ slice: { available: true }, stitch: { available: true }, altar: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
-            
             const [slashingId, setSlashingId] = useState(null);
             const [shatteringId, setShatteringId] = useState(null);
-            const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
-            const [logs, setLogs] = useState(["The Dark Wizard deploys a tangled weave: sin³(x)cos²(x)."]);
+            const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Refine the components to extract mana."]);
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
@@ -223,12 +212,13 @@
             const handleCycle = (cardId) => {
                 setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
-                        if (c.name === 'Sina' && c.power === 2) {
-                            addLog("Identity cycled: The Even Sine armor transmutes into a Residue.");
-                            return { ...c, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: An identity split open." };
-                        } else if (c.name === 'Residue') {
-                            addLog("Identity cycled: The Residue crystallizes back into Sine armor.");
-                            return { ...c, name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Even Power: Can be cycled." };
+                        setMana(m => m + 10);
+                        if (c.name === 'Sina') {
+                            addLog("Identity Cycled: Extracting mana from the Sine shell.");
+                            return { ...c, name: 'Residue', type: 'Used', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Bleeding Mana." };
+                        } else {
+                            addLog("Identity Cycled: Hardening Residue back into a Core.");
+                            return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Unstable Armor." };
                         }
                     }
                     return c;
@@ -236,146 +226,81 @@
             };
 
             const handleBossCardClick = (card) => {
-                // SLICE MECHANIC
-                if (activeMode === 'slice') {
-                    if (card.power > 1) {
-                        setSlashingId(card.id);
-                        addLog("Slice initiated! The blade cleaves the exponent.");
-                        
+                if (activeMode === 'slice' && card.power > 1) {
+                    setSlashingId(card.id);
+                    addLog(`Slicing ${card.name}... extracting initial mana.`);
+                    setMana(m => m + 10);
+                    setTimeout(() => {
+                        setSlashingId(null);
+                        setShatteringId(card.id);
                         setTimeout(() => {
-                            setSlashingId(null);
-                            setShatteringId(card.id);
-                            addLog("An exponent layer is severed from the core.");
-                            
-                            setTimeout(() => {
-                                const newCards = [...bossCards];
-                                const targetIdx = newCards.findIndex(c => c.id === card.id);
-                                const newPower = card.power - 1;
-                                
-                                // Update original card
-                                newCards[targetIdx] = { 
-                                    ...card, 
-                                    power: newPower, 
-                                    canCycle: (card.name === 'Sina' && newPower === 2),
-                                    ability: (newPower === 2) ? "Even Power: Can be cycled." : card.ability
-                                };
-                                
-                                // Insert the peeled 1-power version next to it
-                                newCards.splice(targetIdx + 1, 0, {
-                                    id: `sliced-${Date.now()}`, 
-                                    name: card.name, 
-                                    baseTex: card.baseTex, 
-                                    baseMath: card.baseMath, 
-                                    power: 1, 
-                                    canCycle: false, 
-                                    ability: "Exposed layer: Bleeding and ready for harvest."
-                                });
-                                
-                                setBossCards(newCards);
-                                setShatteringId(null);
-                                setActiveMode(null);
-                                setHandCards(prev => ({ ...prev, slice: { available: false } }));
-                            }, 500);
-                        }, 300);
-                    } else {
-                        addLog("Ineffective. Slice requires an exponent greater than 1.");
-                    }
-                }
-
-                // STITCH MECHANIC - Step 1
-                if (activeMode === 'stitch_1') {
-                    setStitchTargetId(card.id);
-                    setActiveMode('stitch_2');
-                    addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch exponents.`);
-                }
-                
-                // STITCH MECHANIC - Step 2
-                else if (activeMode === 'stitch_2') {
-                    if (card.id === stitchTargetId) {
-                        addLog("Cannot stitch a card to itself.");
-                        return;
-                    }
-                    const target1 = bossCards.find(c => c.id === stitchTargetId);
-                    const target2 = card;
-                    
-                    if (target1.name === target2.name) {
-                        addLog(`Stitching identical spirits... Exponents combined!`);
-                        const newPower = target1.power + target2.power;
-                        
-                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({
-                            ...target1,
-                            id: `stitched-${Date.now()}`,
-                            power: newPower,
-                            canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
-                            ability: `Combined Exponent: The weave grows thicker.`
-                        });
-                        
-                        setBossCards(newCards);
-                        setStitchTargetId(null);
-                        setActiveMode(null);
-                        setHandCards(prev => ({ ...prev, stitch: { available: false } }));
-                    } else {
-                        addLog("Incompatible spirits. Stitching requires matching identities.");
-                        setActiveMode('stitch_1');
-                        setStitchTargetId(null);
-                    }
-                }
-
-                // VESSEL MECHANIC - STEP 1
-                if (activeMode === 'vessel_u') {
-                    if (card.name === 'Cosa') {
-                        const derivative = '-sin(x)'; 
-                        addLog(`Bound underlying structure cos(x) as 'u'. Math.js detects du = ${derivative}.`);
-                        addLog(`The U-Vessel demands a blood sacrifice matching this derivative!`);
-                        setActiveMode('vessel_du');
-                    } else {
-                        addLog("The Vessel rejects this target. It seeks the Armored Core.");
-                    }
-                }
-
-                // VESSEL MECHANIC - STEP 2
-                if (activeMode === 'vessel_du') {
-                    if (card.name === 'Sina' && card.power === 1) {
-                        addLog("Sacrifice accepted! The U-Vessel consumes the weave!");
-                        setConsumeAll(true);
-                        
-                        setTimeout(() => {
-                            setBossCards([{
-                                id: 'final-u', name: 'U-State', baseTex: '-\\int(1-u^2)u^2 \\, du', baseMath: '', power: 1, canCycle: false, ability: "Integrable State: The weave is broken. Victory is imminent."
-                            }]);
-                            setConsumeAll(false);
+                            const newCards = [...bossCards];
+                            const idx = newCards.findIndex(c => c.id === card.id);
+                            newCards[idx] = { ...card, power: card.power - 1, canCycle: (card.name === 'Sina' && card.power - 1 === 2) };
+                            newCards.splice(idx + 1, 0, { id: `s-${Date.now()}`, name: card.name, type: card.type, baseTex: card.baseTex, baseMath: card.baseMath, power: 1, canCycle: false, ability: "Cleaved Fragment." });
+                            setBossCards(newCards);
+                            setShatteringId(null);
                             setActiveMode(null);
-                            setHandCards(prev => ({ ...prev, vessel: { available: false } }));
-                            addLog("VICTORY! The equation is now a basic polynomial.");
-                        }, 800);
-                    } else {
-                        addLog("Invalid sacrifice. The Vessel requires the derivative of your 'u'.");
-                    }
+                            setHandCards(p => ({ ...p, slice: { available: false } }));
+                        }, 500);
+                    }, 300);
+                }
+
+                if (activeMode === 'altar_u' && card.type === 'Core') {
+                    addLog(`Binding Core ${card.name} to the Altar. Blood sacrifice required!`);
+                    setActiveMode('altar_du');
+                }
+
+                if (activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1) {
+                    addLog("Blood Sacrifice accepted! Collapsing the weave for maximum extraction.");
+                    setConsumeAll(true);
+                    setMana(m => m + 100);
+                    setTimeout(() => {
+                        setBossCards([{
+                            id: 'fin', name: 'Refined Solution', type: 'Refined',
+                            baseTex: '-\\left[\\frac{\\cos^3(x)}{3} - \\frac{\\cos^5(x)}{5}\\right] + C',
+                            power: 1, canCycle: false, ability: "Mana Refined. Weave Dissolved."
+                        }]);
+                        setConsumeAll(false);
+                        setActiveMode(null);
+                        setHandCards(p => ({ ...p, altar: { available: false } }));
+                        addLog("REFINEMENT COMPLETE: You have extracted all mana from this spell.");
+                    }, 1000);
                 }
             };
 
             return (
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
-                    <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
-                        <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
-                        <p className="text-sm text-emerald-500 uppercase tracking-widest">Phase 8: Weaver's Exponents</p>
+                    
+                    <header className="mb-10 w-full flex justify-between items-end border-b border-white/10 pb-4">
+                        <div>
+                            <h1 className="text-4xl font-black tracking-tighter text-white">INTEGRALIA</h1>
+                            <p className="text-[10px] text-blue-500 uppercase font-bold tracking-[0.3em]">The Art of Mana Refinement</p>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Mana Recovered</span>
+                            <div className="flex items-center gap-3">
+                                <div className="w-48 h-3 bg-gray-900 rounded-full border border-white/5 overflow-hidden mana-bar-glow">
+                                    <div className="h-full bg-blue-600 transition-all duration-1000" style={{ width: `${Math.min(mana, 100)}%` }}></div>
+                                </div>
+                                <span className="text-2xl font-mono text-blue-400 font-bold">{mana}</span>
+                            </div>
+                        </div>
                     </header>
 
-                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50 overflow-hidden">
-                        <h2 className="absolute top-4 text-purple-400 text-sm font-bold tracking-widest">THE WIZARD'S LANE</h2>
+                    <div className="w-full bg-gray-950 border border-white/5 rounded-[2rem] pt-20 pb-16 px-8 mb-8 flex flex-col items-center relative shadow-2xl overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-900/50 to-transparent"></div>
+                        <h2 className="absolute top-6 text-white/20 text-xs font-black tracking-[0.5em] uppercase">Used Spell Container</h2>
                         
-                        <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
+                        <div className={`absolute inset-0 bg-blue-950/10 z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
 
-                        <div className="flex flex-row items-center justify-center gap-8 flex-wrap mt-4 min-h-[280px] z-20">
-                            {bossCards.length > 1 && <div className={`text-7xl text-purple-600 font-serif mr-2 select-none font-light ${consumeAll ? 'animate-consume' : ''}`}>∫</div>}
-
+                        <div className="flex flex-row items-center justify-center gap-10 flex-wrap z-20">
+                            {bossCards.length > 1 && <div className={`text-8xl text-white/10 font-serif mr-2 select-none ${consumeAll ? 'animate-consume' : ''}`}>∫</div>}
                             {bossCards.map((card) => (
                                 <BattleCard 
                                     key={card.id} card={card}
-                                    isActive={activeMode === 'vessel_u' || activeMode === 'slice' || activeMode === 'stitch_1'}
-                                    isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
-                                    isSacrificeTarget={activeMode === 'vessel_du' && card.name === 'Sina' && card.power === 1}
+                                    isActive={activeMode === 'altar_u' || activeMode === 'slice'}
+                                    isSacrificeTarget={activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1}
                                     onClick={() => handleBossCardClick(card)}
                                     onCycle={handleCycle}
                                     isSlashing={slashingId === card.id}
@@ -383,61 +308,43 @@
                                     isConsumed={consumeAll}
                                 />
                             ))}
-                            {bossCards.length > 1 && <div className={`text-4xl text-purple-600 font-serif ml-2 select-none italic drop-shadow-md ${consumeAll ? 'animate-consume' : ''}`}>dx</div>}
+                            {bossCards.length > 1 && <div className={`text-4xl text-white/20 font-serif ml-2 italic ${consumeAll ? 'animate-consume' : ''}`}>dx</div>}
                         </div>
                     </div>
 
-                    <div className="w-full bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden h-32 mb-6 z-10">
-                        <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">Battle Log</h3>
-                        <div className="overflow-y-auto mt-6 flex-1 pr-2 log-scroll">
-                            <ul className="space-y-3">
-                                {logs.map((log, idx) => (
-                                    <li key={idx} className={`text-sm tracking-wide leading-relaxed ${idx === logs.length - 1 ? 'text-white font-semibold' : 'text-gray-500'}`}>
-                                        <span className="text-purple-500 mr-2 font-bold">▶</span>{log}
-                                    </li>
-                                ))}
-                                <div ref={logEndRef} />
-                            </ul>
+                    <div className="w-full grid grid-cols-3 gap-8 mb-8">
+                        <div className="col-span-1 h-32 bg-gray-950 border border-white/5 rounded-2xl p-4 relative overflow-hidden">
+                            <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Refinement Log</h3>
+                            <div className="overflow-y-auto h-20 log-scroll pr-2">
+                                <ul className="space-y-2">
+                                    {logs.map((log, idx) => (
+                                        <li key={idx} className={`text-[11px] leading-tight ${idx === logs.length - 1 ? 'text-blue-400 font-bold' : 'text-gray-600'}`}>
+                                            <span className="opacity-30 mr-1">></span>{log}
+                                        </li>
+                                    ))}
+                                    <div ref={logEndRef} />
+                                </ul>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="w-full">
-                        <div className="grid grid-cols-4 gap-6">
-                            <button 
-                                onClick={() => { setActiveMode('slice'); setStitchTargetId(null); addLog("Slice primed. Target a card with an exponent greater than 1."); }}
-                                disabled={!handCards.slice.available}
-                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">Machine</span>
-                                <span className="text-white font-bold text-base mb-1">Slice</span>
-                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Cleaves an exponent off a spirit, splitting it into two cards.
-                                </div>
+                        <div className="col-span-2 grid grid-cols-3 gap-4">
+                            <button onClick={() => { setActiveMode('slice'); addLog("Slice Primed: Target an Exponent."); }} disabled={!handCards.slice.available}
+                                className="p-4 rounded-2xl border-2 border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
+                                <span className="text-blue-500 text-[10px] font-black uppercase mb-1">Machine</span>
+                                <span className="text-white font-bold text-lg group-hover:text-blue-400">Slice</span>
+                                <p className="text-[10px] text-gray-500 mt-auto leading-none">Cleave exponents to release mana.</p>
                             </button>
 
-                            <button 
-                                onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); addLog("Stitch equipped. Select the first component to combine."); }}
-                                disabled={!handCards.stitch.available}
-                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-emerald-600 bg-gray-800 card-hover hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Artifact</span>
-                                <span className="text-white font-bold text-base mb-1">Stitch</span>
-                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Stitches two identical identities together, combining their exponents.
-                                </div>
+                            <button onClick={() => { setActiveMode('altar_u'); addLog("Sacrificial Altar Active: Select a CORE."); }} disabled={!handCards.altar.available}
+                                className="p-4 rounded-2xl border-2 border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20 transition-all text-left flex flex-col disabled:opacity-20 group">
+                                <span className="text-red-500 text-[10px] font-black uppercase mb-1">Artifact</span>
+                                <span className="text-white font-bold text-lg group-hover:text-red-400">Sacrificial Altar</span>
+                                <p className="text-[10px] text-gray-500 mt-auto leading-none">Substantiate Core with a blood sacrifice.</p>
                             </button>
 
-                            <button 
-                                onClick={() => { setActiveMode('vessel_u'); setStitchTargetId(null); addLog("U-Vessel deployed. Select an armored card to bind as 'u'."); }}
-                                disabled={!handCards.vessel.available}
-                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-red-600 bg-gray-800 card-hover hover:border-red-400 hover:shadow-lg hover:shadow-red-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span className="text-red-400 text-[10px] font-bold uppercase tracking-widest mb-1">Artifact</span>
-                                <span className="text-white font-bold text-base mb-1">U-Vessel</span>
-                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Traps a card as 'u'. Demands a blood sacrifice to collapse the Weave.
-                                </div>
-                            </button>
+                            <div className="border-2 border-dashed border-white/5 rounded-2xl flex items-center justify-center opacity-20">
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Locked</span>
+                            </div>
                         </div>
                     </div>
                 </div>
