@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 4</title>
+    <title>Integralia: The Shattered Weave - Phase 4.1</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -39,6 +39,12 @@
         }
         .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
 
+        @keyframes drip {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(15px); opacity: 0; }
+        }
+        .svg-drip { animation: drip 2s ease-in infinite; }
+
         /* Custom Particle Engine CSS */
         @keyframes particle-explode {
             0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
@@ -60,28 +66,26 @@
         const { useState, useEffect, useRef } = React;
 
         // --- MATH RENDERER ---
-        const MathEquation = ({ equation, size = "text-3xl" }) => {
+        const MathEquation = ({ equation, size = "text-3xl", inline = false }) => {
             const containerRef = useRef();
             useEffect(() => {
                 if (containerRef.current && equation) {
                     try {
-                        katex.render(equation, containerRef.current, { displayMode: true, throwOnError: false });
+                        katex.render(equation, containerRef.current, { displayMode: !inline, throwOnError: false });
                     } catch (e) { console.error("KaTeX error:", e); }
                 }
-            }, [equation]);
+            }, [equation, inline]);
             return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md`}></div>;
         };
 
         // --- PARTICLE BURST SYSTEM ---
         const ParticleBurst = ({ type }) => {
-            // Blue for Sine's soft shell, Yellow for Cosine's hard shell
             const colorClass = type === 'Sina' ? 'bg-blue-500' : 'bg-yellow-500';
             
-            // Generate 15 random particles
             const particles = Array.from({ length: 15 }).map((_, i) => {
                 const angle = Math.random() * Math.PI * 2;
-                const distance = 40 + Math.random() * 60; // How far they fly
-                const size = 4 + Math.random() * 6; // px size
+                const distance = 40 + Math.random() * 60;
+                const size = 4 + Math.random() * 6;
                 const tx = Math.cos(angle) * distance + 'px';
                 const ty = Math.sin(angle) * distance + 'px';
                 return (
@@ -97,7 +101,7 @@
                 );
             });
 
-            return <div className="absolute inset-0 overflow-visible pointer-events-none">{particles}</div>;
+            return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
         // --- THE NEW BATTLE CARD COMPONENT ---
@@ -108,19 +112,24 @@
                 if (card.name === 'Sina') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
-                            {/* Soft Blue Exterior */}
-                            <circle cx="50" cy="50" r="45" fill="#3b82f6" opacity="0.9" />
-                            <circle cx="35" cy="35" r="15" fill="#60a5fa" opacity="0.5" />
-                            {/* Hard Yellow Core */}
-                            <polygon points="50,25 75,70 25,70" fill="#eab308" />
+                            {/* Hard Yellow Core (Background) */}
+                            <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" />
+                            {/* Wavy Soft Blue Exterior enveloping the core */}
+                            <path d="M 10,50 Q 30,10 50,40 T 90,50 Q 70,90 50,60 T 10,50 Z" fill="#3b82f6" opacity="0.95" />
+                            <path d="M 20,50 Q 35,25 50,50 T 80,50 Q 65,85 50,60 T 20,50 Z" fill="#60a5fa" opacity="0.8" />
                         </svg>
                     );
                 } else if (card.name === 'Cosa') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
                             {/* Hard Yellow Shell */}
-                            <polygon points="50,5 95,50 50,95 5,50" fill="#eab308" />
-                            <polygon points="50,20 80,50 50,80 20,50" fill="#ca8a04" />
+                            <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
+                            {/* The Crack */}
+                            <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
+                            {/* Leaking Blue Drops */}
+                            <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
+                            <path d="M 45 65 Q 45 70 42 70 Q 39 70 39 65 Q 39 60 42 58 Q 45 60 45 65 Z" fill="#3b82f6" />
+                            <circle cx="48" cy="78" r="1.5" fill="#60a5fa" className="svg-drip" />
                         </svg>
                     );
                 } else {
@@ -140,37 +149,30 @@
                         onClick={onClick}
                         className={`relative flex flex-col w-[180px] h-[260px] rounded-xl border-2 transition-all bg-gray-900/90 overflow-visible ${
                             isActive 
-                            ? 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105 cursor-pointer z-20' 
-                            : 'border-gray-700 hover:border-gray-500 hover:bg-gray-800 cursor-pointer z-10'
+                            ? 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105 cursor-pointer z-40' 
+                            : 'border-gray-700 hover:border-gray-500 hover:bg-gray-800 cursor-pointer z-20'
                         }`}
                     >
-                        {/* Sigils (Absolute positioned outside the normal flow) */}
-                        
-                        {/* Left Sigil: Modifier (e.g., inverse, root) */}
                         {card.modifier && (
-                            <div className="absolute -top-4 -left-4 w-9 h-9 rounded bg-indigo-900 border-2 border-indigo-500 flex items-center justify-center text-indigo-200 font-bold shadow-lg z-30">
+                            <div className="absolute -top-4 -left-4 w-9 h-9 rounded bg-indigo-900 border-2 border-indigo-500 flex items-center justify-center text-indigo-200 font-bold shadow-lg z-50">
                                 <MathEquation equation={card.modifier} size="text-sm" inline={true} />
                             </div>
                         )}
 
                         {/* Right Sigil: Power (Exponent) */}
                         {card.power > 1 && (
-                            <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-30">
+                            <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
                                 {card.power}
                             </div>
                         )}
 
-                        {/* Top: Vector Art Area */}
                         <div className="h-[90px] w-full border-b border-gray-800 flex items-center justify-center relative bg-gradient-to-b from-gray-800 to-transparent rounded-t-xl overflow-visible">
-                            {/* Render particles if this card is shattering */}
                             {isShattering && <ParticleBurst type={card.name} />}
-                            {/* Render the actual SVG */}
                             <div className={isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>
                                 {renderVisual()}
                             </div>
                         </div>
 
-                        {/* Middle: Mathematical Name & Equation */}
                         <div className="flex-1 flex flex-col items-center justify-center px-2">
                             <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
                             <div className="pointer-events-none scale-90">
@@ -178,15 +180,12 @@
                             </div>
                         </div>
 
-                        {/* Bottom: Ability Text Area */}
                         <div className="h-[60px] w-full bg-gray-950/50 border-t border-gray-800 rounded-b-xl p-2 flex items-center justify-center">
                             <p className="text-[10px] text-gray-400 text-center leading-tight">
                                 {card.ability || "A foundational expression of the weave."}
                             </p>
                         </div>
                     </div>
-                    
-                    {/* Action Buttons overlay (like Set u / Set dv) */}
                     {children}
                 </div>
             );
@@ -194,16 +193,17 @@
 
         // --- MAIN GAME LOGIC ---
         const IntegraliaGame = () => {
+            // NOTE: I changed the initial bases to 'x' and '\cos(x)', and set power to 2 to trigger the badges!
             const [bossCards, setBossCards] = useState([
-                { id: 'solid-1', name: 'Solid', baseTex: 'x^2', baseMath: 'x^2', power: 1, modifier: null, ability: "The Ladder: Grows heavier when integrated." },
-                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1, modifier: null, ability: "Armored Core: A hard shell that resists basic disruption." }
+                { id: 'solid-1', name: 'Solid', baseTex: 'x', baseMath: 'x', power: 2, modifier: null, ability: "The Ladder: Grows heavier when integrated." },
+                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, modifier: null, ability: "Armored Core: A hard shell that resists basic disruption." }
             ]);
 
             const [handCards, setHandCards] = useState({ thresh: { available: true }, evoke: { available: true } });
             const [activeMode, setActiveMode] = useState(null);
             
             const [threshTarget, setThreshTarget] = useState(null);
-            const [shatteringId, setShatteringId] = useState(null); // ID of the card currently bursting
+            const [shatteringId, setShatteringId] = useState(null);
 
             const [logs, setLogs] = useState(["The Dark Wizard summons a mixed-type spell. Integration by Parts or Threshing required."]);
             const logEndRef = useRef(null);
@@ -226,20 +226,19 @@
             };
 
             const applyLineage = (lineageTex, lineageMath) => {
-                // Trigger the particle burst on the targeted card
                 setShatteringId(threshTarget);
                 addLog("Target transmuted! The shell shatters.");
                 
-                // Wait for the animation to finish before swapping the card data
                 setTimeout(() => {
                     setBossCards(prev => prev.map(c => 
                         c.id === threshTarget 
                         ? { 
                             ...c, 
-                            name: 'Transmuted', 
+                            name: 'Sina', // Swapping to Sina to show the wavy art change!
                             baseTex: lineageTex, 
                             baseMath: lineageMath, 
                             id: `transmuted-${Date.now()}`,
+                            power: 1, // Remove power badge after transmute
                             ability: "Altered State: Lineage forced into the open."
                           }
                         : c
@@ -248,7 +247,7 @@
                     setThreshTarget(null);
                     setActiveMode(null);
                     setHandCards(prev => ({ ...prev, thresh: { available: false } }));
-                }, 500); // 500ms allows the particles to fly out
+                }, 500);
             };
 
             return (
@@ -256,11 +255,11 @@
                     
                     <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
                         <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
-                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Card Anatomy Update</p>
+                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Card Anatomy Update v2</p>
                     </header>
 
-                    {/* BOSS LANE */}
-                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-10">
+                    {/* BOSS LANE (Elevated z-index to 50 so tray falls over the log) */}
+                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50">
                         <h2 className="absolute top-4 text-purple-400 text-sm font-bold tracking-widest">THE WIZARD'S LANE</h2>
                         
                         <div className="flex flex-row items-center justify-center gap-8 flex-wrap mt-4 min-h-[280px]">
@@ -280,20 +279,20 @@
 
                         {/* Threshing Slide-Down Tray */}
                         {activeMode === 'threshing' && threshTarget && (
-                            <div className="absolute -bottom-24 bg-gray-800 border-2 border-blue-900 rounded-xl p-4 flex gap-4 shadow-2xl slide-down z-30 w-3/4 justify-center">
+                            <div className="absolute -bottom-24 bg-gray-800 border-2 border-blue-900 rounded-xl p-4 flex gap-4 shadow-2xl slide-down z-50 w-3/4 justify-center">
                                 <span className="absolute -top-3 bg-gray-900 px-2 text-xs text-blue-400 font-bold uppercase tracking-widest">Lineage Detected</span>
                                 <button onClick={() => applyLineage('\\frac{1}{\\sec(x)}', '1/sec(x)')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
                                     <MathEquation equation="\frac{1}{\sec(x)}" size="text-xl" />
                                 </button>
-                                <button onClick={() => applyLineage('\\sin(x + \\frac{\\pi}{2})', 'sin(x + pi/2)')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
-                                    <MathEquation equation="\sin(x + \frac{\pi}{2})" size="text-xl" />
+                                <button onClick={() => applyLineage('\\sin^2(x + \\frac{\\pi}{2})', 'sin(x + pi/2)^2')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
+                                    <MathEquation equation="\sin^2(x + \frac{\pi}{2})" size="text-xl" />
                                 </button>
                             </div>
                         )}
                     </div>
 
-                    {/* BATTLE LOG */}
-                    <div className="w-full bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden h-32 mb-6">
+                    {/* BATTLE LOG (Lowered z-index to 10) */}
+                    <div className="w-full bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden h-32 mb-6 z-10">
                         <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">
                             Battle Log
                         </h3>
@@ -312,11 +311,10 @@
                     {/* PLAYER HAND */}
                     <div className="w-full">
                         <div className="grid grid-cols-4 gap-6">
-                            {/* Threshing Machine */}
                             <button 
                                 onClick={() => { setActiveMode('threshing'); addLog("Threshing Machine active. Select a Primal spirit."); }}
                                 disabled={!handCards.thresh.available}
-                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50"
+                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20"
                             >
                                 <span className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">Machine</span>
                                 <span className="text-white font-bold text-lg mb-2">Threshing Machine</span>
