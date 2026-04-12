@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integralia: The Shattered Weave - Phase 3</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        body { background-color: #111827; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .card-hover:hover { transform: translateY(-5px); transition: transform 0.2s ease-in-out; }
+        
+        /* Custom scrollbar for the battle log */
+        .log-scroll::-webkit-scrollbar { width: 8px; }
+        .log-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 4px; }
+        .log-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        .log-scroll::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* Shatter Animation */
+        @keyframes shatter {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1); }
+            20% { transform: scale(1.1) rotate(-5deg); filter: brightness(2); }
+            100% { transform: scale(0) rotate(45deg); opacity: 0; filter: blur(10px); }
+        }
+        .animate-shatter { animation: shatter 0.5s ease-out forwards; pointer-events: none; }
+        
+        /* Smooth dropdown */
+        .slide-down { animation: slideDown 0.3s ease-out forwards; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // KaTeX Math Renderer Component
+        const MathEquation = ({ equation, size = "text-3xl", inline = false }) => {
+            const containerRef = useRef();
+
+            useEffect(() => {
+                if (containerRef.current && equation) {
+                    try {
+                        katex.render(equation, containerRef.current, {
+                            displayMode: !inline,
+                            throwOnError: false
+                        });
+                    } catch (e) {
+                        console.error("KaTeX error:", e);
+                    }
+                }
+            }, [equation, inline]);
+
+            return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md`}></div>;
+        };
+
+        const IntegraliaGame = () => {
+            // Data State: Boss Lane
+            const [bossCards, setBossCards] = useState([
+                { id: 'solid-1', name: 'Solid', baseTex: 'x^2', baseMath: 'x^2', power: 1 },
+                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1 }
+            ]);
+
+            // Data State: Hand & Modes
+            const [handCards, setHandCards] = useState({
+                thresh: { available: true },
+                evoke: { available: true }
+            });
+            const [activeMode, setActiveMode] = useState(null); // 'threshing' or 'evocation'
+            
+            // State: Threshing Specifics
+            const [threshTarget, setThreshTarget] = useState(null);
+            const [shatteredId, setShatteredId] = useState(null); // Triggers animation
+
+            // State: Evocation Specifics
+            const [evocationState, setEvocationState] = useState({ u: null, dv: null });
+            const [evocationResults, setEvocationResults] = useState({ duTex: null, vTex: null });
+
+            // Data State: Battle Log
+            const [logs, setLogs] = useState(["The Dark Wizard summons a mixed-type spell. Integration by Parts or Threshing required."]);
+            const logEndRef = useRef(null);
+
+            const addLog = (message) => {
+                setLogs(prev => [...prev, message]);
+            };
+
+            // Auto-scroll battle log
+            useEffect(() => {
+                if (logEndRef.current) {
+                    logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, [logs]);
+
+            // --- THRESHING LOGIC ---
+            const handleThreshClick = () => {
+                if (!handCards.thresh.available) return;
+                setActiveMode('threshing');
+                addLog("Threshing Machine active. Select a target to reveal its genetic lineage.");
+            };
+
+            const handleBossCardClick = (card) => {
+                if (activeMode === 'threshing') {
+                    if (card.name === 'Cosa') {
+                        setThreshTarget(card.id);
+                        addLog("Lineage exposed. Select an identity.");
+                    } else {
+                        addLog("Target cannot be threshed. Try a Trig function.");
+                    }
+                }
+            };
+
+            const applyLineage = (lineageTex, lineageMath) => {
+                setShatteredId(threshTarget);
+                addLog("Target smashed and transmuted!");
+                
+                setTimeout(() => {
+                    setBossCards(prev => prev.map(c => 
+                        c.id === threshTarget 
+                        ? { ...c, baseTex: lineageTex, baseMath: lineageMath, id: `transmuted-${Date.now()}` }
+                        : c
+                    ));
+                    setShatteredId(null);
+                    setThreshTarget(null);
+                    setActiveMode(null);
+                    setHandCards(prev => ({ ...prev, thresh: { available: false } }));
+                }, 400); // Wait for shatter animation
+            };
+
+            // --- EVOCATION LOGIC (MATH.JS ENGINE) ---
+            const handleEvokeClick = () => {
+                if (!handCards.evoke.available) return;
+                setActiveMode('evocation');
+                addLog("Evocation Template summoned. Assign 'u' (Bind) and 'dv' (Poison).");
+            };
+
+            const assignEvocation = (card, role) => {
+                const newState = { ...evocationState, [role]: card };
+                setEvocationState(newState);
+
+                const newResults = { ...evocationResults };
+
+                // The Magic happens here: dynamically calculate derivative using Math.js
+                if (role === 'u') {
+                    try {
+                        const derivativeNode = math.derivative(card.baseMath, 'x');
+                        newResults.duTex = derivativeNode.toTex(); // Convert result to LaTeX!
+                        addLog(`Math.js Engine calculated du = ${derivativeNode.toString()}`);
+                    } catch (e) {
+                        console.error("Math engine failed to derive:", e);
+                        newResults.duTex = "\\text{Error}";
+                    }
+                }
+
+                // Hardcoded lookup for integral (v) since Math.js doesn't do symbolic integration
+                if (role === 'dv') {
+                    if (card.baseMath === 'cos(x)') newResults.vTex = '\\sin(x)';
+                    else if (card.baseMath === 'x^2') newResults.vTex = '\\frac{x^3}{3}';
+                    else newResults.vTex = '\\int ' + card.baseTex + ' dx'; // fallback
+                }
+
+                setEvocationResults(newResults);
+            };
+
+            const executeEvocation = () => {
+                const { u, dv } = evocationState;
+                const { duTex, vTex } = evocationResults;
+                
+                // Form: u*v - int(v*du)
+                const finalEq = `${u.baseTex} \\cdot \\left(${vTex}\\right) - \\int \\left(${vTex}\\right) \\left(${duTex}\\right) dx`;
+                
+                setBossCards([{
+                    id: 'final',
+                    name: 'Shattered Spell',
+                    baseTex: finalEq,
+                    baseMath: '',
+                    power: 1
+                }]);
+                
+                setActiveMode(null);
+                setHandCards(prev => ({ ...prev, evoke: { available: false } }));
+                addLog("Evocation successful! The spell is broken into components.");
+            };
+
+            return (
+                <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
+                    
+                    <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
+                        <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
+                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Math.js Engine Online</p>
+                    </header>
+
+                    {/* BOSS LANE (Top Section) */}
+                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-8 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-10">
+                        <h2 className="absolute top-4 text-purple-400 text-sm font-bold tracking-widest">THE WIZARD'S LANE</h2>
+                        
+                        <div className="flex flex-row items-center justify-center gap-6 flex-wrap mt-4 min-h-[160px]">
+                            {bossCards.length > 1 && <div className="text-7xl text-purple-600 font-serif mr-2 select-none font-light">∫</div>}
+
+                            {bossCards.map((card, index) => (
+                                <div key={card.id} className="flex items-center flex-col relative">
+                                    <div 
+                                        onClick={() => handleBossCardClick(card)}
+                                        className={`relative flex flex-col items-center justify-center min-w-[150px] h-36 rounded-xl border-2 transition-all ${
+                                            shatteredId === card.id ? 'animate-shatter border-yellow-400 bg-yellow-900' :
+                                            activeMode === 'threshing' ? 'cursor-pointer hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 border-gray-600 bg-gray-800' : 
+                                            'border-gray-700 bg-gray-900/80'
+                                        }`}
+                                    >
+                                        {card.power > 1 && (
+                                            <div className="absolute -top-5 -right-5 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-lg shadow-lg z-20">
+                                                {card.power}
+                                            </div>
+                                        )}
+                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-2">{card.name}</span>
+                                        <div className="pointer-events-none">
+                                            <MathEquation equation={card.baseTex} size="text-3xl" />
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Evocation Assignment Buttons */}
+                                    {activeMode === 'evocation' && bossCards.length > 1 && (
+                                        <div className="absolute -bottom-14 flex gap-2 w-full justify-center slide-down">
+                                            <button 
+                                                onClick={() => assignEvocation(card, 'u')}
+                                                className={`px-3 py-1 text-xs font-bold rounded ${evocationState.u?.id === card.id ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-600 hover:bg-indigo-900 hover:text-indigo-300'}`}
+                                            >Set (u)</button>
+                                            <button 
+                                                onClick={() => assignEvocation(card, 'dv')}
+                                                className={`px-3 py-1 text-xs font-bold rounded ${evocationState.dv?.id === card.id ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400 border border-gray-600 hover:bg-emerald-900 hover:text-emerald-300'}`}
+                                            >Set (dv)</button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {bossCards.length > 1 && <div className="text-4xl text-purple-600 font-serif ml-2 select-none italic drop-shadow-md">dx</div>}
+                        </div>
+
+                        {/* Threshing Slide-Down Tray */}
+                        {activeMode === 'threshing' && threshTarget && (
+                            <div className="absolute -bottom-24 bg-gray-800 border-2 border-blue-900 rounded-xl p-4 flex gap-4 shadow-2xl slide-down z-30 w-3/4 justify-center">
+                                <span className="absolute -top-3 bg-gray-900 px-2 text-xs text-blue-400 font-bold uppercase tracking-widest">Lineage Detected</span>
+                                <button onClick={() => applyLineage('\\frac{1}{\\sec(x)}', '1/sec(x)')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
+                                    <MathEquation equation="\frac{1}{\sec(x)}" size="text-xl" />
+                                </button>
+                                <button onClick={() => applyLineage('\\sin(x + \\frac{\\pi}{2})', 'sin(x + pi/2)')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
+                                    <MathEquation equation="\sin(x + \frac{\pi}{2})" size="text-xl" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* MIDDLE ZONE (Dynamic) */}
+                    <div className="w-full flex gap-6 mb-6 min-h-[220px]">
+                        
+                        {/* Battle Log (Left) */}
+                        <div className={`transition-all duration-500 bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden ${activeMode === 'evocation' ? 'w-1/3' : 'w-full'}`}>
+                            <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">
+                                Battle Log
+                            </h3>
+                            <div className="overflow-y-auto mt-6 flex-1 pr-2 log-scroll">
+                                <ul className="space-y-3">
+                                    {logs.map((log, idx) => (
+                                        <li key={idx} className={`text-sm tracking-wide leading-relaxed ${idx === logs.length - 1 ? 'text-white font-semibold' : 'text-gray-500'}`}>
+                                            <span className="text-purple-500 mr-2 font-bold">▶</span>{log}
+                                        </li>
+                                    ))}
+                                    <div ref={logEndRef} />
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* Evocation Template Area (Right - Appears when Evocation is active) */}
+                        {activeMode === 'evocation' && (
+                            <div className="w-2/3 bg-gray-900 border border-indigo-900 rounded-xl p-6 relative flex flex-col items-center justify-center slide-down shadow-[inset_0_0_50px_rgba(67,56,202,0.1)]">
+                                <h3 className="absolute top-0 left-0 w-full bg-indigo-900 text-center text-indigo-200 text-xs font-bold uppercase tracking-wider py-1 border-b border-indigo-700 z-10">
+                                    Evocation Template
+                                </h3>
+                                
+                                {/* IBP Formula Display */}
+                                <div className="mt-4 mb-6 opacity-70 bg-black/50 px-4 py-2 rounded-full">
+                                    <MathEquation equation="\int u \, dv = u \cdot v - \int v \, du" size="text-xl" />
+                                </div>
+
+                                <div className="flex w-full justify-around items-start gap-4">
+                                    
+                                    {/* Bind (u) & (du) */}
+                                    <div className="flex flex-col items-center flex-1">
+                                        <span className="text-indigo-400 font-bold mb-2 uppercase text-xs tracking-widest">Bind (u)</span>
+                                        <div className="w-full h-20 border-2 border-dashed border-indigo-700 rounded-lg flex items-center justify-center bg-gray-800/50">
+                                            {evocationState.u ? <MathEquation equation={evocationState.u.baseTex} size="text-2xl" /> : <span className="text-gray-600 text-sm italic">Empty</span>}
+                                        </div>
+                                        <div className="mt-3 text-center border-t border-gray-700 pt-2 w-full">
+                                            <span className="text-indigo-500 font-mono text-xs">Engine Calculated du:</span>
+                                            <div className="h-10 mt-1 flex items-center justify-center">
+                                                {evocationResults.duTex ? <MathEquation equation={evocationResults.duTex} size="text-xl" /> : <span className="text-gray-700 text-xl">-</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Poison (dv) & (v) */}
+                                    <div className="flex flex-col items-center flex-1">
+                                        <span className="text-emerald-400 font-bold mb-2 uppercase text-xs tracking-widest">Poison (dv)</span>
+                                        <div className="w-full h-20 border-2 border-dashed border-emerald-700 rounded-lg flex items-center justify-center bg-gray-800/50">
+                                            {evocationState.dv ? <MathEquation equation={evocationState.dv.baseTex + "\\; dx"} size="text-2xl" /> : <span className="text-gray-600 text-sm italic">Empty</span>}
+                                        </div>
+                                        <div className="mt-3 text-center border-t border-gray-700 pt-2 w-full">
+                                            <span className="text-emerald-500 font-mono text-xs">Simulated Integration v:</span>
+                                            <div className="h-10 mt-1 flex items-center justify-center">
+                                                {evocationResults.vTex ? <MathEquation equation={evocationResults.vTex} size="text-xl" /> : <span className="text-gray-700 text-xl">-</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                {/* Execute Button */}
+                                {evocationState.u && evocationState.dv && (
+                                    <button 
+                                        onClick={executeEvocation}
+                                        className="absolute -bottom-5 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-full uppercase tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.5)] transition-all transform hover:scale-105"
+                                    >
+                                        Execute Spell
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* PLAYER HAND (Bottom Section) */}
+                    <div className="w-full">
+                        <h2 className="text-gray-400 text-sm font-bold tracking-widest mb-4">YOUR HAND</h2>
+                        <div className="grid grid-cols-4 gap-6">
+                            
+                            {/* Card 1: Threshing Machine */}
+                            <button 
+                                onClick={handleThreshClick}
+                                disabled={!handCards.thresh.available || bossCards.length === 1}
+                                className={`p-5 rounded-xl border-2 text-left flex flex-col h-48 transition-all ${
+                                    handCards.thresh.available && bossCards.length > 1
+                                    ? 'border-blue-600 bg-gray-800 card-hover cursor-pointer hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50' 
+                                    : 'border-gray-800 bg-gray-900 opacity-40 cursor-not-allowed'
+                                }`}
+                            >
+                                <span className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">Machine</span>
+                                <span className="text-white font-bold text-lg mb-2">Threshing Machine</span>
+                                <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
+                                    Forces a target to reveal its lineage. Allows you to transmute its identity.
+                                </div>
+                            </button>
+
+                            {/* Card 2: Evocation */}
+                            <button 
+                                onClick={handleEvokeClick}
+                                disabled={!handCards.evoke.available || bossCards.length === 1}
+                                className={`p-5 rounded-xl border-2 text-left flex flex-col h-48 transition-all ${
+                                    handCards.evoke.available && bossCards.length > 1
+                                    ? 'border-indigo-600 bg-gray-800 card-hover cursor-pointer hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-900/50' 
+                                    : 'border-gray-800 bg-gray-900 opacity-40 cursor-not-allowed'
+                                }`}
+                            >
+                                <span className="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-1">Magic</span>
+                                <span className="text-white font-bold text-lg mb-2">Evocation</span>
+                                <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
+                                    Summons the Integration by Parts template. Requires a Bind (u) and a Poison (dv).
+                                </div>
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<IntegraliaGame />);
+    </script>
+</body>
+</html>
