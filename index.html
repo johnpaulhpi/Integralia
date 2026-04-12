@@ -3,18 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 4.1</title>
+    <title>Integralia: The Shattered Weave - Phase 5</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
 
     <style>
@@ -25,38 +21,21 @@
         .log-scroll::-webkit-scrollbar-track { background: #1f2937; border-radius: 4px; }
         .log-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         
-        /* Smooth dropdown */
         .slide-down { animation: slideDown 0.3s ease-out forwards; }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Vector Art Animations */
-        @keyframes pulse-soft {
-            0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.05); opacity: 1; }
-        }
+        @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } }
         .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
 
-        @keyframes drip {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(15px); opacity: 0; }
-        }
+        @keyframes drip { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(15px); opacity: 0; } }
         .svg-drip { animation: drip 2s ease-in infinite; }
 
-        /* Custom Particle Engine CSS */
-        @keyframes particle-explode {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; }
-        }
-        .particle {
-            position: absolute;
-            top: 50%; left: 50%;
-            animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-            pointer-events: none;
-            z-index: 50;
-        }
+        @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
+        .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
+        
+        /* The Black Hole Consume Animation */
+        @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(90deg); filter: blur(20px); opacity: 0; } }
+        .animate-consume { animation: consume 0.8s ease-in forwards; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -65,23 +44,19 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- MATH RENDERER ---
         const MathEquation = ({ equation, size = "text-3xl", inline = false }) => {
             const containerRef = useRef();
             useEffect(() => {
                 if (containerRef.current && equation) {
-                    try {
-                        katex.render(equation, containerRef.current, { displayMode: !inline, throwOnError: false });
-                    } catch (e) { console.error("KaTeX error:", e); }
+                    try { katex.render(equation, containerRef.current, { displayMode: !inline, throwOnError: false }); } 
+                    catch (e) { console.error("KaTeX error:", e); }
                 }
             }, [equation, inline]);
             return <div ref={containerRef} className={`${size} text-yellow-400 drop-shadow-md`}></div>;
         };
 
-        // --- PARTICLE BURST SYSTEM ---
         const ParticleBurst = ({ type }) => {
             const colorClass = type === 'Sina' ? 'bg-blue-500' : 'bg-yellow-500';
-            
             const particles = Array.from({ length: 15 }).map((_, i) => {
                 const angle = Math.random() * Math.PI * 2;
                 const distance = 40 + Math.random() * 60;
@@ -89,32 +64,19 @@
                 const tx = Math.cos(angle) * distance + 'px';
                 const ty = Math.sin(angle) * distance + 'px';
                 return (
-                    <div 
-                        key={i} 
-                        className={`particle ${colorClass} shadow-[0_0_10px_currentColor]`}
-                        style={{
-                            width: size, height: size,
-                            '--tx': tx, '--ty': ty,
-                            clipPath: type === 'Sina' ? 'circle(50%)' : 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)'
-                        }}
-                    />
+                    <div key={i} className={`particle ${colorClass} shadow-[0_0_10px_currentColor]`}
+                        style={{ width: size, height: size, '--tx': tx, '--ty': ty, clipPath: type === 'Sina' ? 'circle(50%)' : 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' }} />
                 );
             });
-
             return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
-        // --- THE NEW BATTLE CARD COMPONENT ---
-        const BattleCard = ({ card, isActive, onClick, isShattering, children }) => {
-            
-            // Generate Vector Art based on card name
+        const BattleCard = ({ card, isActive, isSacrificeTarget, onClick, isShattering, isConsumed }) => {
             const renderVisual = () => {
                 if (card.name === 'Sina') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
-                            {/* Hard Yellow Core (Background) */}
                             <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" />
-                            {/* Wavy Soft Blue Exterior enveloping the core */}
                             <path d="M 10,50 Q 30,10 50,40 T 90,50 Q 70,90 50,60 T 10,50 Z" fill="#3b82f6" opacity="0.95" />
                             <path d="M 20,50 Q 35,25 50,50 T 80,50 Q 65,85 50,60 T 20,50 Z" fill="#60a5fa" opacity="0.8" />
                         </svg>
@@ -122,20 +84,23 @@
                 } else if (card.name === 'Cosa') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
-                            {/* Hard Yellow Shell */}
                             <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
-                            {/* The Crack */}
                             <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
-                            {/* Leaking Blue Drops */}
                             <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
                             <path d="M 45 65 Q 45 70 42 70 Q 39 70 39 65 Q 39 60 42 58 Q 45 60 45 65 Z" fill="#3b82f6" />
                             <circle cx="48" cy="78" r="1.5" fill="#60a5fa" className="svg-drip" />
                         </svg>
                     );
+                } else if (card.name === 'U-State') {
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#a855f7" strokeWidth="4" strokeDasharray="10 5" />
+                            <text x="50" y="65" fontSize="40" fill="#d8b4fe" textAnchor="middle" fontFamily="serif" fontStyle="italic">u</text>
+                        </svg>
+                    );
                 } else {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-md">
-                            {/* Default Solid Box for x^n */}
                             <rect x="20" y="20" width="60" height="60" rx="8" fill="#9ca3af" />
                             <rect x="30" y="30" width="40" height="40" rx="4" fill="#6b7280" />
                         </svg>
@@ -143,159 +108,150 @@
                 }
             };
 
+            let borderClass = 'border-gray-700 hover:border-gray-500 hover:bg-gray-800';
+            if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105';
+            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-105 animate-pulse';
+
             return (
-                <div className="relative flex flex-col items-center">
-                    <div 
-                        onClick={onClick}
-                        className={`relative flex flex-col w-[180px] h-[260px] rounded-xl border-2 transition-all bg-gray-900/90 overflow-visible ${
-                            isActive 
-                            ? 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105 cursor-pointer z-40' 
-                            : 'border-gray-700 hover:border-gray-500 hover:bg-gray-800 cursor-pointer z-20'
-                        }`}
-                    >
+                <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''}`}>
+                    <div onClick={onClick} className={`relative flex flex-col w-[180px] h-[260px] rounded-xl border-2 transition-all bg-gray-900/90 overflow-visible cursor-pointer z-40 ${borderClass}`}>
                         {card.modifier && (
                             <div className="absolute -top-4 -left-4 w-9 h-9 rounded bg-indigo-900 border-2 border-indigo-500 flex items-center justify-center text-indigo-200 font-bold shadow-lg z-50">
                                 <MathEquation equation={card.modifier} size="text-sm" inline={true} />
                             </div>
                         )}
-
-                        {/* Right Sigil: Power (Exponent) */}
                         {card.power > 1 && (
                             <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
                                 {card.power}
                             </div>
                         )}
-
                         <div className="h-[90px] w-full border-b border-gray-800 flex items-center justify-center relative bg-gradient-to-b from-gray-800 to-transparent rounded-t-xl overflow-visible">
                             {isShattering && <ParticleBurst type={card.name} />}
-                            <div className={isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>
-                                {renderVisual()}
-                            </div>
+                            <div className={isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>{renderVisual()}</div>
                         </div>
-
                         <div className="flex-1 flex flex-col items-center justify-center px-2">
                             <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
-                            <div className="pointer-events-none scale-90">
-                                <MathEquation equation={card.baseTex} size="text-2xl" />
-                            </div>
+                            <div className="pointer-events-none scale-90"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
                         </div>
-
                         <div className="h-[60px] w-full bg-gray-950/50 border-t border-gray-800 rounded-b-xl p-2 flex items-center justify-center">
-                            <p className="text-[10px] text-gray-400 text-center leading-tight">
-                                {card.ability || "A foundational expression of the weave."}
-                            </p>
+                            <p className="text-[10px] text-gray-400 text-center leading-tight">{card.ability}</p>
                         </div>
                     </div>
-                    {children}
                 </div>
             );
         };
 
-        // --- MAIN GAME LOGIC ---
         const IntegraliaGame = () => {
-            // NOTE: I changed the initial bases to 'x' and '\cos(x)', and set power to 2 to trigger the badges!
             const [bossCards, setBossCards] = useState([
-                { id: 'solid-1', name: 'Solid', baseTex: 'x', baseMath: 'x', power: 2, modifier: null, ability: "The Ladder: Grows heavier when integrated." },
-                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, modifier: null, ability: "Armored Core: A hard shell that resists basic disruption." }
+                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, ability: "Squishy Exterior: Vulnerable to the Peel technique." },
+                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, ability: "Armored Core: A hard shell that resists basic disruption." }
             ]);
 
-            const [handCards, setHandCards] = useState({ thresh: { available: true }, evoke: { available: true } });
-            const [activeMode, setActiveMode] = useState(null);
+            const [handCards, setHandCards] = useState({ peel: { available: true }, vessel: { available: true } });
+            const [activeMode, setActiveMode] = useState(null); // 'peel', 'vessel_u', 'vessel_du'
             
-            const [threshTarget, setThreshTarget] = useState(null);
             const [shatteringId, setShatteringId] = useState(null);
+            const [consumeAll, setConsumeAll] = useState(false);
+            
+            const [uData, setUData] = useState({ cardId: null, requiredDu: null });
 
-            const [logs, setLogs] = useState(["The Dark Wizard summons a mixed-type spell. Integration by Parts or Threshing required."]);
+            const [logs, setLogs] = useState(["The Dark Wizard deploys a tangled weave: sin³(x)cos²(x)."]);
             const logEndRef = useRef(null);
-
-            const addLog = (message) => setLogs(prev => [...prev, message]);
-
-            useEffect(() => {
-                if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' });
-            }, [logs]);
+            const addLog = (msg) => setLogs(prev => [...prev, msg]);
+            useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
 
             const handleBossCardClick = (card) => {
-                if (activeMode === 'threshing') {
-                    if (card.name === 'Cosa' || card.name === 'Sina') {
-                        setThreshTarget(card.id);
-                        addLog("Lineage exposed. Select an identity.");
+                // PEEL MECHANIC
+                if (activeMode === 'peel') {
+                    if (card.name === 'Sina' && card.power % 2 !== 0) {
+                        setShatteringId(card.id);
+                        addLog("Critical! Sina is peeled. The core splinters into a Residue.");
+                        setTimeout(() => {
+                            const newCards = [...bossCards];
+                            const targetIdx = newCards.findIndex(c => c.id === card.id);
+                            newCards[targetIdx] = { ...card, power: 1, ability: "Exposed Core: Ready for harvest." };
+                            newCards.splice(targetIdx + 1, 0, {
+                                id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, ability: "Fissure: Generated from peeled armor."
+                            });
+                            setBossCards(newCards);
+                            setShatteringId(null);
+                            setActiveMode(null);
+                            setHandCards(prev => ({ ...prev, peel: { available: false } }));
+                        }, 500);
                     } else {
-                        addLog("Target cannot be threshed. Try a Primal spirit.");
+                        addLog("Ineffective. Peel requires an odd-powered Primal spirit.");
+                    }
+                }
+
+                // VESSEL MECHANIC - STEP 1 (Select U)
+                if (activeMode === 'vessel_u') {
+                    try {
+                        const derivative = math.derivative(card.baseMath, 'x').toString();
+                        setUData({ cardId: card.id, requiredDu: derivative });
+                        addLog(`Bound ${card.baseTex} as 'u'. Math.js engine detects du = ${derivative}.`);
+                        addLog(`The U-Vessel demands a blood sacrifice matching this derivative!`);
+                        setActiveMode('vessel_du');
+                    } catch (e) {
+                        addLog("The Vessel rejects this target.");
+                    }
+                }
+
+                // VESSEL MECHANIC - STEP 2 (Sacrifice DU)
+                if (activeMode === 'vessel_du') {
+                    // For the prototype, we check if they click the exposed Sine card
+                    if (card.name === 'Sina' && card.power === 1) {
+                        addLog("Sacrifice accepted! The U-Vessel consumes the weave!");
+                        setConsumeAll(true);
+                        
+                        setTimeout(() => {
+                            setBossCards([{
+                                id: 'final-u', name: 'U-State', baseTex: '-\\int(1-u^2)u^2 \\, du', baseMath: '-(1-u^2)u^2', power: 1, ability: "Integrable State: The weave is broken. Victory is imminent."
+                            }]);
+                            setConsumeAll(false);
+                            setActiveMode(null);
+                            setHandCards(prev => ({ ...prev, vessel: { available: false } }));
+                            addLog("VICTORY! The equation is now a basic polynomial.");
+                        }, 800); // Wait for black hole animation
+                    } else {
+                        addLog("Invalid sacrifice. The Vessel requires the derivative of your 'u'.");
                     }
                 }
             };
 
-            const applyLineage = (lineageTex, lineageMath) => {
-                setShatteringId(threshTarget);
-                addLog("Target transmuted! The shell shatters.");
-                
-                setTimeout(() => {
-                    setBossCards(prev => prev.map(c => 
-                        c.id === threshTarget 
-                        ? { 
-                            ...c, 
-                            name: 'Sina', // Swapping to Sina to show the wavy art change!
-                            baseTex: lineageTex, 
-                            baseMath: lineageMath, 
-                            id: `transmuted-${Date.now()}`,
-                            power: 1, // Remove power badge after transmute
-                            ability: "Altered State: Lineage forced into the open."
-                          }
-                        : c
-                    ));
-                    setShatteringId(null);
-                    setThreshTarget(null);
-                    setActiveMode(null);
-                    setHandCards(prev => ({ ...prev, thresh: { available: false } }));
-                }, 500);
-            };
-
             return (
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
-                    
                     <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
                         <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
-                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Card Anatomy Update v2</p>
+                        <p className="text-sm text-gray-500 uppercase tracking-widest text-purple-400">Phase 5: Peel & Sacrifice</p>
                     </header>
 
-                    {/* BOSS LANE (Elevated z-index to 50 so tray falls over the log) */}
-                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50">
+                    {/* BOSS LANE */}
+                    <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50 overflow-hidden">
                         <h2 className="absolute top-4 text-purple-400 text-sm font-bold tracking-widest">THE WIZARD'S LANE</h2>
                         
-                        <div className="flex flex-row items-center justify-center gap-8 flex-wrap mt-4 min-h-[280px]">
-                            <div className="text-7xl text-purple-600 font-serif mr-2 select-none font-light">∫</div>
+                        {/* The Black Hole Background (appears during sacrifice) */}
+                        <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_#000_100%)] z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
+
+                        <div className="flex flex-row items-center justify-center gap-8 flex-wrap mt-4 min-h-[280px] z-20">
+                            {bossCards.length > 1 && <div className={`text-7xl text-purple-600 font-serif mr-2 select-none font-light ${consumeAll ? 'animate-consume' : ''}`}>∫</div>}
 
                             {bossCards.map((card) => (
                                 <BattleCard 
-                                    key={card.id}
-                                    card={card}
-                                    isActive={activeMode === 'threshing' && threshTarget === card.id}
+                                    key={card.id} card={card}
+                                    isActive={activeMode === 'vessel_u' || activeMode === 'peel'}
+                                    isSacrificeTarget={activeMode === 'vessel_du' && card.name === 'Sina'}
                                     onClick={() => handleBossCardClick(card)}
                                     isShattering={shatteringId === card.id}
+                                    isConsumed={consumeAll}
                                 />
                             ))}
-                            <div className="text-4xl text-purple-600 font-serif ml-2 select-none italic drop-shadow-md">dx</div>
+                            {bossCards.length > 1 && <div className={`text-4xl text-purple-600 font-serif ml-2 select-none italic drop-shadow-md ${consumeAll ? 'animate-consume' : ''}`}>dx</div>}
                         </div>
-
-                        {/* Threshing Slide-Down Tray */}
-                        {activeMode === 'threshing' && threshTarget && (
-                            <div className="absolute -bottom-24 bg-gray-800 border-2 border-blue-900 rounded-xl p-4 flex gap-4 shadow-2xl slide-down z-50 w-3/4 justify-center">
-                                <span className="absolute -top-3 bg-gray-900 px-2 text-xs text-blue-400 font-bold uppercase tracking-widest">Lineage Detected</span>
-                                <button onClick={() => applyLineage('\\frac{1}{\\sec(x)}', '1/sec(x)')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
-                                    <MathEquation equation="\frac{1}{\sec(x)}" size="text-xl" />
-                                </button>
-                                <button onClick={() => applyLineage('\\sin^2(x + \\frac{\\pi}{2})', 'sin(x + pi/2)^2')} className="px-6 py-2 bg-gray-900 border border-gray-600 rounded-lg hover:border-blue-400 hover:bg-gray-700 transition flex items-center justify-center min-w-[120px]">
-                                    <MathEquation equation="\sin^2(x + \frac{\pi}{2})" size="text-xl" />
-                                </button>
-                            </div>
-                        )}
                     </div>
 
-                    {/* BATTLE LOG (Lowered z-index to 10) */}
+                    {/* BATTLE LOG */}
                     <div className="w-full bg-gray-900 border border-gray-700 rounded-xl p-4 flex flex-col relative overflow-hidden h-32 mb-6 z-10">
-                        <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">
-                            Battle Log
-                        </h3>
+                        <h3 className="absolute top-0 left-0 w-full bg-gray-800 text-center text-gray-400 text-xs font-bold uppercase tracking-wider py-1 border-b border-gray-700 z-10">Battle Log</h3>
                         <div className="overflow-y-auto mt-6 flex-1 pr-2 log-scroll">
                             <ul className="space-y-3">
                                 {logs.map((log, idx) => (
@@ -312,19 +268,30 @@
                     <div className="w-full">
                         <div className="grid grid-cols-4 gap-6">
                             <button 
-                                onClick={() => { setActiveMode('threshing'); addLog("Threshing Machine active. Select a Primal spirit."); }}
-                                disabled={!handCards.thresh.available}
-                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20"
+                                onClick={() => { setActiveMode('peel'); addLog("Primal Shift primed. Target an odd-powered Primal spirit."); }}
+                                disabled={!handCards.peel.available}
+                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <span className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">Machine</span>
-                                <span className="text-white font-bold text-lg mb-2">Threshing Machine</span>
+                                <span className="text-white font-bold text-lg mb-2">Primal Shift</span>
                                 <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
-                                    Forces a target to reveal its lineage. Allows you to transmute its identity and shatter its shell.
+                                    Peels an exponent layer off a Primal spirit, turning the shattered armor into a Residue card.
+                                </div>
+                            </button>
+
+                            <button 
+                                onClick={() => { setActiveMode('vessel_u'); addLog("U-Vessel deployed. Select an armored card to bind as 'u'."); }}
+                                disabled={!handCards.vessel.available}
+                                className="p-5 rounded-xl border-2 text-left flex flex-col h-48 border-red-600 bg-gray-800 card-hover hover:border-red-400 hover:shadow-lg hover:shadow-red-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                <span className="text-red-400 text-xs font-bold uppercase tracking-widest mb-1">Artifact</span>
+                                <span className="text-white font-bold text-lg mb-2">U-Vessel</span>
+                                <div className="mt-auto pt-4 border-t border-gray-700 text-xs text-gray-400 leading-relaxed">
+                                    Traps a card as 'u'. Demands a blood sacrifice matching its derivative to collapse the Weave.
                                 </div>
                             </button>
                         </div>
                     </div>
-
                 </div>
             );
         };
