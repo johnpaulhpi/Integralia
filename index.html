@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 7</title>
+    <title>Integralia: The Shattered Weave - Phase 8</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -108,7 +108,7 @@
                             <circle cx="48" cy="78" r="1.5" fill="#60a5fa" className="svg-drip" />
                         </svg>
                     );
-                } else if (card.name === 'Compound') {
+                } else if (card.name === 'Residue') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)] svg-pulse">
                             <polygon points="50,5 95,50 50,95 5,50" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
@@ -142,7 +142,7 @@
             } else if (card.name === 'Cosa') {
                 baseBg = 'bg-yellow-950/60';
                 baseBorder = 'border-yellow-900 hover:border-yellow-700 hover:bg-yellow-900/60';
-            } else if (card.name === 'Compound') {
+            } else if (card.name === 'Residue') {
                 baseBg = 'bg-emerald-950/60';
                 baseBorder = 'border-emerald-900 hover:border-emerald-700 hover:bg-emerald-900/60';
             }
@@ -150,7 +150,7 @@
             let borderClass = baseBorder;
             if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(96,165,250,0.5)] scale-105';
             if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
-            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-105';
+            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-105 animate-pulse';
 
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''}`}>
@@ -203,11 +203,11 @@
 
         const IntegraliaGame = () => {
             const [bossCards, setBossCards] = useState([
-                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, ability: "Squishy Exterior: Vulnerable to the Slice technique.", canCycle: false },
-                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, ability: "Armored Core: A hard shell that resists basic disruption.", canCycle: false }
+                { id: 'sina-1', name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Squishy Exterior: Vulnerable to the Slice technique." },
+                { id: 'cosa-1', name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core: A hard shell that resists basic disruption." }
             ]);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, vessel: { available: true }, needle: { available: true }, ripper: { available: true } });
+            const [handCards, setHandCards] = useState({ slice: { available: true }, stitch: { available: true }, vessel: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
             
             const [slashingId, setSlashingId] = useState(null);
@@ -222,13 +222,13 @@
 
             const handleCycle = (cardId) => {
                 setBossCards(prev => prev.map(c => {
-                    if (c.id === cardId && c.name === 'Residue') {
-                        if (c.baseTex === '(1-\\cos^2(x))') {
-                            addLog("Identity cycled: The Residue reverts to its Sinusoidal form.");
-                            return { ...c, baseTex: '\\sin^2(x)', baseMath: 'sin(x)^2' };
-                        } else {
-                            addLog("Identity cycled: The Sine armor hardens back into a Residue.");
-                            return { ...c, baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)' };
+                    if (c.id === cardId) {
+                        if (c.name === 'Sina' && c.power === 2) {
+                            addLog("Identity cycled: The Even Sine armor transmutes into a Residue.");
+                            return { ...c, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: An identity split open." };
+                        } else if (c.name === 'Residue') {
+                            addLog("Identity cycled: The Residue crystallizes back into Sine armor.");
+                            return { ...c, name: 'Sina', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Even Power: Can be cycled." };
                         }
                     }
                     return c;
@@ -238,22 +238,39 @@
             const handleBossCardClick = (card) => {
                 // SLICE MECHANIC
                 if (activeMode === 'slice') {
-                    if (card.name === 'Sina' && card.power % 2 !== 0) {
+                    if (card.power > 1) {
                         setSlashingId(card.id);
-                        addLog("Slice initiated! The blade strikes true.");
+                        addLog("Slice initiated! The blade cleaves the exponent.");
                         
                         setTimeout(() => {
                             setSlashingId(null);
                             setShatteringId(card.id);
-                            addLog("The core splinters into a Residue.");
+                            addLog("An exponent layer is severed from the core.");
                             
                             setTimeout(() => {
                                 const newCards = [...bossCards];
                                 const targetIdx = newCards.findIndex(c => c.id === card.id);
-                                newCards[targetIdx] = { ...card, power: 1, ability: "Exposed Core: Bleeding and ready for harvest." };
+                                const newPower = card.power - 1;
+                                
+                                // Update original card
+                                newCards[targetIdx] = { 
+                                    ...card, 
+                                    power: newPower, 
+                                    canCycle: (card.name === 'Sina' && newPower === 2),
+                                    ability: (newPower === 2) ? "Even Power: Can be cycled." : card.ability
+                                };
+                                
+                                // Insert the peeled 1-power version next to it
                                 newCards.splice(targetIdx + 1, 0, {
-                                    id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: Generated from sliced armor. Can be cycled."
+                                    id: `sliced-${Date.now()}`, 
+                                    name: card.name, 
+                                    baseTex: card.baseTex, 
+                                    baseMath: card.baseMath, 
+                                    power: 1, 
+                                    canCycle: false, 
+                                    ability: "Exposed layer: Bleeding and ready for harvest."
                                 });
+                                
                                 setBossCards(newCards);
                                 setShatteringId(null);
                                 setActiveMode(null);
@@ -261,22 +278,18 @@
                             }, 500);
                         }, 300);
                     } else {
-                        addLog("Ineffective. Slice requires an odd-powered Primal spirit.");
+                        addLog("Ineffective. Slice requires an exponent greater than 1.");
                     }
                 }
 
-                // WEAVER'S NEEDLE - Step 1
+                // STITCH MECHANIC - Step 1
                 if (activeMode === 'stitch_1') {
-                    if (card.name === 'Residue' || card.name === 'Cosa') {
-                        setStitchTargetId(card.id);
-                        setActiveMode('stitch_2');
-                        addLog(`Selected ${card.name} as the first thread. Select the second target to stitch.`);
-                    } else {
-                        addLog("The needle can only thread Residues and Cores.");
-                    }
+                    setStitchTargetId(card.id);
+                    setActiveMode('stitch_2');
+                    addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch exponents.`);
                 }
                 
-                // WEAVER'S NEEDLE - Step 2
+                // STITCH MECHANIC - Step 2
                 else if (activeMode === 'stitch_2') {
                     if (card.id === stitchTargetId) {
                         addLog("Cannot stitch a card to itself.");
@@ -285,47 +298,33 @@
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
                     
-                    if ((target1.name === 'Residue' && target2.name === 'Cosa') || (target1.name === 'Cosa' && target2.name === 'Residue')) {
-                        addLog("Weaving the threads... polynomial expansion successful!");
+                    if (target1.name === target2.name) {
+                        addLog(`Stitching identical spirits... Exponents combined!`);
+                        const newPower = target1.power + target2.power;
                         
-                        // Create the stitched compound
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
                         newCards.push({
-                            id: `compound-${Date.now()}`, name: 'Compound', baseTex: '\\cos^2(x) - \\cos^4(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Stitched Weave: Two identities expanded into one."
+                            ...target1,
+                            id: `stitched-${Date.now()}`,
+                            power: newPower,
+                            canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
+                            ability: `Combined Exponent: The weave grows thicker.`
                         });
                         
                         setBossCards(newCards);
                         setStitchTargetId(null);
                         setActiveMode(null);
-                        setHandCards(prev => ({ ...prev, needle: { available: false } }));
+                        setHandCards(prev => ({ ...prev, stitch: { available: false } }));
                     } else {
-                        addLog("These identities cannot be stitched together.");
+                        addLog("Incompatible spirits. Stitching requires matching identities.");
                         setActiveMode('stitch_1');
                         setStitchTargetId(null);
                     }
                 }
 
-                // THREADRIPPER
-                if (activeMode === 'unstitch') {
-                    if (card.name === 'Compound') {
-                        addLog("Threadripper cuts the weave! The polynomial is factored back down.");
-                        const newCards = bossCards.filter(c => c.id !== card.id);
-                        // Re-insert the original two components
-                        newCards.push({ id: `residue-${Date.now()}`, name: 'Residue', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: 1, canCycle: true, ability: "Fissure: Factored out of a compound." });
-                        newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core: Recovered from the weave." });
-                        
-                        setBossCards(newCards);
-                        setActiveMode(null);
-                        setHandCards(prev => ({ ...prev, ripper: { available: false }, needle: { available: true } })); // Give needle back
-                    } else {
-                        addLog("The Threadripper can only be used on a Stitched Compound.");
-                    }
-                }
-
                 // VESSEL MECHANIC - STEP 1
                 if (activeMode === 'vessel_u') {
-                    if (card.name === 'Cosa' || card.name === 'Compound') {
-                        // Hardcode the U selection for simplicity in the prototype based on cos(x)
+                    if (card.name === 'Cosa') {
                         const derivative = '-sin(x)'; 
                         addLog(`Bound underlying structure cos(x) as 'u'. Math.js detects du = ${derivative}.`);
                         addLog(`The U-Vessel demands a blood sacrifice matching this derivative!`);
@@ -342,12 +341,8 @@
                         setConsumeAll(true);
                         
                         setTimeout(() => {
-                            // If they stitched it first, it's u^2 - u^4. If not, it's (1-u^2)u^2
-                            const hasCompound = bossCards.some(c => c.name === 'Compound');
-                            const finalEq = hasCompound ? '-\\int(u^2 - u^4) \\, du' : '-\\int(1-u^2)u^2 \\, du';
-                            
                             setBossCards([{
-                                id: 'final-u', name: 'U-State', baseTex: finalEq, baseMath: '', power: 1, canCycle: false, ability: "Integrable State: The weave is broken. Victory is imminent."
+                                id: 'final-u', name: 'U-State', baseTex: '-\\int(1-u^2)u^2 \\, du', baseMath: '', power: 1, canCycle: false, ability: "Integrable State: The weave is broken. Victory is imminent."
                             }]);
                             setConsumeAll(false);
                             setActiveMode(null);
@@ -364,7 +359,7 @@
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
                     <header className="mb-6 text-center border-b border-gray-700 pb-4 w-full">
                         <h1 className="text-4xl font-bold tracking-widest text-gray-300">INTEGRALIA</h1>
-                        <p className="text-sm text-emerald-500 uppercase tracking-widest">Phase 7: The Artificer's Loom</p>
+                        <p className="text-sm text-emerald-500 uppercase tracking-widest">Phase 8: Weaver's Exponents</p>
                     </header>
 
                     <div className="w-full bg-gray-900 border border-purple-900 rounded-xl pt-16 pb-12 px-8 mb-6 flex flex-col items-center relative shadow-2xl shadow-purple-900/20 z-50 overflow-hidden">
@@ -378,7 +373,7 @@
                             {bossCards.map((card) => (
                                 <BattleCard 
                                     key={card.id} card={card}
-                                    isActive={activeMode === 'vessel_u' || activeMode === 'slice' || activeMode === 'stitch_1' || activeMode === 'unstitch'}
+                                    isActive={activeMode === 'vessel_u' || activeMode === 'slice' || activeMode === 'stitch_1'}
                                     isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
                                     isSacrificeTarget={activeMode === 'vessel_du' && card.name === 'Sina' && card.power === 1}
                                     onClick={() => handleBossCardClick(card)}
@@ -408,46 +403,30 @@
 
                     <div className="w-full">
                         <div className="grid grid-cols-4 gap-6">
-                            {/* Slice */}
                             <button 
-                                onClick={() => { setActiveMode('slice'); setStitchTargetId(null); addLog("Slice primed. Target an odd-powered Primal spirit."); }}
+                                onClick={() => { setActiveMode('slice'); setStitchTargetId(null); addLog("Slice primed. Target a card with an exponent greater than 1."); }}
                                 disabled={!handCards.slice.available}
                                 className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-blue-600 bg-gray-800 card-hover hover:border-blue-400 hover:shadow-lg hover:shadow-blue-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <span className="text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-1">Machine</span>
                                 <span className="text-white font-bold text-base mb-1">Slice</span>
                                 <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Slices an exponent off a Primal spirit, creating a Residue card.
+                                    Cleaves an exponent off a spirit, splitting it into two cards.
                                 </div>
                             </button>
 
-                            {/* Weaver's Needle */}
                             <button 
-                                onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); addLog("Weaver's Needle equipped. Select the first component to stitch."); }}
-                                disabled={!handCards.needle.available}
+                                onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); addLog("Stitch equipped. Select the first component to combine."); }}
+                                disabled={!handCards.stitch.available}
                                 className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-emerald-600 bg-gray-800 card-hover hover:border-emerald-400 hover:shadow-lg hover:shadow-emerald-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                                 <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1">Artifact</span>
-                                <span className="text-white font-bold text-base mb-1">Weaver's Needle</span>
+                                <span className="text-white font-bold text-base mb-1">Stitch</span>
                                 <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Stitches a Residue and a Core into a single polynomial expansion.
+                                    Stitches two identical identities together, combining their exponents.
                                 </div>
                             </button>
 
-                            {/* Threadripper */}
-                            <button 
-                                onClick={() => { setActiveMode('unstitch'); setStitchTargetId(null); addLog("Threadripper equipped. Select a Compound to factor apart."); }}
-                                disabled={!handCards.ripper.available}
-                                className="p-4 rounded-xl border-2 text-left flex flex-col h-44 border-fuchsia-600 bg-gray-800 card-hover hover:border-fuchsia-400 hover:shadow-lg hover:shadow-fuchsia-900/50 z-20 disabled:opacity-40 disabled:cursor-not-allowed"
-                            >
-                                <span className="text-fuchsia-400 text-[10px] font-bold uppercase tracking-widest mb-1">Tool</span>
-                                <span className="text-white font-bold text-base mb-1">Threadripper</span>
-                                <div className="mt-auto pt-2 border-t border-gray-700 text-[11px] text-gray-400 leading-tight">
-                                    Unravels a stitched compound back into its individual factors.
-                                </div>
-                            </button>
-
-                            {/* U-Vessel */}
                             <button 
                                 onClick={() => { setActiveMode('vessel_u'); setStitchTargetId(null); addLog("U-Vessel deployed. Select an armored card to bind as 'u'."); }}
                                 disabled={!handCards.vessel.available}
