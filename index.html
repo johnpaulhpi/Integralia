@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 10</title>
+    <title>Integralia: The Shattered Weave - Phase 10.1</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -106,7 +106,7 @@
                             <circle cx="48" cy="78" r="1.5" fill="#60a5fa" />
                         </svg>
                     );
-                } else if (card.name === 'Residue' || card.name === 'Compound') {
+                } else if (card.name === 'Residue') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                             <polygon points="50,5 95,50 50,95 5,50" fill="#064e3b" stroke="#10b981" strokeWidth="2" />
@@ -130,7 +130,7 @@
             if (card.type === 'Core' || card.type === 'Fragment') {
                 baseBg = card.name === 'Sina' ? 'bg-blue-950/40' : 'bg-yellow-950/40';
                 baseBorder = card.name === 'Sina' ? 'border-blue-900' : 'border-yellow-900';
-            } else if (card.name === 'Residue' || card.name === 'Compound') {
+            } else if (card.name === 'Residue') {
                 baseBg = 'bg-emerald-950/40';
                 baseBorder = 'border-emerald-900 shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]';
             } else if (card.name === 'U-State' || card.name === 'Refined Solution') {
@@ -149,12 +149,10 @@
                         
                         {isSlashing && <div className="animate-slash"></div>}
 
-                        {/* Top Left: Type Label */}
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">
                             {card.type}
                         </div>
 
-                        {/* Identity Cycle Sigil */}
                         {card.canCycle && (
                             <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
                                 className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">
@@ -162,37 +160,31 @@
                             </div>
                         )}
 
-                        {/* Blood Sigil indicating it is the cleaved sacrifice */}
                         {card.isBleeding && (
                             <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center text-red-400 text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] z-50">
                                 🩸
                             </div>
                         )}
 
-                        {/* Power Badge */}
                         {card.power > 1 && (
                             <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
                                 {card.power}
                             </div>
                         )}
 
-                        {/* Graphic Area */}
                         <div className="h-[100px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible">
                             {isShattering && <ParticleBurst type={card.name} />}
                             <div className={isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"}>{renderVisual()}</div>
                         </div>
 
-                        {/* Math Area */}
                         <div className="flex-1 flex flex-col items-center justify-center px-2">
                             <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
                             <div className="pointer-events-none scale-95"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
                         </div>
 
-                        {/* Ability Text */}
                         <div className="h-[75px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
                             <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1">"{card.ability}"</p>
                             
-                            {/* Targeted Bleeding */}
                             {(card.isBleeding || isSacrificeTarget) && (
                                 <>
                                     <div className="blood-drop drop-1"></div>
@@ -208,7 +200,7 @@
 
         const IntegraliaGame = () => {
             const [mana, setMana] = useState(0);
-            const [gamePhase, setGamePhase] = useState('setup'); // 'setup', 'integration'
+            const [gamePhase, setGamePhase] = useState('setup');
             const [integrationStep, setIntegrationStep] = useState(0);
 
             const [bossCards, setBossCards] = useState([
@@ -222,6 +214,9 @@
             const [shatteringId, setShatteringId] = useState(null);
             const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
+            
+            // This stores which core was bound to the altar so we can verify the sacrifice
+            const [uData, setUData] = useState({ coreName: null });
             
             const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Refine the components to extract mana."]);
             const logEndRef = useRef(null);
@@ -259,7 +254,6 @@
                             const newCards = [...bossCards];
                             const idx = newCards.findIndex(c => c.id === card.id);
                             
-                            // The original card does NOT bleed, it just loses a power layer
                             newCards[idx] = { 
                                 ...card, 
                                 power: card.power - 1, 
@@ -267,7 +261,6 @@
                                 isBleeding: false 
                             };
                             
-                            // The NEW cleaved fragment bleeds
                             newCards.splice(idx + 1, 0, { 
                                 id: `cleaved-${Date.now()}`, 
                                 name: card.name, 
@@ -320,25 +313,35 @@
 
                 // ALTAR LOGIC
                 if (activeMode === 'altar_u' && card.type === 'Core') {
-                    addLog(`Binding Core ${card.name} to the Altar. Blood sacrifice required!`);
+                    setUData({ coreName: card.name });
+                    addLog(`Binding Core ${card.name} to the Altar. Blood sacrifice of opposite type required!`);
                     setActiveMode('altar_du');
                 }
 
-                if (activeMode === 'altar_du' && card.name === 'Sina' && card.power === 1 && card.isBleeding) {
-                    addLog("Blood Sacrifice accepted! The Weave collapses into a U-State.");
-                    setConsumeAll(true);
-                    setMana(m => m + 50);
-                    setTimeout(() => {
-                        setBossCards([{
-                            id: 'u-state', name: 'U-State', type: 'Unresolved',
-                            baseTex: '-\\int(1-u^2)u^2 \\, du',
-                            power: 1, canCycle: false, ability: "Needs Distribution.", isBleeding: false
-                        }]);
-                        setConsumeAll(false);
-                        setActiveMode(null);
-                        setGamePhase('integration');
-                        addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
-                    }, 1000);
+                if (activeMode === 'altar_du') {
+                    if (card.isBleeding && card.power === 1) {
+                        // The Mathematical Chain Rule Verification
+                        if (card.name !== uData.coreName) {
+                            addLog("Blood Sacrifice accepted! The Weave collapses into a U-State.");
+                            setConsumeAll(true);
+                            setMana(m => m + 50);
+                            setTimeout(() => {
+                                setBossCards([{
+                                    id: 'u-state', name: 'U-State', type: 'Unresolved',
+                                    baseTex: '-\\int(1-u^2)u^2 \\, du',
+                                    power: 1, canCycle: false, ability: "Needs Distribution.", isBleeding: false
+                                }]);
+                                setConsumeAll(false);
+                                setActiveMode(null);
+                                setGamePhase('integration');
+                                addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
+                            }, 1000);
+                        } else {
+                            addLog(`Invalid sacrifice. If 'u' is ${uData.coreName}, 'du' must be the opposite type!`);
+                        }
+                    } else {
+                        addLog("The Altar demands a bleeding, power-1 Fragment as sacrifice.");
+                    }
                 }
             };
 
@@ -365,7 +368,7 @@
                     setBossCards([{ ...bossCards[0], baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5}', ability: "Needs Constant of Integration." }]);
                     addLog("Token Applied: Executed the Power Rule.");
                 } else if (ruleType === 'plus_c' && integrationStep === 3) {
-                    setMana(m => m - 10 + 200); // Spend 10, gain massive final reward
+                    setMana(m => m - 10 + 200);
                     setIntegrationStep(4);
                     setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5} + C', ability: "Mana Refined. Spell completely dissolved." }]);
                     addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
@@ -418,9 +421,7 @@
                         </div>
                     </div>
 
-                    {/* Controls Section */}
                     <div className="w-full flex flex-col gap-6 mb-8">
-                        {/* Enlarged Battle Log */}
                         <div className="w-full h-64 bg-gray-950 border border-white/5 rounded-2xl p-6 relative overflow-hidden flex flex-col">
                             <h3 className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Refinement Log</h3>
                             <div className="overflow-y-auto flex-1 log-scroll pr-4">
@@ -435,7 +436,6 @@
                             </div>
                         </div>
 
-                        {/* Dynamic Tool Grid based on Phase */}
                         {gamePhase === 'setup' && (
                             <div className="w-full grid grid-cols-3 gap-6">
                                 <button onClick={() => { setActiveMode('slice'); addLog("Slice Primed: Target an Exponent."); }} 
