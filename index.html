@@ -517,9 +517,14 @@
                     }
                 }
 
-                // MAT SLOTTING LOGIC: IBP
+               // MAT SLOTTING LOGIC: IBP
                 if (!activeMode && activeMat === 'ibp') {
                     if (!ibpU) {
+                        // GATEKEEPER: 'u' must be Algebraic so the derivative simplifies!
+                        if (card.name !== 'Algebraica') {
+                            addLog("For current Dual-Weave techniques, 'u' (Bind) must be an Algebraic Thread.");
+                            return;
+                        }
                         setIbpU(card);
                         setBossCards(prev => prev.filter(c => c.id !== card.id));
                         addLog(`Bound ${card.name} as 'u'. Math engine calculating derivative...`);
@@ -527,6 +532,12 @@
                     }
                     
                     if (ibpU && !ibpDv) {
+                        // GATEKEEPER: 'dv' must be a pure, simple function we know how to integrate!
+                        if (card.power > 1 || card.type === 'Resonant' || card.type === 'Fragment' || card.name === 'Residue' || card.name === 'Compound' || card.name === 'Algebraica') {
+                            addLog("Invalid poison. 'dv' requires a pure, power-1 Exponential or Trigonometric spirit.");
+                            return;
+                        }
+                        
                         setIbpDv(card);
                         setBossCards(prev => prev.filter(c => c.id !== card.id));
                         addLog(`Poisoned with ${card.name} as 'dv'. Synthesizing Expansion Weave...`);
