@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 17</title>
+    <title>Integralia: The Shattered Weave - Phase 18</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -482,19 +482,19 @@
                 // MAT SLOTTING LOGIC: ALTAR
                 if (!activeMode && activeMat === 'altar') {
                     if (!altarCore) {
-                        if (card.type === 'Core' || card.name === 'Compound') {
+                        if (card.name === 'Sina' || card.name === 'Cosa') {
                             const coreFamily = card.name === 'Sina' ? 'sin' : 'cos';
                             setAltarCore({ ...card, family: coreFamily });
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Slotted ${card.name} into the Core. Now provide an opposite sacrifice.`);
                         } else {
-                            addLog("The Altar requires a stable Core to begin refinement.");
+                            addLog("The Altar only accepts Sine or Cosine Cores.");
                         }
                         return;
                     }
                     
                     if (altarCore && !altarSacrifice) {
-                        if (card.isBleeding && card.power === 1) {
+                        if (card.power === 1 && (card.name === 'Sina' || card.name === 'Cosa')) {
                             const sacrificeFamily = card.name === 'Sina' ? 'sin' : 'cos';
                             if (sacrificeFamily !== altarCore.family) {
                                 setAltarSacrifice(card);
@@ -504,7 +504,7 @@
                                 addLog("Invalid sacrifice! The blood must be of the opposite type.");
                             }
                         } else {
-                            addLog("The Altar demands a bleeding, power-1 Fragment as sacrifice.");
+                            addLog("The Altar demands a Sine or Cosine of exactly power 1 as sacrifice.");
                         }
                         return;
                     }
@@ -634,25 +634,74 @@
             };
 
             const collapseWeave = () => {
+                const expectedExpandedName = altarCore.family === 'sin' ? 'Sina' : 'Cosa';
+                const expectedResidueTex = altarCore.family === 'sin' ? '(1-\\sin^2(x))' : '(1-\\cos^2(x))';
+
+                // Weave Validation Engine
+                const isInvalid = altarExpanded.some(c => {
+                    if (c.name === expectedExpandedName) return false;
+                    if (c.name === 'Residue' && c.baseTex === expectedResidueTex) return false;
+                    return true; 
+                });
+
+                if (isInvalid) {
+                    addLog("The Weave is unstable! You left unconverted opposite spirits in the Expanded Weave. Cycle them into Residue first.");
+                    return;
+                }
+
+                let uPower = altarCore.power;
+                let residueCount = 0;
+
+                altarExpanded.forEach(c => {
+                    if (c.name === expectedExpandedName) uPower += c.power;
+                    if (c.name === 'Residue') residueCount++;
+                });
+
+                if (residueCount > 1) {
+                    addLog("The Altar can only process one Residue at a time right now. The spell is too complex!");
+                    return;
+                }
+
                 addLog("Altar rituals complete! The Weave collapses into a U-State.");
                 setConsumeAll(true);
                 setMana(m => m + 50);
+
                 setTimeout(() => {
-                    const hasCompound = altarExpanded.some(c => c.name === 'Compound');
-                    const finalEq = hasCompound ? '-\\int(u^2 - u^4) \\, du' : '-\\int(1-u^2)u^2 \\, du';
+                    // Dynamic Polynomial Engine
+                    let sign = altarCore.family === 'cos' ? -1 : 1;
+                    let terms = [];
+                    
+                    if (residueCount === 0) {
+                        terms.push({ c: sign, p: uPower });
+                    } else {
+                        // sign * u^P * (1 - u^2) = sign*u^P - sign*u^{P+2}
+                        terms.push({ c: sign, p: uPower });
+                        terms.push({ c: -sign, p: uPower + 2 });
+                    }
+                    
+                    terms.sort((a,b) => a.p - b.p);
+
+                    let initialEq = '';
+                    if (residueCount === 1) {
+                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}(1-u^2) \\, du`;
+                    } else {
+                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`;
+                    }
 
                     setBossCards([{
                         id: 'u-state', name: 'U-State', type: 'Unresolved',
-                        baseTex: finalEq,
-                        power: 1, canCycle: false, ability: "Needs Distribution.", isBleeding: false
+                        baseTex: initialEq,
+                        power: 1, canCycle: false, ability: residueCount === 1 ? "Needs Distribution." : "Needs Power Rule.", isBleeding: false,
+                        meta: { terms, hasResidue: residueCount === 1 }
                     }]);
+                    
                     setConsumeAll(false);
                     setActiveMat(null);
                     setAltarCore(null);
                     setAltarSacrifice(null);
                     setAltarExpanded([]);
                     setIntegrationPath('altar');
-                    setIntegrationStep(0);
+                    setIntegrationStep(residueCount === 1 ? 0 : 2); // Skips distribute/linearity if no residue!
                     setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
                 }, 1000);
@@ -695,21 +744,46 @@
                 if (mana < 10) { addLog("Not enough Mana! You need 10 Mana to cast a Rule Token."); return; }
 
                 if (integrationPath === 'altar') {
+                    const meta = bossCards[0].meta;
+                    
                     if (actionType === 'action1' && integrationStep === 0) {
+                        let distEq = '';
+                        meta.terms.forEach((t, i) => {
+                            if (t.c < 0) distEq += i === 0 ? '-' : ' - ';
+                            else if (i > 0) distEq += ' + ';
+                            distEq += t.p === 1 ? 'u' : `u^${t.p}`;
+                        });
+                        distEq = `\\int (${distEq}) \\, du`;
+
                         setMana(m => m - 10); setIntegrationStep(1);
-                        setBossCards([{ ...bossCards[0], baseTex: '-\\int(u^2 - u^4) \\, du', ability: "Needs Linearity Split." }]);
+                        setBossCards([{ ...bossCards[0], baseTex: distEq, ability: "Needs Linearity Split." }]);
                         addLog("Token Applied: Distributed the powers.");
                     } else if (actionType === 'action2' && integrationStep === 1) {
+                        let linEq = '';
+                        meta.terms.forEach((t, i) => {
+                            if (t.c < 0) linEq += i === 0 ? '-\\int ' : ' - \\int ';
+                            else linEq += i === 0 ? '\\int ' : ' + \\int ';
+                            linEq += `${t.p === 1 ? 'u' : `u^${t.p}`} \\, du`;
+                        });
+
                         setMana(m => m - 10); setIntegrationStep(2);
-                        setBossCards([{ ...bossCards[0], baseTex: '\\int -u^2 \\, du + \\int u^4 \\, du', ability: "Needs Power Rule." }]);
+                        setBossCards([{ ...bossCards[0], baseTex: linEq, ability: "Needs Power Rule." }]);
                         addLog("Token Applied: Split the integral using Linearity.");
                     } else if (actionType === 'action3' && integrationStep === 2) {
+                        let powEq = '';
+                        meta.terms.forEach((t, i) => {
+                            let newP = t.p + 1;
+                            if (t.c < 0) powEq += i === 0 ? '-' : ' - ';
+                            else if (i > 0) powEq += ' + ';
+                            powEq += `\\frac{u^{${newP}}}{${newP}}`;
+                        });
+
                         setMana(m => m - 10); setIntegrationStep(3);
-                        setBossCards([{ ...bossCards[0], baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5}', ability: "Needs Constant of Integration." }]);
+                        setBossCards([{ ...bossCards[0], baseTex: powEq, ability: "Needs Constant of Integration." }]);
                         addLog("Token Applied: Executed the Power Rule.");
                     } else if (actionType === 'plus_c' && integrationStep === 3) {
                         setMana(m => m - 10 + 200); setIntegrationStep(4);
-                        setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5} + C', ability: "Mana Refined. Spell completely dissolved." }]);
+                        setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]);
                         addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
                     } else {
                         addLog("You cannot apply that rule right now.");
@@ -721,7 +795,7 @@
                     if (actionType === 'action1' && integrationStep === 0) {
                          setMana(m => m - 10); setIntegrationStep(1);
                          let inner = meta.vTex;
-                         if (inner === '-\\cos(x)') inner = '-\\cos(x)'; // Formatting explicitly for visual consistency
+                         if (inner === '-\\cos(x)') inner = '-\\cos(x)';
                          setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - \\int ${inner} \\, dx`, ability: "Needs Inner Integration." }]);
                          addLog("Token Applied: Simplified the inner integral.");
                     } else if (actionType === 'action2' && integrationStep === 1) {
@@ -843,7 +917,7 @@
                                             {altarSacrifice ? (
                                                 <BattleCard card={altarSacrifice} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('sacrifice', null)} />
                                             ) : (
-                                                <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Bleeding Fragment<br/>to Assign</span>
+                                                <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card (Power 1)<br/>to Assign</span>
                                             )}
                                         </div>
                                     </div>
