@@ -692,9 +692,6 @@
             };
 
             const stepIntoAbyss = () => {
-                if (mana < 5) { addLog("Not enough mana for the descent! Cost: 5 Mana."); return; }
-                setMana(m => m - 5);
-
                 const lastU = tabularU[tabularU.length - 1];
                 const lastDv = tabularDv[tabularDv.length - 1];
 
@@ -727,7 +724,7 @@
                 if (isZero) {
                     setTabularComplete(true);
                     addLog("The Mortal Coil is reduced to dust. You may reap the echoes.");
-                } else { addLog("You step deeper. The coil bleeds; the echo loops. (-5 Mana)"); }
+                } else { addLog("You step deeper. The coil bleeds; the echo loops."); }
             };
 
             const reapEchoes = () => {
@@ -996,7 +993,7 @@
                                     <div className="w-full pt-4 mt-2 border-t border-teal-900/30 flex justify-center z-50">
                                         {!tabularComplete ? (
                                             <button onClick={stepIntoAbyss} className="px-8 py-3 bg-gray-900 border-2 border-teal-600 hover:bg-teal-900 text-teal-400 font-black uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all transform hover:scale-105">
-                                                Step into the Abyss (-5 Mana)
+                                                Step into the Abyss
                                             </button>
                                         ) : (
                                             <button onClick={reapEchoes} className="px-10 py-4 bg-teal-600 hover:bg-teal-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(20,184,166,0.6)] transition-all transform hover:scale-105 animate-pulse">
