@@ -119,7 +119,7 @@
                             <circle cx="50" cy="50" r="15" fill="#ca8a04" />
                         </svg>
                     );
-                } else if (card.type === 'Derived') {
+                } else if (card.type === 'Derived' || card.type === 'Resonant') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="#d946ef" strokeWidth="2" strokeDasharray="8 4" />
@@ -147,9 +147,9 @@
             } else if (card.name === 'Cosa' || card.name === 'Residue' || card.name === 'Compound') {
                 baseBg = 'bg-yellow-950/40';
                 baseBorder = card.name === 'Cosa' ? 'border-yellow-900 hover:border-yellow-700' : 'border-yellow-700 shadow-[inset_0_0_20px_rgba(234,179,8,0.1)] hover:border-yellow-500';
-            } else if (card.type === 'Derived') {
-                baseBg = 'bg-fuchsia-950/40';
-                baseBorder = 'border-fuchsia-600 shadow-[inset_0_0_30px_rgba(217,70,239,0.2)] hover:border-fuchsia-400';
+            } else if (card.type === 'Derived' || card.type === 'Resonant') {
+                baseBg = 'bg-amber-950/40';
+                baseBorder = 'border-amber-600 shadow-[inset_0_0_30px_rgba(245,158,11,0.2)] hover:border-amber-400';
             } else if (card.name === 'U-State' || card.name === 'Refined Solution') {
                 baseBg = 'bg-fuchsia-950/40';
                 baseBorder = 'border-fuchsia-900 shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] hover:border-fuchsia-700';
@@ -222,11 +222,38 @@
             const [gamePhase, setGamePhase] = useState('setup');
             const [integrationStep, setIntegrationStep] = useState(0);
 
-            // Board State
-            const [bossCards, setBossCards] = useState([
-                { id: 'sina-1', name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 3, canCycle: false, ability: "Vulnerable to Slicing.", isBleeding: false },
-                { id: 'cosa-1', name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: false, ability: "Armored Core.", isBleeding: false }
-            ]);
+            const [bossCards, setBossCards] = useState([]);
+            
+            // Random Spell Generator
+            const generateSpell = () => {
+                const sinPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
+                const cosPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
+                
+                const newCards = [];
+                if (sinPower > 0) {
+                    newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: sinPower, canCycle: (sinPower % 2 === 0), ability: "Primal Spirit.", isBleeding: false });
+                }
+                if (cosPower > 0) {
+                    newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
+                }
+                
+                setBossCards(newCards);
+                setGamePhase('setup');
+                setIntegrationStep(0);
+                setActiveMode(null);
+                setActiveMat(null);
+                setAltarCore(null);
+                setAltarSacrifice(null);
+                setAltarExpanded([]);
+                setTrigSubCard(null);
+                
+                addLog(`A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`);
+            };
+
+            // Run generator on boot
+            useEffect(() => {
+                generateSpell();
+            }, []);
 
             // Altar Mat State
             const [altarCore, setAltarCore] = useState(null);
@@ -234,12 +261,9 @@
             const [altarExpanded, setAltarExpanded] = useState([]);
             const [uData, setUData] = useState({ coreFamily: null });
 
-            // Dual-Weave (IBP) Mat State
-            const [ibpU, setIbpU] = useState(null);
-            const [ibpDv, setIbpDv] = useState(null);
-            const [ibpDerived, setIbpDerived] = useState(null);
+            // Trig Sub Mat State
+            const [trigSubCard, setTrigSubCard] = useState(null);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, needle: { available: true }, altar: { available: true }, ibp: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
             
@@ -248,7 +272,7 @@
             const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
-            const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Prepare the board with your Tools and Mats."]);
+            const [logs, setLogs] = useState([]);
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
@@ -260,9 +284,9 @@
                 if (matName === 'altar') {
                     addLog("Sacrificial Altar Deployed. Slot your Core and Sacrifice into the Mat!");
                 } else if (matName === 'ibp') {
-                    addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
+                    addLog("Dual-Weave Mat (By Parts) Deployed. (Mechanic Unlocking Soon)");
                 } else if (matName === 'trigsub') {
-                    addLog("Rune Circle (Trig Sub) Deployed. (Mechanic Unlocking Soon)");
+                    addLog("Rune Circle Deployed. Target an Even Power core to reduce its exponent.");
                 } else {
                     addLog("Mat returned to inventory.");
                 }
@@ -275,9 +299,14 @@
                         if (c.name === 'Sina') {
                             addLog("Identity Cycled: Extracting mana from the Sine shell.");
                             return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into the Cosine family.", isBleeding: false };
+                        } else if (c.name === 'Cosa') {
+                             addLog("Identity Cycled: Extracting mana from the Cosine shell.");
+                             return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into the Sine family.", isBleeding: false };
                         } else {
-                            addLog("Identity Cycled: Hardening Residue back into a Sine Core.");
-                            return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                            addLog("Identity Cycled: Hardening Residue back into a Core.");
+                            // We don't know what it used to be based purely on state here simply, but in our controlled environment:
+                            if (c.baseTex.includes('cos')) return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                            else return { ...c, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
                         }
                     }
                     return c;
@@ -303,7 +332,7 @@
                                 newCards[idx] = { 
                                     ...card, 
                                     power: card.power - 1, 
-                                    canCycle: (card.name === 'Sina' && card.power - 1 === 2),
+                                    canCycle: ((card.name === 'Sina' || card.name === 'Cosa') && (card.power - 1) % 2 === 0),
                                     isBleeding: false 
                                 };
                                 
@@ -356,7 +385,7 @@
                                 id: `stitched-${Date.now()}`,
                                 power: newPower,
                                 type: resolvedType,
-                                canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
+                                canCycle: ((target1.name === 'Sina' || target1.name === 'Cosa') && newPower % 2 === 0),
                                 isBleeding: false,
                                 ability: `Combined Exponent: The weave grows thicker.`
                             });
@@ -380,7 +409,9 @@
                             setAltarCore({ ...card, family: coreFamily });
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Slotted ${card.name} into the Core. Now provide an opposite sacrifice.`);
-                        } else { addLog("The Altar requires a stable Core to begin refinement."); }
+                        } else {
+                            addLog("The Altar requires a stable Core to begin refinement.");
+                        }
                         return;
                     }
                     
@@ -391,8 +422,12 @@
                                 setAltarSacrifice(card);
                                 setBossCards(prev => prev.filter(c => c.id !== card.id));
                                 addLog("Blood Sacrifice accepted! Now move all remaining equation cards into the Expanded Weave.");
-                            } else { addLog("Invalid sacrifice! The blood must be of the opposite type."); }
-                        } else { addLog("The Altar demands a bleeding, power-1 Fragment as sacrifice."); }
+                            } else {
+                                addLog("Invalid sacrifice! The blood must be of the opposite type.");
+                            }
+                        } else {
+                            addLog("The Altar demands a bleeding, power-1 Fragment as sacrifice.");
+                        }
                         return;
                     }
 
@@ -404,39 +439,41 @@
                     }
                 }
 
-                // MAT SLOTTING LOGIC: IBP
-                if (!activeMode && activeMat === 'ibp') {
-                    if (!ibpU) {
-                        setIbpU(card);
+                // MAT SLOTTING LOGIC: TRIG SUB (Half-Angle)
+                if (!activeMode && activeMat === 'trigsub') {
+                    if (card.power % 2 === 0) {
+                        setTrigSubCard(card);
                         setBossCards(prev => prev.filter(c => c.id !== card.id));
-                        addLog(`Bound ${card.name} as 'u'. Math engine calculating derivative...`);
+                        addLog(`${card.name} slotted into the Rune Circle. Power reduced, angle expanded!`);
                         
-                        // Wait for dv to complete expansion logic
-                        return;
-                    }
-                    
-                    if (ibpU && !ibpDv) {
-                        setIbpDv(card);
-                        setBossCards(prev => prev.filter(c => c.id !== card.id));
-                        addLog(`Poisoned with ${card.name} as 'dv'. Synthesizing Expansion Weave...`);
-                        
-                        // Execute Math.js Logic for Expansion
-                        let calculatedDuTex = '';
-                        try { 
-                            const node = math.derivative(ibpU.baseMath, 'x');
-                            calculatedDuTex = node.toTex();
-                        } catch(e) { calculatedDuTex = 'du'; }
+                        // Immediate resolution for Phase 15 prototype
+                        setTimeout(() => {
+                            let newTex = '';
+                            if (card.name === 'Sina') newTex = '\\frac{1 - \\cos(2x)}{2}';
+                            if (card.name === 'Cosa') newTex = '\\frac{1 + \\cos(2x)}{2}';
 
-                        let calculatedVTex = `\\int ${card.baseTex} dx`;
-                        if (card.baseMath === 'cos(x)') calculatedVTex = '\\sin(x)';
-                        else if (card.baseMath === 'sin(x)') calculatedVTex = '-\\cos(x)';
+                            setBossCards(prev => [...prev, {
+                                id: `halfangle-${Date.now()}`,
+                                name: 'Resonant Core',
+                                type: 'Resonant',
+                                baseTex: newTex,
+                                power: card.power / 2,
+                                canCycle: false,
+                                ability: "Half-Angle Identity Applied.",
+                                isBleeding: false
+                            }]);
+                            setTrigSubCard(null);
+                            setActiveMat(null);
+                            addLog("Rune Circle resolved. The spell structure has fundamentally shifted.");
+                        }, 1200);
 
-                        setIbpDerived({ duTex: calculatedDuTex, vTex: calculatedVTex });
-                        return;
+                    } else {
+                        addLog("The Rune Circle requires a Core with an EVEN power to activate half-angle reduction.");
                     }
                 }
             };
 
+            // Un-Slotting Logic for the Altar Mat
             const handleAltarClick = (role, id) => {
                 if (role === 'core') {
                     setBossCards(prev => [...prev, altarCore]);
@@ -451,20 +488,6 @@
                     setBossCards(prev => [...prev, cardToReturn]);
                     setAltarExpanded(prev => prev.filter(c => c.id !== id));
                     addLog(`${cardToReturn.name} returned to the board.`);
-                }
-            };
-
-            const handleIbpClick = (role) => {
-                if (role === 'u') {
-                    setBossCards(prev => [...prev, ibpU]);
-                    setIbpU(null);
-                    setIbpDerived(null);
-                    addLog("'u' binding released.");
-                } else if (role === 'dv') {
-                    setBossCards(prev => [...prev, ibpDv]);
-                    setIbpDv(null);
-                    setIbpDerived(null);
-                    addLog("'dv' poison released.");
                 }
             };
 
@@ -488,29 +511,6 @@
                     setAltarExpanded([]);
                     setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
-                }, 1000);
-            };
-
-            const confirmIbpWeave = () => {
-                addLog("Dual-Weave executed! The equation expands.");
-                setConsumeAll(true);
-                setMana(m => m + 50);
-                
-                setTimeout(() => {
-                    // Push the synthesized components back to the board
-                    setBossCards([
-                        { ...ibpU, id: `u-${Date.now()}` },
-                        { id: `v-${Date.now()}`, name: 'Derived v', type: 'Derived', baseTex: ibpDerived.vTex, baseMath: '', power: 1, ability: "Synthesized Integral." },
-                        { id: `v2-${Date.now()}`, name: 'Derived v', type: 'Derived', baseTex: ibpDerived.vTex, baseMath: '', power: 1, ability: "Ready for inner integration." },
-                        { id: `du-${Date.now()}`, name: 'Derived du', type: 'Derived', baseTex: ibpDerived.duTex, baseMath: '', power: 1, ability: "Synthesized Derivative." }
-                    ]);
-                    
-                    setConsumeAll(false);
-                    setActiveMat(null);
-                    setIbpU(null);
-                    setIbpDv(null);
-                    setIbpDerived(null);
-                    addLog("The board has been replaced with the expanded Integration by Parts components.");
                 }, 1000);
             };
 
@@ -540,7 +540,7 @@
 
             let boardBorder = "border-white/5";
             if (activeMat === 'altar') { boardBorder = "border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.15)]"; }
-            else if (activeMat === 'ibp') { boardBorder = "border-fuchsia-900/50 shadow-[0_0_30px_rgba(217,70,239,0.15)]"; }
+            else if (activeMat === 'trigsub') { boardBorder = "border-amber-900/50 shadow-[0_0_30px_rgba(245,158,11,0.15)]"; }
 
             return (
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-7xl mx-auto">
@@ -554,7 +554,7 @@
                             <span className="text-[10px] text-gray-500 font-bold uppercase block mb-1">Mana Recovered</span>
                             <div className="flex items-center gap-3">
                                 <div className="w-48 h-3 bg-gray-900 rounded-full border border-white/5 overflow-hidden mana-bar-glow">
-                                    <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${Math.min(mana / 250 * 100, 100)}%` }}></div>
+                                    <div className="h-full bg-blue-600 transition-all duration-300" style={{ width: `${Math.min(mana / 500 * 100, 100)}%` }}></div>
                                 </div>
                                 <span className="text-3xl font-mono text-blue-400 font-bold">{mana}</span>
                             </div>
@@ -583,7 +583,7 @@
                                     <BattleCard 
                                         key={card.id} card={card} 
                                         scale={activeMat ? 'scale-75' : 'scale-95'}
-                                        isActive={activeMode === 'slice' || activeMode === 'stitch_1' || (activeMat === 'altar' && !altarCore) || (activeMat === 'ibp' && (!ibpU || !ibpDv))}
+                                        isActive={activeMode === 'slice' || activeMode === 'stitch_1' || (activeMat === 'altar' && !altarCore) || (activeMat === 'trigsub')}
                                         isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
                                         onClick={() => handleBossCardClick(card)}
                                         onCycle={handleCycle}
@@ -596,14 +596,16 @@
                             </div>
                         </div>
 
-                        {/* SACRIFICIAL ALTAR MAT */}
+                        {/* SACRIFICIAL ALTAR MAT (Slides in on the right) */}
                         {activeMat === 'altar' && (
                             <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(220,38,38,0.05)] animate-slide-left overflow-hidden">
                                 <h2 className="text-red-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4">Sacrificial Altar Mat</h2>
                                 
+                                {/* Top Row: Core & Sacrifice Slots */}
                                 <div className="w-full flex justify-center gap-6 relative z-20">
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500/20 text-4xl font-black mt-2">×</div>
 
+                                    {/* Core Slot */}
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">1. Core (u)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
@@ -615,6 +617,7 @@
                                         </div>
                                     </div>
 
+                                    {/* Sacrifice Slot */}
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">2. Sacrifice (du)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
@@ -627,11 +630,14 @@
                                     </div>
                                 </div>
 
+                                {/* Bottom Row: Expanded Weave */}
                                 <div className="w-full border-t border-red-900/30 pt-4 mt-4 flex flex-col items-center flex-1 z-20">
                                     <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2">3. Expanded Weave</span>
                                     <div className="w-full flex-1 flex flex-wrap justify-center items-center gap-2 bg-black/30 rounded-2xl p-2 border border-red-900/20 relative min-h-[120px]">
                                         {altarExpanded.length === 0 && (
-                                            <span className="text-red-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Move all remaining cards here</span>
+                                            <span className="text-red-900/50 font-bold text-[10px] uppercase tracking-widest text-center">
+                                                Move all remaining cards here
+                                            </span>
                                         )}
                                         {altarExpanded.map((card) => (
                                             <div key={card.id} className="w-[120px] h-[160px] flex items-center justify-center">
@@ -641,6 +647,7 @@
                                     </div>
                                 </div>
 
+                                {/* Collapse Button Override */}
                                 {bossCards.length === 0 && altarCore && altarSacrifice && (
                                     <div className="absolute inset-0 bg-red-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
                                         <button onClick={collapseWeave} className="px-10 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] transition-all transform hover:scale-105">
@@ -651,63 +658,22 @@
                             </div>
                         )}
 
-                        {/* DUAL-WEAVE (IBP) MAT */}
-                        {activeMat === 'ibp' && (
-                            <div className="w-8/12 bg-fuchsia-950/10 border-2 border-fuchsia-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(217,70,239,0.05)] animate-slide-left overflow-hidden">
-                                <h2 className="text-fuchsia-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4">Dual-Weave Mat (IBP)</h2>
+                        {/* RUNE CIRCLE MAT (Trig Sub) */}
+                        {activeMat === 'trigsub' && (
+                            <div className="w-8/12 bg-amber-950/10 border-2 border-amber-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(245,158,11,0.05)] animate-slide-left overflow-hidden items-center justify-center">
+                                <h2 className="absolute top-4 text-amber-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4">Rune Circle (Half-Angle)</h2>
                                 
-                                <div className="w-full flex justify-center gap-6 relative z-20">
-                                    <div className="flex flex-col items-center w-[160px]">
-                                        <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">1. Bind (u)</span>
-                                        <div className="w-full h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {ibpU ? (
-                                                <BattleCard card={ibpU} scale="scale-75 hover:scale-95" onClick={() => handleIbpClick('u')} />
-                                            ) : (
-                                                <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Bind</span>
-                                            )}
+                                <div className="w-[240px] h-[340px] border-4 border-dashed border-amber-900/50 rounded-full flex items-center justify-center bg-black/40 relative shadow-[0_0_50px_rgba(245,158,11,0.2)]">
+                                    {trigSubCard ? (
+                                        <div className="animate-pulse">
+                                            <BattleCard card={trigSubCard} scale="scale-90" />
                                         </div>
-                                    </div>
-
-                                    <div className="flex flex-col items-center w-[160px]">
-                                        <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">2. Poison (dv)</span>
-                                        <div className="w-full h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {ibpDv ? (
-                                                <BattleCard card={ibpDv} scale="scale-75 hover:scale-95" onClick={() => handleIbpClick('dv')} />
-                                            ) : (
-                                                <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Poison</span>
-                                            )}
+                                    ) : (
+                                        <div className="text-amber-900/70 font-bold text-xs uppercase tracking-widest text-center px-4">
+                                            Select an<br/>Even Powered<br/>Core
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-
-                                <div className="w-full border-t border-fuchsia-900/30 pt-4 mt-4 flex flex-col items-center flex-1 z-20">
-                                    <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2">3. Expanded Form [ u v - ∫ v du ]</span>
-                                    <div className="w-full flex-1 flex flex-nowrap justify-center items-center gap-2 bg-black/30 rounded-2xl p-2 border border-fuchsia-900/20 relative min-h-[140px] overflow-hidden">
-                                        {!ibpU || !ibpDv || !ibpDerived ? (
-                                            <span className="text-fuchsia-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Bind u and dv to expand the sequence</span>
-                                        ) : (
-                                            <div className="flex items-center justify-center gap-1 w-full h-full">
-                                                <div className="w-[85px]"><BattleCard card={ibpU} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500/50 font-bold">·</div>
-                                                <div className="w-[85px]"><BattleCard card={{name: 'Derived v', type:'Derived', baseTex: ibpDerived.vTex, power: 1}} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500 font-bold text-2xl mx-1">-</div>
-                                                <div className="text-fuchsia-500/50 font-serif text-4xl mr-1">∫</div>
-                                                <div className="w-[85px]"><BattleCard card={{name: 'Derived v', type:'Derived', baseTex: ibpDerived.vTex, power: 1}} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500/50 font-bold">·</div>
-                                                <div className="w-[85px]"><BattleCard card={{name: 'Derived du', type:'Derived', baseTex: ibpDerived.duTex, power: 1}} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500/50 font-bold ml-1">dx</div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {ibpU && ibpDv && ibpDerived && (
-                                    <div className="absolute inset-0 bg-fuchsia-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                                        <button onClick={confirmIbpWeave} className="px-10 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:shadow-[0_0_50px_rgba(217,70,239,0.8)] transition-all transform hover:scale-105">
-                                            Confirm Weave
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>
@@ -765,18 +731,18 @@
                                             <p className="text-xs text-gray-500 mt-2 leading-tight">U-Substitution. Requires blood sacrifice.</p>
                                         </button>
 
-                                        <button onClick={() => activeMat === 'ibp' ? selectMat(null) : selectMat('ibp')} 
+                                        <button onClick={() => selectMat('ibp')} 
                                             className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'ibp' ? 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_20px_rgba(217,70,239,0.3)]' : 'border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 hover:bg-fuchsia-950/20'}`}>
                                             <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Mat</span>
                                             <span className="text-white font-bold text-lg group-hover:text-fuchsia-400">Dual-Weave</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Integration By Parts (uv - ∫vdu).</p>
+                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Integration By Parts (uv - ∫vdu). (Locked)</p>
                                         </button>
 
-                                        <button onClick={() => selectMat('trigsub')} 
+                                        <button onClick={() => activeMat === 'trigsub' ? selectMat(null) : selectMat('trigsub')} 
                                             className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'trigsub' ? 'border-amber-400 bg-amber-950/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'border-amber-900 bg-gray-950 hover:border-amber-500 hover:bg-amber-950/20'}`}>
                                             <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Mat</span>
                                             <span className="text-white font-bold text-lg group-hover:text-amber-400">Rune Circle</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Trigonometric Substitution (Locked).</p>
+                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Half-Angle Reduction for Even Powers.</p>
                                         </button>
                                     </div>
                                 </div>
@@ -784,27 +750,35 @@
                         )}
 
                         {gamePhase === 'integration' && (
-                            <div className="w-full grid grid-cols-4 gap-4">
-                                <button onClick={() => applyIntegrationRule('distribute')} disabled={integrationStep !== 0}
-                                    className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                    <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                    <span className="text-white font-bold text-lg">Distribute</span>
-                                </button>
-                                <button onClick={() => applyIntegrationRule('linearity')} disabled={integrationStep !== 1}
-                                    className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                    <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                    <span className="text-white font-bold text-lg">Linearity</span>
-                                </button>
-                                <button onClick={() => applyIntegrationRule('power_rule')} disabled={integrationStep !== 2}
-                                    className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                    <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                    <span className="text-white font-bold text-lg">Power Rule</span>
-                                </button>
-                                <button onClick={() => applyIntegrationRule('plus_c')} disabled={integrationStep !== 3}
-                                    className="p-4 rounded-xl border-2 border-amber-500 bg-gray-950 hover:border-amber-300 transition-all text-center flex flex-col disabled:opacity-20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                    <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                    <span className="text-white font-bold text-lg">Constant (+C)</span>
-                                </button>
+                            <div className="w-full flex flex-col items-center">
+                                <div className="w-full grid grid-cols-4 gap-4">
+                                    <button onClick={() => applyIntegrationRule('distribute')} disabled={integrationStep !== 0}
+                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
+                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
+                                        <span className="text-white font-bold text-lg">Distribute</span>
+                                    </button>
+                                    <button onClick={() => applyIntegrationRule('linearity')} disabled={integrationStep !== 1}
+                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
+                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
+                                        <span className="text-white font-bold text-lg">Linearity</span>
+                                    </button>
+                                    <button onClick={() => applyIntegrationRule('power_rule')} disabled={integrationStep !== 2}
+                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
+                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
+                                        <span className="text-white font-bold text-lg">Power Rule</span>
+                                    </button>
+                                    <button onClick={() => applyIntegrationRule('plus_c')} disabled={integrationStep !== 3}
+                                        className="p-4 rounded-xl border-2 border-amber-500 bg-gray-950 hover:border-amber-300 transition-all text-center flex flex-col disabled:opacity-20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
+                                        <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
+                                        <span className="text-white font-bold text-lg">Constant (+C)</span>
+                                    </button>
+                                </div>
+                                
+                                {integrationStep === 4 && (
+                                    <button onClick={generateSpell} className="mt-8 px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:shadow-[0_0_50px_rgba(59,130,246,0.8)] transition-all transform hover:scale-105 animate-pulse">
+                                        Summon Next Spell
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
