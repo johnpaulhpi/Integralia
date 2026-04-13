@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 16</title>
+    <title>Integralia: The Shattered Weave - Phase 17</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -132,6 +132,20 @@
                             {innerPath}
                         </svg>
                     );
+                } else if (card.name === 'Algebraica') {
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
+                            <line x1="30" y1="70" x2="70" y2="30" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
+                            <line x1="30" y1="30" x2="70" y2="70" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
+                        </svg>
+                    );
+                } else if (card.name === 'Expona') {
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] svg-pulse">
+                            <path d="M 20 80 Q 60 80, 80 20" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" />
+                            <circle cx="80" cy="20" r="6" fill="#f87171" />
+                        </svg>
+                    );
                 } else if (card.type === 'Derived' || card.type === 'Resonant') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
@@ -140,7 +154,7 @@
                             <circle cx="50" cy="50" r="10" fill="#f0abfc" />
                         </svg>
                     );
-                } else if (card.name === 'U-State' || card.name === 'Refined Solution') {
+                } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Refined Solution') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="#a855f7" strokeWidth="3" strokeDasharray="5 5" />
@@ -160,6 +174,12 @@
             } else if (card.name === 'Cosa') {
                 baseBg = 'bg-yellow-950/40';
                 baseBorder = 'border-yellow-900 hover:border-yellow-700 hover:bg-yellow-900/60';
+            } else if (card.name === 'Algebraica') {
+                baseBg = 'bg-emerald-950/40';
+                baseBorder = 'border-emerald-900 hover:border-emerald-700 hover:bg-emerald-900/60';
+            } else if (card.name === 'Expona') {
+                baseBg = 'bg-red-950/40';
+                baseBorder = 'border-red-900 hover:border-red-700 hover:bg-red-900/60';
             } else if (card.name === 'Residue' || card.name === 'Compound') {
                 if (card.baseTex && card.baseTex.includes('sin')) {
                     baseBg = 'bg-blue-950/40';
@@ -171,7 +191,7 @@
             } else if (card.type === 'Derived' || card.type === 'Resonant') {
                 baseBg = 'bg-fuchsia-950/40';
                 baseBorder = 'border-fuchsia-600 shadow-[inset_0_0_30px_rgba(217,70,239,0.2)] hover:border-fuchsia-400';
-            } else if (card.name === 'U-State' || card.name === 'Refined Solution') {
+            } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Refined Solution') {
                 baseBg = 'bg-fuchsia-950/40';
                 baseBorder = 'border-fuchsia-900 shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] hover:border-fuchsia-700';
             }
@@ -242,25 +262,43 @@
             const [mana, setMana] = useState(0);
             const [gamePhase, setGamePhase] = useState('setup');
             const [integrationStep, setIntegrationStep] = useState(0);
+            const [integrationPath, setIntegrationPath] = useState(null); // 'altar' or 'ibp'
 
             const [bossCards, setBossCards] = useState([]);
             
             // Random Spell Generator
             const generateSpell = () => {
-                const sinPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
-                const cosPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
-                
+                const isIbp = Math.random() > 0.5; // 50/50 Chance
                 const newCards = [];
-                if (sinPower > 0) {
-                    newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: sinPower, canCycle: (sinPower % 2 === 0), ability: "Primal Spirit.", isBleeding: false });
-                }
-                if (cosPower > 0) {
-                    newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
+                let logMsg = "";
+
+                if (!isIbp) {
+                    const sinPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
+                    const cosPower = Math.floor(Math.random() * 3) + 1; // 1 to 3
+                    if (sinPower > 0) newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: sinPower, canCycle: (sinPower % 2 === 0), ability: "Primal Spirit.", isBleeding: false });
+                    if (cosPower > 0) newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
+                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`;
+                } else {
+                    const xPower = 1; // Kept at 1 to prevent nested IBP loops for this build phase
+                    newCards.push({ id: `algebraica-${Date.now()}`, name: 'Algebraica', type: 'Core', baseTex: 'x', baseMath: 'x', power: xPower, canCycle: false, ability: "Algebraic Thread.", isBleeding: false });
+
+                    const ibpType = Math.floor(Math.random() * 3);
+                    if (ibpType === 0) {
+                        newCards.push({ id: `expona-${Date.now()}`, name: 'Expona', type: 'Core', baseTex: 'e^x', baseMath: 'exp(x)', power: 1, canCycle: false, ability: "Exponential Spirit.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x e^x using Dual-Weave (IBP).`;
+                    } else if (ibpType === 1) {
+                        newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Armored Core.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x cos(x) using Dual-Weave (IBP).`;
+                    } else {
+                        newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 1, canCycle: false, ability: "Primal Spirit.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x sin(x) using Dual-Weave (IBP).`;
+                    }
                 }
                 
                 setBossCards(newCards);
                 setGamePhase('setup');
                 setIntegrationStep(0);
+                setIntegrationPath(null);
                 setActiveMode(null);
                 setActiveMat(null);
                 setAltarCore(null);
@@ -271,7 +309,7 @@
                 setIbpDerived(null);
                 setTrigSubCard(null);
                 
-                addLog(`A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`);
+                addLog(logMsg);
             };
 
             // Run generator on boot
@@ -502,6 +540,7 @@
                         let calculatedVTex = `\\int ${card.baseTex} dx`;
                         if (card.baseMath === 'cos(x)' || (card.baseTex && card.baseTex.includes('cos'))) calculatedVTex = '\\sin(x)';
                         else if (card.baseMath === 'sin(x)' || (card.baseTex && card.baseTex.includes('sin'))) calculatedVTex = '-\\cos(x)';
+                        else if (card.baseMath === 'exp(x)' || (card.baseTex && card.baseTex.includes('e^x'))) calculatedVTex = 'e^x';
 
                         setIbpDerived({ duTex: calculatedDuTex, vTex: calculatedVTex });
                         return;
@@ -612,54 +651,101 @@
                     setAltarCore(null);
                     setAltarSacrifice(null);
                     setAltarExpanded([]);
+                    setIntegrationPath('altar');
+                    setIntegrationStep(0);
                     setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
                 }, 1000);
             };
 
             const confirmIbpWeave = () => {
-                addLog("Dual-Weave executed! The equation expands.");
+                addLog("Dual-Weave executed! The equation collapses into the Final Form.");
                 setConsumeAll(true);
                 setMana(m => m + 50);
                 
                 setTimeout(() => {
-                    setBossCards([
-                        { ...ibpU, id: `u-${Date.now()}` },
-                        { id: `v-${Date.now()}`, name: 'Derived v', type: 'Derived', baseTex: ibpDerived.vTex, baseMath: '', power: 1, ability: "Synthesized Integral.", canCycle: false, isBleeding: false },
-                        { id: `v2-${Date.now()}`, name: 'Derived v', type: 'Derived', baseTex: ibpDerived.vTex, baseMath: '', power: 1, ability: "Ready for inner integration.", canCycle: false, isBleeding: false },
-                        { id: `du-${Date.now()}`, name: 'Derived du', type: 'Derived', baseTex: ibpDerived.duTex, baseMath: '', power: 1, ability: "Synthesized Derivative.", canCycle: false, isBleeding: false }
-                    ]);
+                    const uTex = ibpU.baseTex; 
+                    let vTex = ibpDerived.vTex; 
+                    const duTex = ibpDerived.duTex;
+                    
+                    // Format u*v properly
+                    let uvTex = `${uTex}${vTex}`;
+                    if (vTex === '-\\cos(x)') uvTex = `-${uTex}\\cos(x)`;
+                    
+                    setBossCards([{
+                        id: 'ibp-state', name: 'IBP-State', type: 'Unresolved',
+                        baseTex: `${uvTex} - \\int ${vTex} \\cdot ${duTex} \\, dx`,
+                        power: 1, canCycle: false, ability: "Needs Inner Integral Simplification.", isBleeding: false,
+                        meta: { uTex, vTex, duTex, uvTex }
+                    }]);
                     
                     setConsumeAll(false);
                     setActiveMat(null);
                     setIbpU(null);
                     setIbpDv(null);
                     setIbpDerived(null);
-                    addLog("The board has been replaced with the expanded Integration by Parts components.");
+                    setIntegrationPath('ibp');
+                    setIntegrationStep(0);
+                    setGamePhase('integration');
+                    addLog("PHASE 2: The spell is now a Dual-Weave State. Refine the remaining integral.");
                 }, 1000);
             };
 
-            const applyIntegrationRule = (ruleType) => {
+            const applyIntegrationRule = (actionType) => {
                 if (mana < 10) { addLog("Not enough Mana! You need 10 Mana to cast a Rule Token."); return; }
 
-                if (ruleType === 'distribute' && integrationStep === 0) {
-                    setMana(m => m - 10); setIntegrationStep(1);
-                    setBossCards([{ ...bossCards[0], baseTex: '-\\int(u^2 - u^4) \\, du', ability: "Needs Linearity Split." }]);
-                    addLog("Token Applied: Distributed the powers.");
-                } else if (ruleType === 'linearity' && integrationStep === 1) {
-                    setMana(m => m - 10); setIntegrationStep(2);
-                    setBossCards([{ ...bossCards[0], baseTex: '\\int -u^2 \\, du + \\int u^4 \\, du', ability: "Needs Power Rule." }]);
-                    addLog("Token Applied: Split the integral using Linearity.");
-                } else if (ruleType === 'power_rule' && integrationStep === 2) {
-                    setMana(m => m - 10); setIntegrationStep(3);
-                    setBossCards([{ ...bossCards[0], baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5}', ability: "Needs Constant of Integration." }]);
-                    addLog("Token Applied: Executed the Power Rule.");
-                } else if (ruleType === 'plus_c' && integrationStep === 3) {
-                    setMana(m => m - 10 + 200); setIntegrationStep(4);
-                    setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5} + C', ability: "Mana Refined. Spell completely dissolved." }]);
-                    addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
-                } else {
-                    addLog("You cannot apply that rule right now.");
+                if (integrationPath === 'altar') {
+                    if (actionType === 'action1' && integrationStep === 0) {
+                        setMana(m => m - 10); setIntegrationStep(1);
+                        setBossCards([{ ...bossCards[0], baseTex: '-\\int(u^2 - u^4) \\, du', ability: "Needs Linearity Split." }]);
+                        addLog("Token Applied: Distributed the powers.");
+                    } else if (actionType === 'action2' && integrationStep === 1) {
+                        setMana(m => m - 10); setIntegrationStep(2);
+                        setBossCards([{ ...bossCards[0], baseTex: '\\int -u^2 \\, du + \\int u^4 \\, du', ability: "Needs Power Rule." }]);
+                        addLog("Token Applied: Split the integral using Linearity.");
+                    } else if (actionType === 'action3' && integrationStep === 2) {
+                        setMana(m => m - 10); setIntegrationStep(3);
+                        setBossCards([{ ...bossCards[0], baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5}', ability: "Needs Constant of Integration." }]);
+                        addLog("Token Applied: Executed the Power Rule.");
+                    } else if (actionType === 'plus_c' && integrationStep === 3) {
+                        setMana(m => m - 10 + 200); setIntegrationStep(4);
+                        setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: '-\\frac{u^3}{3} + \\frac{u^5}{5} + C', ability: "Mana Refined. Spell completely dissolved." }]);
+                        addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
+                    } else {
+                        addLog("You cannot apply that rule right now.");
+                    }
+                } 
+                else if (integrationPath === 'ibp') {
+                    const meta = bossCards[0].meta;
+                    
+                    if (actionType === 'action1' && integrationStep === 0) {
+                         setMana(m => m - 10); setIntegrationStep(1);
+                         let inner = meta.vTex;
+                         if (inner === '-\\cos(x)') inner = '-\\cos(x)'; // Formatting explicitly for visual consistency
+                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - \\int ${inner} \\, dx`, ability: "Needs Inner Integration." }]);
+                         addLog("Token Applied: Simplified the inner integral.");
+                    } else if (actionType === 'action2' && integrationStep === 1) {
+                         setMana(m => m - 10); setIntegrationStep(2);
+                         let resolvedInner = meta.vTex;
+                         if (meta.vTex === '\\sin(x)') resolvedInner = '-\\cos(x)';
+                         else if (meta.vTex === '-\\cos(x)') resolvedInner = '-\\sin(x)';
+                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - (${resolvedInner})`, ability: "Needs Sign Formatting." }]);
+                         addLog("Token Applied: Evaluated the remaining integral.");
+                    } else if (actionType === 'action3' && integrationStep === 2) {
+                         setMana(m => m - 10); setIntegrationStep(3);
+                         let finalTex = `${meta.uvTex} - ${meta.vTex}`; // Default for e^x
+                         if (meta.vTex === '\\sin(x)') finalTex = `${meta.uvTex} + \\cos(x)`;
+                         else if (meta.vTex === '-\\cos(x)') finalTex = `${meta.uvTex} + \\sin(x)`;
+                         
+                         setBossCards([{ ...bossCards[0], baseTex: finalTex, ability: "Needs Constant of Integration." }]);
+                         addLog("Token Applied: Formatted signs and structure.");
+                    } else if (actionType === 'plus_c' && integrationStep === 3) {
+                         setMana(m => m - 10 + 200); setIntegrationStep(4);
+                         setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]);
+                         addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
+                    } else {
+                        addLog("You cannot apply that rule right now.");
+                    }
                 }
             };
 
@@ -667,6 +753,13 @@
             if (activeMat === 'altar') { boardBorder = "border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.15)]"; }
             else if (activeMat === 'ibp') { boardBorder = "border-fuchsia-900/50 shadow-[0_0_30px_rgba(217,70,239,0.15)]"; }
             else if (activeMat === 'trigsub') { boardBorder = "border-amber-900/50 shadow-[0_0_30px_rgba(245,158,11,0.15)]"; }
+
+            // Dynamic Integration Button Labels
+            const btnLabels = {
+                altar: ['Distribute', 'Linearity', 'Power Rule'],
+                ibp: ['Simplify', 'Evaluate', 'Format']
+            };
+            const currentLabels = btnLabels[integrationPath] || btnLabels.altar;
 
             return (
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-7xl mx-auto">
@@ -945,20 +1038,20 @@
                         {gamePhase === 'integration' && (
                             <div className="w-full flex flex-col items-center">
                                 <div className="w-full grid grid-cols-4 gap-4">
-                                    <button onClick={() => applyIntegrationRule('distribute')} disabled={integrationStep !== 0}
+                                    <button onClick={() => applyIntegrationRule('action1')} disabled={integrationStep !== 0}
                                         className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
                                         <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">Distribute</span>
+                                        <span className="text-white font-bold text-lg">{currentLabels[0]}</span>
                                     </button>
-                                    <button onClick={() => applyIntegrationRule('linearity')} disabled={integrationStep !== 1}
+                                    <button onClick={() => applyIntegrationRule('action2')} disabled={integrationStep !== 1}
                                         className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
                                         <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">Linearity</span>
+                                        <span className="text-white font-bold text-lg">{currentLabels[1]}</span>
                                     </button>
-                                    <button onClick={() => applyIntegrationRule('power_rule')} disabled={integrationStep !== 2}
+                                    <button onClick={() => applyIntegrationRule('action3')} disabled={integrationStep !== 2}
                                         className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
                                         <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">Power Rule</span>
+                                        <span className="text-white font-bold text-lg">{currentLabels[2]}</span>
                                     </button>
                                     <button onClick={() => applyIntegrationRule('plus_c')} disabled={integrationStep !== 3}
                                         className="p-4 rounded-xl border-2 border-amber-500 bg-gray-950 hover:border-amber-300 transition-all text-center flex flex-col disabled:opacity-20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
