@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 18</title>
+    <title>Integralia: The Shattered Weave - Phase 19</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -146,7 +146,7 @@
                             <circle cx="80" cy="20" r="6" fill="#f87171" />
                         </svg>
                     );
-                } else if (card.type === 'Derived' || card.type === 'Resonant') {
+                } else if (card.type === 'Derived' || card.type === 'Resonant' || card.name === 'Bleeding Coil') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="#d946ef" strokeWidth="2" strokeDasharray="8 4" />
@@ -154,7 +154,17 @@
                             <circle cx="50" cy="50" r="10" fill="#f0abfc" />
                         </svg>
                     );
-                } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Refined Solution') {
+                } else if (card.name === 'Dust') {
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.3)]">
+                            <circle cx="50" cy="50" r="2" fill="#9ca3af" />
+                            <circle cx="40" cy="40" r="1" fill="#6b7280" />
+                            <circle cx="60" cy="60" r="1.5" fill="#4b5563" />
+                            <circle cx="30" cy="60" r="1" fill="#9ca3af" />
+                            <circle cx="70" cy="30" r="2" fill="#4b5563" />
+                        </svg>
+                    );
+                } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Tabular-State' || card.name === 'Refined Solution') {
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
                             <circle cx="50" cy="50" r="42" fill="none" stroke="#a855f7" strokeWidth="3" strokeDasharray="5 5" />
@@ -180,6 +190,9 @@
             } else if (card.name === 'Expona') {
                 baseBg = 'bg-red-950/40';
                 baseBorder = 'border-red-900 hover:border-red-700 hover:bg-red-900/60';
+            } else if (card.name === 'Dust') {
+                baseBg = 'bg-gray-950/80';
+                baseBorder = 'border-gray-800 border-dashed';
             } else if (card.name === 'Residue' || card.name === 'Compound') {
                 if (card.baseTex && card.baseTex.includes('sin')) {
                     baseBg = 'bg-blue-950/40';
@@ -188,10 +201,10 @@
                     baseBg = 'bg-yellow-950/40';
                     baseBorder = 'border-yellow-700 shadow-[inset_0_0_20px_rgba(234,179,8,0.1)] hover:border-yellow-500';
                 }
-            } else if (card.type === 'Derived' || card.type === 'Resonant') {
+            } else if (card.type === 'Derived' || card.type === 'Resonant' || card.name === 'Bleeding Coil') {
                 baseBg = 'bg-fuchsia-950/40';
                 baseBorder = 'border-fuchsia-600 shadow-[inset_0_0_30px_rgba(217,70,239,0.2)] hover:border-fuchsia-400';
-            } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Refined Solution') {
+            } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Tabular-State' || card.name === 'Refined Solution') {
                 baseBg = 'bg-fuchsia-950/40';
                 baseBorder = 'border-fuchsia-900 shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] hover:border-fuchsia-700';
             }
@@ -262,7 +275,7 @@
             const [mana, setMana] = useState(0);
             const [gamePhase, setGamePhase] = useState('setup');
             const [integrationStep, setIntegrationStep] = useState(0);
-            const [integrationPath, setIntegrationPath] = useState(null); // 'altar' or 'ibp'
+            const [integrationPath, setIntegrationPath] = useState(null); 
 
             const [bossCards, setBossCards] = useState([]);
             
@@ -279,19 +292,19 @@
                     if (cosPower > 0) newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
                     logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`;
                 } else {
-                    const xPower = 1; // Kept at 1 to prevent nested IBP loops for this build phase
-                    newCards.push({ id: `algebraica-${Date.now()}`, name: 'Algebraica', type: 'Core', baseTex: 'x', baseMath: 'x', power: xPower, canCycle: false, ability: "Algebraic Thread.", isBleeding: false });
+                    const xPower = Math.floor(Math.random() * 3) + 1; // 1 to 3 (Tabular Method target!)
+                    newCards.push({ id: `algebraica-${Date.now()}`, name: 'Algebraica', type: 'Core', baseTex: xPower === 1 ? 'x' : `x^${xPower}`, baseMath: xPower === 1 ? 'x' : `x^${xPower}`, power: xPower, canCycle: false, ability: "Algebraic Thread.", isBleeding: false });
 
                     const ibpType = Math.floor(Math.random() * 3);
                     if (ibpType === 0) {
                         newCards.push({ id: `expona-${Date.now()}`, name: 'Expona', type: 'Core', baseTex: 'e^x', baseMath: 'exp(x)', power: 1, canCycle: false, ability: "Exponential Spirit.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x e^x using Dual-Weave (IBP).`;
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} e^x using Dual-Weave or Tabular Method.`;
                     } else if (ibpType === 1) {
                         newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Armored Core.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x cos(x) using Dual-Weave (IBP).`;
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} cos(x) using Dual-Weave or Tabular Method.`;
                     } else {
                         newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 1, canCycle: false, ability: "Primal Spirit.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x sin(x) using Dual-Weave (IBP).`;
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} sin(x) using Dual-Weave or Tabular Method.`;
                     }
                 }
                 
@@ -308,30 +321,33 @@
                 setIbpDv(null);
                 setIbpDerived(null);
                 setTrigSubCard(null);
+                setTabularU([]);
+                setTabularDv([]);
+                setTabularComplete(false);
                 
                 addLog(logMsg);
             };
 
-            // Run generator on boot
             useEffect(() => {
                 generateSpell();
             }, []);
 
-            // Altar Mat State
+            // Mat States
             const [altarCore, setAltarCore] = useState(null);
             const [altarSacrifice, setAltarSacrifice] = useState(null);
             const [altarExpanded, setAltarExpanded] = useState([]);
-            const [uData, setUData] = useState({ coreFamily: null });
-
-            // Dual-Weave (IBP) Mat State
+            
             const [ibpU, setIbpU] = useState(null);
             const [ibpDv, setIbpDv] = useState(null);
             const [ibpDerived, setIbpDerived] = useState(null);
 
-            // Rune Circle (Trig Sub) Mat State
             const [trigSubCard, setTrigSubCard] = useState(null);
 
-            const [handCards, setHandCards] = useState({ slice: { available: true }, needle: { available: true }, altar: { available: true }, ibp: { available: true } });
+            // Abyssal Stair (Tabular) Mat State
+            const [tabularU, setTabularU] = useState([]); // Mortal Coils
+            const [tabularDv, setTabularDv] = useState([]); // Eternal Echoes
+            const [tabularComplete, setTabularComplete] = useState(false);
+
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
             
@@ -355,6 +371,8 @@
                     addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
                 } else if (matName === 'trigsub') {
                     addLog("Rune Circle (Trig Sub) Deployed. Slot an even-powered Core to Transmute.");
+                } else if (matName === 'tabular') {
+                    addLog("The Abyssal Stair Deployed. Slot a Mortal Coil (x) and an Eternal Echo to begin the descent.");
                 } else {
                     addLog("Mat returned to inventory.");
                 }
@@ -368,10 +386,7 @@
                     setMana(m => m + 10);
                     addLog(`Identity Cycled: Extracting mana from the ${card.name === 'Sina' ? 'Sine' : 'Cosine'} shell. (+10 Mana)`);
                 } else if (card.name === 'Residue') {
-                    if (mana < 10) {
-                        addLog("Not enough Mana! Hardening a Residue costs 10 Mana.");
-                        return; // Abort
-                    }
+                    if (mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
                     setMana(m => m - 10);
                     addLog(`Identity Cycled: Hardening Residue back into a Core. (-10 Mana)`);
                 }
@@ -394,7 +409,6 @@
             const handleBossCardClick = (card) => {
                 if (gamePhase !== 'setup') return;
 
-                // TOOLS TAKE PRIORITY
                 if (activeMode) {
                     if (activeMode === 'slice' && card.power > 1) {
                         setSlashingId(card.id);
@@ -409,6 +423,8 @@
                                 
                                 newCards[idx] = { 
                                     ...card, 
+                                    baseTex: card.name === 'Algebraica' ? (card.power - 1 === 1 ? 'x' : `x^${card.power - 1}`) : card.baseTex,
+                                    baseMath: card.name === 'Algebraica' ? (card.power - 1 === 1 ? 'x' : `x^${card.power - 1}`) : card.baseMath,
                                     power: card.power - 1, 
                                     canCycle: ((card.name === 'Sina' || card.name === 'Cosa') && (card.power - 1) % 2 === 0),
                                     isBleeding: false 
@@ -418,8 +434,8 @@
                                     id: `cleaved-${Date.now()}`, 
                                     name: card.name, 
                                     type: 'Fragment', 
-                                    baseTex: card.baseTex, 
-                                    baseMath: card.baseMath, 
+                                    baseTex: card.name === 'Algebraica' ? 'x' : card.baseTex, 
+                                    baseMath: card.name === 'Algebraica' ? 'x' : card.baseMath, 
                                     power: 1, 
                                     canCycle: false, 
                                     ability: "Cleaved Fragment. Bleeding mana.", 
@@ -462,6 +478,8 @@
                                 ...target1,
                                 id: `stitched-${Date.now()}`,
                                 power: newPower,
+                                baseTex: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseTex,
+                                baseMath: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseMath,
                                 type: resolvedType,
                                 canCycle: ((target1.name === 'Sina' || target1.name === 'Cosa') && newPower % 2 === 0),
                                 isBleeding: false,
@@ -487,12 +505,9 @@
                             setAltarCore({ ...card, family: coreFamily });
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Slotted ${card.name} into the Core. Now provide an opposite sacrifice.`);
-                        } else {
-                            addLog("The Altar only accepts Sine or Cosine Cores.");
-                        }
+                        } else { addLog("The Altar only accepts Sine or Cosine Cores."); }
                         return;
                     }
-                    
                     if (altarCore && !altarSacrifice) {
                         if (card.power === 1 && (card.name === 'Sina' || card.name === 'Cosa')) {
                             const sacrificeFamily = card.name === 'Sina' ? 'sin' : 'cos';
@@ -500,15 +515,10 @@
                                 setAltarSacrifice(card);
                                 setBossCards(prev => prev.filter(c => c.id !== card.id));
                                 addLog("Blood Sacrifice accepted! Now move all remaining equation cards into the Expanded Weave.");
-                            } else {
-                                addLog("Invalid sacrifice! The blood must be of the opposite type.");
-                            }
-                        } else {
-                            addLog("The Altar demands a Sine or Cosine of exactly power 1 as sacrifice.");
-                        }
+                            } else { addLog("Invalid sacrifice! The blood must be of the opposite type."); }
+                        } else { addLog("The Altar demands a Sine or Cosine of exactly power 1 as sacrifice."); }
                         return;
                     }
-
                     if (altarCore && altarSacrifice) {
                         setAltarExpanded(prev => [...prev, card]);
                         setBossCards(prev => prev.filter(c => c.id !== card.id));
@@ -517,10 +527,9 @@
                     }
                 }
 
-               // MAT SLOTTING LOGIC: IBP
+                // MAT SLOTTING LOGIC: IBP
                 if (!activeMode && activeMat === 'ibp') {
                     if (!ibpU) {
-                        // GATEKEEPER: 'u' must be Algebraic so the derivative simplifies!
                         if (card.name !== 'Algebraica') {
                             addLog("For current Dual-Weave techniques, 'u' (Bind) must be an Algebraic Thread.");
                             return;
@@ -530,14 +539,11 @@
                         addLog(`Bound ${card.name} as 'u'. Math engine calculating derivative...`);
                         return;
                     }
-                    
                     if (ibpU && !ibpDv) {
-                        // GATEKEEPER: 'dv' must be a pure, simple function we know how to integrate!
                         if (card.power > 1 || card.type === 'Resonant' || card.type === 'Fragment' || card.name === 'Residue' || card.name === 'Compound' || card.name === 'Algebraica') {
                             addLog("Invalid poison. 'dv' requires a pure, power-1 Exponential or Trigonometric spirit.");
                             return;
                         }
-                        
                         setIbpDv(card);
                         setBossCards(prev => prev.filter(c => c.id !== card.id));
                         addLog(`Poisoned with ${card.name} as 'dv'. Synthesizing Expansion Weave...`);
@@ -565,25 +571,40 @@
                             setTrigSubCard(card);
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Slotted ${card.name} into the Rune Circle. Ready for Transmutation.`);
-                        } else {
-                            addLog("The Rune Circle requires a stable Core with an EVEN power.");
+                        } else { addLog("The Rune Circle requires a stable Core with an EVEN power."); }
+                        return;
+                    }
+                }
+
+                // MAT SLOTTING LOGIC: TABULAR
+                if (!activeMode && activeMat === 'tabular') {
+                    if (tabularU.length === 0) {
+                        if (card.name !== 'Algebraica') {
+                            addLog("The Abyss demands a Mortal Coil (Algebraica) to bleed first.");
+                            return;
                         }
+                        setTabularU([card]);
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Bound ${card.name} as the Mortal Coil. Now provide an Eternal Echo.`);
+                        return;
+                    }
+                    if (tabularU.length > 0 && tabularDv.length === 0) {
+                        if (card.name === 'Algebraica' || card.power > 1 || card.type === 'Residue') {
+                            addLog("The Abyss demands a pure, power-1 Eternal Echo (Exponential/Trig) to resonate.");
+                            return;
+                        }
+                        setTabularDv([card]);
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Bound ${card.name} as the Eternal Echo. The descent begins.`);
                         return;
                     }
                 }
             };
 
-            // Un-Slotting Logic for the Altar Mat
             const handleAltarClick = (role, id) => {
-                if (role === 'core') {
-                    setBossCards(prev => [...prev, altarCore]);
-                    setAltarCore(null);
-                    addLog("Core returned to the board.");
-                } else if (role === 'sacrifice') {
-                    setBossCards(prev => [...prev, altarSacrifice]);
-                    setAltarSacrifice(null);
-                    addLog("Sacrifice returned to the board.");
-                } else if (role === 'expanded') {
+                if (role === 'core') { setBossCards(prev => [...prev, altarCore]); setAltarCore(null); addLog("Core returned to the board."); } 
+                else if (role === 'sacrifice') { setBossCards(prev => [...prev, altarSacrifice]); setAltarSacrifice(null); addLog("Sacrifice returned to the board."); } 
+                else if (role === 'expanded') {
                     const cardToReturn = altarExpanded.find(c => c.id === id);
                     setBossCards(prev => [...prev, cardToReturn]);
                     setAltarExpanded(prev => prev.filter(c => c.id !== id));
@@ -591,56 +612,21 @@
                 }
             };
 
-            // Un-Slotting Logic for the IBP Mat
             const handleIbpClick = (role) => {
-                if (role === 'u') {
-                    setBossCards(prev => [...prev, ibpU]);
-                    setIbpU(null);
-                    setIbpDerived(null);
-                    addLog("'u' binding released.");
-                } else if (role === 'dv') {
-                    setBossCards(prev => [...prev, ibpDv]);
-                    setIbpDv(null);
-                    setIbpDerived(null);
-                    addLog("'dv' poison released.");
-                }
+                if (role === 'u') { setBossCards(prev => [...prev, ibpU]); setIbpU(null); setIbpDerived(null); addLog("'u' binding released."); } 
+                else if (role === 'dv') { setBossCards(prev => [...prev, ibpDv]); setIbpDv(null); setIbpDerived(null); addLog("'dv' poison released."); }
             };
 
-            // Un-Slotting Logic for the Rune Circle Mat
             const handleTrigSubClick = () => {
-                if (trigSubCard) {
-                    setBossCards(prev => [...prev, trigSubCard]);
-                    setTrigSubCard(null);
-                    addLog("Core returned to the board.");
-                }
+                if (trigSubCard) { setBossCards(prev => [...prev, trigSubCard]); setTrigSubCard(null); addLog("Core returned to the board."); }
             };
 
             const transmuteRune = () => {
                 if (!trigSubCard) return;
-                
                 setMana(m => m + 30);
-                
-                const newKaTeX = trigSubCard.name === 'Sina' 
-                    ? '\\frac{1 - \\cos(2x)}{2}' 
-                    : '\\frac{1 + \\cos(2x)}{2}';
-
-                setBossCards(prev => [
-                    ...prev,
-                    {
-                        id: `resonant-${Date.now()}`,
-                        name: 'Resonant Core',
-                        type: 'Resonant',
-                        baseTex: newKaTeX,
-                        baseMath: '', // Base math can remain empty for derived states unless needed by math.js later
-                        power: trigSubCard.power / 2,
-                        canCycle: false,
-                        ability: "Transmuted via Half-Angle Identity.",
-                        isBleeding: false
-                    }
-                ]);
-
-                setTrigSubCard(null);
-                setActiveMat(null);
+                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                setBossCards(prev => [ ...prev, { id: `resonant-${Date.now()}`, name: 'Resonant Core', type: 'Resonant', baseTex: newKaTeX, baseMath: '', power: trigSubCard.power / 2, canCycle: false, ability: "Transmuted via Half-Angle Identity.", isBleeding: false } ]);
+                setTrigSubCard(null); setActiveMat(null);
                 addLog("Transmutation complete! The Rune Circle fades.");
             };
 
@@ -648,106 +634,133 @@
                 const expectedExpandedName = altarCore.family === 'sin' ? 'Sina' : 'Cosa';
                 const expectedResidueTex = altarCore.family === 'sin' ? '(1-\\sin^2(x))' : '(1-\\cos^2(x))';
 
-                // Weave Validation Engine
                 const isInvalid = altarExpanded.some(c => {
                     if (c.name === expectedExpandedName) return false;
                     if (c.name === 'Residue' && c.baseTex === expectedResidueTex) return false;
                     return true; 
                 });
 
-                if (isInvalid) {
-                    addLog("The Weave is unstable! You left unconverted opposite spirits in the Expanded Weave. Cycle them into Residue first.");
-                    return;
-                }
+                if (isInvalid) { addLog("The Weave is unstable! You left unconverted opposite spirits in the Expanded Weave. Cycle them into Residue first."); return; }
 
                 let uPower = altarCore.power;
                 let residueCount = 0;
-
                 altarExpanded.forEach(c => {
                     if (c.name === expectedExpandedName) uPower += c.power;
                     if (c.name === 'Residue') residueCount++;
                 });
 
-                if (residueCount > 1) {
-                    addLog("The Altar can only process one Residue at a time right now. The spell is too complex!");
-                    return;
-                }
+                if (residueCount > 1) { addLog("The Altar can only process one Residue at a time right now. The spell is too complex!"); return; }
 
                 addLog("Altar rituals complete! The Weave collapses into a U-State.");
-                setConsumeAll(true);
-                setMana(m => m + 50);
+                setConsumeAll(true); setMana(m => m + 50);
 
                 setTimeout(() => {
-                    // Dynamic Polynomial Engine
                     let sign = altarCore.family === 'cos' ? -1 : 1;
                     let terms = [];
-                    
-                    if (residueCount === 0) {
-                        terms.push({ c: sign, p: uPower });
-                    } else {
-                        // sign * u^P * (1 - u^2) = sign*u^P - sign*u^{P+2}
-                        terms.push({ c: sign, p: uPower });
-                        terms.push({ c: -sign, p: uPower + 2 });
-                    }
-                    
+                    if (residueCount === 0) { terms.push({ c: sign, p: uPower }); } 
+                    else { terms.push({ c: sign, p: uPower }); terms.push({ c: -sign, p: uPower + 2 }); }
                     terms.sort((a,b) => a.p - b.p);
 
                     let initialEq = '';
-                    if (residueCount === 1) {
-                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}(1-u^2) \\, du`;
-                    } else {
-                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`;
-                    }
+                    if (residueCount === 1) { initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}(1-u^2) \\, du`; } 
+                    else { initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`; }
 
-                    setBossCards([{
-                        id: 'u-state', name: 'U-State', type: 'Unresolved',
-                        baseTex: initialEq,
-                        power: 1, canCycle: false, ability: residueCount === 1 ? "Needs Distribution." : "Needs Power Rule.", isBleeding: false,
-                        meta: { terms, hasResidue: residueCount === 1 }
-                    }]);
+                    setBossCards([{ id: 'u-state', name: 'U-State', type: 'Unresolved', baseTex: initialEq, power: 1, canCycle: false, ability: residueCount === 1 ? "Needs Distribution." : "Needs Power Rule.", isBleeding: false, meta: { terms, hasResidue: residueCount === 1 } }]);
                     
-                    setConsumeAll(false);
-                    setActiveMat(null);
-                    setAltarCore(null);
-                    setAltarSacrifice(null);
-                    setAltarExpanded([]);
-                    setIntegrationPath('altar');
-                    setIntegrationStep(residueCount === 1 ? 0 : 2); // Skips distribute/linearity if no residue!
-                    setGamePhase('integration');
+                    setConsumeAll(false); setActiveMat(null); setAltarCore(null); setAltarSacrifice(null); setAltarExpanded([]);
+                    setIntegrationPath('altar'); setIntegrationStep(residueCount === 1 ? 0 : 2); setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
                 }, 1000);
             };
 
             const confirmIbpWeave = () => {
                 addLog("Dual-Weave executed! The equation collapses into the Final Form.");
-                setConsumeAll(true);
-                setMana(m => m + 50);
-                
+                setConsumeAll(true); setMana(m => m + 50);
                 setTimeout(() => {
                     const uTex = ibpU.baseTex; 
                     let vTex = ibpDerived.vTex; 
                     const duTex = ibpDerived.duTex;
-                    
-                    // Format u*v properly
                     let uvTex = `${uTex}${vTex}`;
                     if (vTex === '-\\cos(x)') uvTex = `-${uTex}\\cos(x)`;
                     
-                    setBossCards([{
-                        id: 'ibp-state', name: 'IBP-State', type: 'Unresolved',
-                        baseTex: `${uvTex} - \\int ${vTex} \\cdot ${duTex} \\, dx`,
-                        power: 1, canCycle: false, ability: "Needs Inner Integral Simplification.", isBleeding: false,
-                        meta: { uTex, vTex, duTex, uvTex }
-                    }]);
+                    setBossCards([{ id: 'ibp-state', name: 'IBP-State', type: 'Unresolved', baseTex: `${uvTex} - \\int ${vTex} \\cdot ${duTex} \\, dx`, power: 1, canCycle: false, ability: "Needs Inner Integral Simplification.", isBleeding: false, meta: { uTex, vTex, duTex, uvTex } }]);
                     
-                    setConsumeAll(false);
-                    setActiveMat(null);
-                    setIbpU(null);
-                    setIbpDv(null);
-                    setIbpDerived(null);
-                    setIntegrationPath('ibp');
-                    setIntegrationStep(0);
-                    setGamePhase('integration');
+                    setConsumeAll(false); setActiveMat(null); setIbpU(null); setIbpDv(null); setIbpDerived(null);
+                    setIntegrationPath('ibp'); setIntegrationStep(0); setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a Dual-Weave State. Refine the remaining integral.");
+                }, 1000);
+            };
+
+            const stepIntoAbyss = () => {
+                if (mana < 5) { addLog("Not enough mana for the descent! Cost: 5 Mana."); return; }
+                setMana(m => m - 5);
+
+                const lastU = tabularU[tabularU.length - 1];
+                const lastDv = tabularDv[tabularDv.length - 1];
+
+                let newUBaseMath = '';
+                let newUTex = '';
+                let isZero = false;
+
+                try {
+                    const derivedNode = math.derivative(lastU.baseMath, 'x');
+                    newUBaseMath = derivedNode.toString();
+                    newUTex = derivedNode.toTex().replace(/~/g, '');
+                    if (newUBaseMath === '0') { isZero = true; newUTex = '0'; }
+                } catch(e) { console.error(e); }
+
+                const newUCard = { id: `u-${Date.now()}`, name: isZero ? 'Dust' : 'Bleeding Coil', type: isZero ? 'Void' : 'Derived', baseTex: newUTex, baseMath: newUBaseMath, power: 1, ability: isZero ? "Reduced to nothing." : "Stripped of power.", isBleeding: !isZero };
+
+                let newDvTex = '';
+                let newDvMath = '';
+                if (lastDv.baseMath.includes('exp(x)') || lastDv.baseMath.includes('e^x')) { newDvTex = 'e^x'; newDvMath = 'exp(x)'; } 
+                else if (lastDv.baseMath === 'sin(x)') { newDvTex = '-\\cos(x)'; newDvMath = '-cos(x)'; }
+                else if (lastDv.baseMath === '-cos(x)' || lastDv.baseTex === '-\\cos(x)') { newDvTex = '-\\sin(x)'; newDvMath = '-sin(x)'; }
+                else if (lastDv.baseMath === '-sin(x)' || lastDv.baseTex === '-\\sin(x)') { newDvTex = '\\cos(x)'; newDvMath = 'cos(x)'; }
+                else if (lastDv.baseMath === 'cos(x)') { newDvTex = '\\sin(x)'; newDvMath = 'sin(x)'; }
+
+                const newDvCard = { id: `dv-${Date.now()}`, name: 'Echo', type: 'Resonant', baseTex: newDvTex, baseMath: newDvMath, power: 1, ability: "Endlessly looping.", isBleeding: false };
+
+                setTabularU([...tabularU, newUCard]);
+                setTabularDv([...tabularDv, newDvCard]);
+
+                if (isZero) {
+                    setTabularComplete(true);
+                    addLog("The Mortal Coil is reduced to dust. You may reap the echoes.");
+                } else { addLog("You step deeper. The coil bleeds; the echo loops. (-5 Mana)"); }
+            };
+
+            const reapEchoes = () => {
+                let finalTex = '';
+                for (let i = 0; i < tabularU.length - 1; i++) {
+                    const sign = i % 2 === 0 ? '+' : '-';
+                    let uTerm = tabularU[i].baseTex;
+                    let dvTerm = tabularDv[i+1].baseTex;
+                    
+                    // Basic formatting string replacement for visual presentation
+                    if (uTerm === '1') uTerm = '';
+                    let termTex = '';
+                    if (dvTerm === '-\\cos(x)' || dvTerm === '-\\sin(x)') {
+                        dvTerm = dvTerm.replace('-', '');
+                        const newSign = sign === '+' ? '-' : '+';
+                        termTex = ` ${newSign} ${uTerm}${dvTerm}`;
+                    } else {
+                        termTex = ` ${sign} ${uTerm}${dvTerm}`;
+                    }
+                    if (i === 0 && termTex.trim().startsWith('+')) finalTex += termTex.replace('+', '').trim();
+                    else finalTex += termTex;
+                }
+
+                setMana(m => m + 100); 
+                addLog("The echoes are harvested! The abyss collapses.");
+                setConsumeAll(true);
+                
+                setTimeout(() => {
+                    setBossCards([{ id: 'tabular-state', name: 'Tabular-State', type: 'Unresolved', baseTex: finalTex, power: 1, canCycle: false, ability: "Needs Constant of Integration.", isBleeding: false }]);
+                    setConsumeAll(false); setActiveMat(null); setTabularU([]); setTabularDv([]); setTabularComplete(false);
+                    setIntegrationPath('tabular'); setIntegrationStep(2); // Jump straight to +C format
+                    setGamePhase('integration');
+                    addLog("PHASE 2: The spell is now a Tabular State. Finalize the refinement.");
                 }, 1000);
             };
 
@@ -756,81 +769,46 @@
 
                 if (integrationPath === 'altar') {
                     const meta = bossCards[0].meta;
-                    
                     if (actionType === 'action1' && integrationStep === 0) {
                         let distEq = '';
-                        meta.terms.forEach((t, i) => {
-                            if (t.c < 0) distEq += i === 0 ? '-' : ' - ';
-                            else if (i > 0) distEq += ' + ';
-                            distEq += t.p === 1 ? 'u' : `u^${t.p}`;
-                        });
-                        distEq = `\\int (${distEq}) \\, du`;
-
-                        setMana(m => m - 10); setIntegrationStep(1);
-                        setBossCards([{ ...bossCards[0], baseTex: distEq, ability: "Needs Linearity Split." }]);
-                        addLog("Token Applied: Distributed the powers.");
+                        meta.terms.forEach((t, i) => { if (t.c < 0) distEq += i === 0 ? '-' : ' - '; else if (i > 0) distEq += ' + '; distEq += t.p === 1 ? 'u' : `u^${t.p}`; });
+                        setMana(m => m - 10); setIntegrationStep(1); setBossCards([{ ...bossCards[0], baseTex: `\\int (${distEq}) \\, du`, ability: "Needs Linearity Split." }]); addLog("Token Applied: Distributed the powers.");
                     } else if (actionType === 'action2' && integrationStep === 1) {
                         let linEq = '';
-                        meta.terms.forEach((t, i) => {
-                            if (t.c < 0) linEq += i === 0 ? '-\\int ' : ' - \\int ';
-                            else linEq += i === 0 ? '\\int ' : ' + \\int ';
-                            linEq += `${t.p === 1 ? 'u' : `u^${t.p}`} \\, du`;
-                        });
-
-                        setMana(m => m - 10); setIntegrationStep(2);
-                        setBossCards([{ ...bossCards[0], baseTex: linEq, ability: "Needs Power Rule." }]);
-                        addLog("Token Applied: Split the integral using Linearity.");
+                        meta.terms.forEach((t, i) => { if (t.c < 0) linEq += i === 0 ? '-\\int ' : ' - \\int '; else linEq += i === 0 ? '\\int ' : ' + \\int '; linEq += `${t.p === 1 ? 'u' : `u^${t.p}`} \\, du`; });
+                        setMana(m => m - 10); setIntegrationStep(2); setBossCards([{ ...bossCards[0], baseTex: linEq, ability: "Needs Power Rule." }]); addLog("Token Applied: Split the integral using Linearity.");
                     } else if (actionType === 'action3' && integrationStep === 2) {
                         let powEq = '';
-                        meta.terms.forEach((t, i) => {
-                            let newP = t.p + 1;
-                            if (t.c < 0) powEq += i === 0 ? '-' : ' - ';
-                            else if (i > 0) powEq += ' + ';
-                            powEq += `\\frac{u^{${newP}}}{${newP}}`;
-                        });
-
-                        setMana(m => m - 10); setIntegrationStep(3);
-                        setBossCards([{ ...bossCards[0], baseTex: powEq, ability: "Needs Constant of Integration." }]);
-                        addLog("Token Applied: Executed the Power Rule.");
+                        meta.terms.forEach((t, i) => { let newP = t.p + 1; if (t.c < 0) powEq += i === 0 ? '-' : ' - '; else if (i > 0) powEq += ' + '; powEq += `\\frac{u^{${newP}}}{${newP}}`; });
+                        setMana(m => m - 10); setIntegrationStep(3); setBossCards([{ ...bossCards[0], baseTex: powEq, ability: "Needs Constant of Integration." }]); addLog("Token Applied: Executed the Power Rule.");
                     } else if (actionType === 'plus_c' && integrationStep === 3) {
-                        setMana(m => m - 10 + 200); setIntegrationStep(4);
-                        setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]);
-                        addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
-                    } else {
-                        addLog("You cannot apply that rule right now.");
-                    }
+                        setMana(m => m - 10 + 200); setIntegrationStep(4); setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]); addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
+                    } else { addLog("You cannot apply that rule right now."); }
                 } 
                 else if (integrationPath === 'ibp') {
                     const meta = bossCards[0].meta;
-                    
                     if (actionType === 'action1' && integrationStep === 0) {
                          setMana(m => m - 10); setIntegrationStep(1);
-                         let inner = meta.vTex;
-                         if (inner === '-\\cos(x)') inner = '-\\cos(x)';
-                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - \\int ${inner} \\, dx`, ability: "Needs Inner Integration." }]);
-                         addLog("Token Applied: Simplified the inner integral.");
+                         let inner = meta.vTex === '-\\cos(x)' ? '-\\cos(x)' : meta.vTex;
+                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - \\int ${inner} \\, dx`, ability: "Needs Inner Integration." }]); addLog("Token Applied: Simplified the inner integral.");
                     } else if (actionType === 'action2' && integrationStep === 1) {
                          setMana(m => m - 10); setIntegrationStep(2);
                          let resolvedInner = meta.vTex;
-                         if (meta.vTex === '\\sin(x)') resolvedInner = '-\\cos(x)';
-                         else if (meta.vTex === '-\\cos(x)') resolvedInner = '-\\sin(x)';
-                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - (${resolvedInner})`, ability: "Needs Sign Formatting." }]);
-                         addLog("Token Applied: Evaluated the remaining integral.");
+                         if (meta.vTex === '\\sin(x)') resolvedInner = '-\\cos(x)'; else if (meta.vTex === '-\\cos(x)') resolvedInner = '-\\sin(x)';
+                         setBossCards([{ ...bossCards[0], baseTex: `${meta.uvTex} - (${resolvedInner})`, ability: "Needs Sign Formatting." }]); addLog("Token Applied: Evaluated the remaining integral.");
                     } else if (actionType === 'action3' && integrationStep === 2) {
                          setMana(m => m - 10); setIntegrationStep(3);
-                         let finalTex = `${meta.uvTex} - ${meta.vTex}`; // Default for e^x
-                         if (meta.vTex === '\\sin(x)') finalTex = `${meta.uvTex} + \\cos(x)`;
-                         else if (meta.vTex === '-\\cos(x)') finalTex = `${meta.uvTex} + \\sin(x)`;
-                         
-                         setBossCards([{ ...bossCards[0], baseTex: finalTex, ability: "Needs Constant of Integration." }]);
-                         addLog("Token Applied: Formatted signs and structure.");
+                         let finalTex = `${meta.uvTex} - ${meta.vTex}`; 
+                         if (meta.vTex === '\\sin(x)') finalTex = `${meta.uvTex} + \\cos(x)`; else if (meta.vTex === '-\\cos(x)') finalTex = `${meta.uvTex} + \\sin(x)`;
+                         setBossCards([{ ...bossCards[0], baseTex: finalTex, ability: "Needs Constant of Integration." }]); addLog("Token Applied: Formatted signs and structure.");
                     } else if (actionType === 'plus_c' && integrationStep === 3) {
-                         setMana(m => m - 10 + 200); setIntegrationStep(4);
-                         setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]);
-                         addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
-                    } else {
-                        addLog("You cannot apply that rule right now.");
-                    }
+                         setMana(m => m - 10 + 200); setIntegrationStep(4); setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]); addLog("Token Applied: Added +C. REFINEMENT COMPLETE! Massive Mana Payout!");
+                    } else { addLog("You cannot apply that rule right now."); }
+                }
+                else if (integrationPath === 'tabular') {
+                    if (actionType === 'plus_c' && integrationStep === 2) {
+                         setMana(m => m - 10 + 300); setIntegrationStep(4); setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Mana Refined. Spell completely dissolved." }]); addLog("Token Applied: Added +C. REFINEMENT COMPLETE! MASSIVE MANA PAYOUT!");
+                    } else { addLog("You cannot apply that rule right now."); }
                 }
             };
 
@@ -838,12 +816,9 @@
             if (activeMat === 'altar') { boardBorder = "border-red-900/50 shadow-[0_0_30px_rgba(220,38,38,0.15)]"; }
             else if (activeMat === 'ibp') { boardBorder = "border-fuchsia-900/50 shadow-[0_0_30px_rgba(217,70,239,0.15)]"; }
             else if (activeMat === 'trigsub') { boardBorder = "border-amber-900/50 shadow-[0_0_30px_rgba(245,158,11,0.15)]"; }
+            else if (activeMat === 'tabular') { boardBorder = "border-teal-900/50 shadow-[0_0_30px_rgba(20,184,166,0.15)]"; }
 
-            // Dynamic Integration Button Labels
-            const btnLabels = {
-                altar: ['Distribute', 'Linearity', 'Power Rule'],
-                ibp: ['Simplify', 'Evaluate', 'Format']
-            };
+            const btnLabels = { altar: ['Distribute', 'Linearity', 'Power Rule'], ibp: ['Simplify', 'Evaluate', 'Format'], tabular: ['-', '-', 'Format'] };
             const currentLabels = btnLabels[integrationPath] || btnLabels.altar;
 
             return (
@@ -868,32 +843,18 @@
                     {/* DYNAMIC TOP SECTION: Board + Optional Mats */}
                     <div className="w-full flex gap-6 mb-6 min-h-[450px] transition-all duration-500">
                         
-                        {/* MAIN BOARD (Shrinks when a Mat is active) */}
+                        {/* MAIN BOARD */}
                         <div className={`bg-gray-950 border rounded-[2rem] pt-10 pb-8 px-6 flex flex-col items-center relative overflow-hidden transition-all duration-500 ${activeMat ? 'w-4/12' : 'w-full'} ${boardBorder}`}>
-                            <h2 className="absolute top-4 text-white/20 text-xs font-black tracking-[0.5em] uppercase text-center w-full">
-                                Used Spell Container
-                            </h2>
-                            
+                            <h2 className="absolute top-4 text-white/20 text-xs font-black tracking-[0.5em] uppercase text-center w-full">Used Spell Container</h2>
                             <div className={`absolute inset-0 bg-blue-950/10 z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
-
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full mt-4">
                                 {bossCards.length > 0 && <div className={`text-6xl text-white/10 font-serif select-none ${consumeAll ? 'animate-consume' : ''}`}>∫</div>}
-                                
-                                {bossCards.length === 0 && !consumeAll && (
-                                    <div className="text-gray-600 font-bold tracking-widest uppercase opacity-50 text-sm text-center">Board Empty</div>
-                                )}
-
+                                {bossCards.length === 0 && !consumeAll && <div className="text-gray-600 font-bold tracking-widest uppercase opacity-50 text-sm text-center">Board Empty</div>}
                                 {bossCards.map((card) => (
-                                    <BattleCard 
-                                        key={card.id} card={card} 
-                                        scale={activeMat ? 'scale-75' : 'scale-95'}
-                                        isActive={activeMode === 'slice' || activeMode === 'stitch_1' || (activeMat === 'altar' && !altarCore) || (activeMat === 'ibp' && (!ibpU || !ibpDv)) || (activeMat === 'trigsub' && !trigSubCard)}
+                                    <BattleCard key={card.id} card={card} scale={activeMat ? 'scale-75' : 'scale-95'}
+                                        isActive={activeMode === 'slice' || activeMode === 'stitch_1' || (activeMat === 'altar' && !altarCore) || (activeMat === 'ibp' && (!ibpU || !ibpDv)) || (activeMat === 'trigsub' && !trigSubCard) || (activeMat === 'tabular' && (!tabularU.length || !tabularDv.length))}
                                         isStitchTarget={stitchTargetId === card.id || activeMode === 'stitch_2'}
-                                        onClick={() => handleBossCardClick(card)}
-                                        onCycle={handleCycle}
-                                        isSlashing={slashingId === card.id}
-                                        isShattering={shatteringId === card.id}
-                                        isConsumed={consumeAll}
+                                        onClick={() => handleBossCardClick(card)} onCycle={handleCycle} isSlashing={slashingId === card.id} isShattering={shatteringId === card.id} isConsumed={consumeAll}
                                     />
                                 ))}
                                 {bossCards.length > 0 && <div className={`text-3xl text-white/20 font-serif italic ${consumeAll ? 'animate-consume' : ''}`}>dx</div>}
@@ -904,58 +865,30 @@
                         {activeMat === 'altar' && (
                             <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(220,38,38,0.05)] animate-slide-left overflow-hidden">
                                 <h2 className="text-red-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4">Sacrificial Altar Mat</h2>
-                                
-                                {/* Top Row: Core & Sacrifice Slots */}
                                 <div className="w-full flex justify-center gap-6 relative z-20">
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500/20 text-4xl font-black mt-2">×</div>
-
-                                    {/* Core Slot */}
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">1. Core (u)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {altarCore ? (
-                                                <BattleCard card={altarCore} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('core', null)} />
-                                            ) : (
-                                                <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Board Core<br/>to Assign</span>
-                                            )}
+                                            {altarCore ? <BattleCard card={altarCore} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('core', null)} /> : <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Board Core<br/>to Assign</span>}
                                         </div>
                                     </div>
-
-                                    {/* Sacrifice Slot */}
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">2. Sacrifice (du)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {altarSacrifice ? (
-                                                <BattleCard card={altarSacrifice} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('sacrifice', null)} />
-                                            ) : (
-                                                <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card (Power 1)<br/>to Assign</span>
-                                            )}
+                                            {altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('sacrifice', null)} /> : <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card (Power 1)<br/>to Assign</span>}
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Bottom Row: Expanded Weave */}
                                 <div className="w-full border-t border-red-900/30 pt-4 mt-4 flex flex-col items-center flex-1 z-20">
                                     <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2">3. Expanded Weave</span>
                                     <div className="w-full flex-1 flex flex-wrap justify-center items-center gap-2 bg-black/30 rounded-2xl p-2 border border-red-900/20 relative min-h-[120px]">
-                                        {altarExpanded.length === 0 && (
-                                            <span className="text-red-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Move all remaining cards here</span>
-                                        )}
-                                        {altarExpanded.map((card) => (
-                                            <div key={card.id} className="w-[120px] h-[160px] flex items-center justify-center">
-                                                <BattleCard card={card} scale="scale-[0.55] hover:scale-75" onClick={() => handleAltarClick('expanded', card.id)} />
-                                            </div>
-                                        ))}
+                                        {altarExpanded.length === 0 && <span className="text-red-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Move all remaining cards here</span>}
+                                        {altarExpanded.map((card) => ( <div key={card.id} className="w-[120px] h-[160px] flex items-center justify-center"><BattleCard card={card} scale="scale-[0.55] hover:scale-75" onClick={() => handleAltarClick('expanded', card.id)} /></div> ))}
                                     </div>
                                 </div>
-
-                                {/* Collapse Button */}
                                 {bossCards.length === 0 && altarCore && altarSacrifice && (
-                                    <div className="absolute inset-0 bg-red-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                                        <button onClick={collapseWeave} className="px-10 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] transition-all transform hover:scale-105">
-                                            Collapse Weave
-                                        </button>
-                                    </div>
+                                    <div className="absolute inset-0 bg-red-950/80 backdrop-blur-sm z-50 flex items-center justify-center"><button onClick={collapseWeave} className="px-10 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] transition-all transform hover:scale-105">Collapse Weave</button></div>
                                 )}
                             </div>
                         )}
@@ -964,58 +897,37 @@
                         {activeMat === 'ibp' && (
                             <div className="w-8/12 bg-fuchsia-950/10 border-2 border-fuchsia-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(217,70,239,0.05)] animate-slide-left overflow-hidden">
                                 <h2 className="text-fuchsia-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4">Dual-Weave Mat (IBP)</h2>
-                                
                                 <div className="w-full flex justify-center gap-6 relative z-20">
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">1. Bind (u)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {ibpU ? (
-                                                <BattleCard card={ibpU} scale="scale-75 hover:scale-95" onClick={() => handleIbpClick('u')} />
-                                            ) : (
-                                                <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Bind</span>
-                                            )}
+                                            {ibpU ? <BattleCard card={ibpU} scale="scale-75 hover:-scale-95" onClick={() => handleIbpClick('u')} /> : <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Bind</span>}
                                         </div>
                                     </div>
-
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">2. Poison (dv)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {ibpDv ? (
-                                                <BattleCard card={ibpDv} scale="scale-75 hover:scale-95" onClick={() => handleIbpClick('dv')} />
-                                            ) : (
-                                                <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Poison</span>
-                                            )}
+                                            {ibpDv ? <BattleCard card={ibpDv} scale="scale-75 hover:scale-95" onClick={() => handleIbpClick('dv')} /> : <span className="text-fuchsia-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Card<br/>to Poison</span>}
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="w-full border-t border-fuchsia-900/30 pt-4 mt-4 flex flex-col items-center flex-1 z-20">
                                     <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2">3. Expanded Form [ u v - ∫ v du ]</span>
                                     <div className="w-full flex-1 flex flex-nowrap justify-center items-center gap-2 bg-black/30 rounded-2xl p-2 border border-fuchsia-900/20 relative min-h-[140px] overflow-hidden">
-                                        {!ibpU || !ibpDv || !ibpDerived ? (
-                                            <span className="text-fuchsia-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Bind u and dv to expand the sequence</span>
-                                        ) : (
+                                        {!ibpU || !ibpDv || !ibpDerived ? ( <span className="text-fuchsia-900/50 font-bold text-[10px] uppercase tracking-widest text-center">Bind u and dv to expand the sequence</span> ) : (
                                             <div className="flex items-center justify-center gap-1 w-full h-full">
-                                                <div className="w-[85px]"><BattleCard card={ibpU} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500/50 font-bold">·</div>
+                                                <div className="w-[85px]"><BattleCard card={ibpU} scale="scale-[0.45]" /></div><div className="text-fuchsia-500/50 font-bold">·</div>
                                                 <div className="w-[85px]"><BattleCard card={{name: 'Derived v', type:'Derived', baseTex: ibpDerived.vTex, power: 1}} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500 font-bold text-2xl mx-1">-</div>
-                                                <div className="text-fuchsia-500/50 font-serif text-4xl mr-1">∫</div>
+                                                <div className="text-fuchsia-500 font-bold text-2xl mx-1">-</div><div className="text-fuchsia-500/50 font-serif text-4xl mr-1">∫</div>
                                                 <div className="w-[85px]"><BattleCard card={{name: 'Derived v', type:'Derived', baseTex: ibpDerived.vTex, power: 1}} scale="scale-[0.45]" /></div>
                                                 <div className="text-fuchsia-500/50 font-bold">·</div>
-                                                <div className="w-[85px]"><BattleCard card={{name: 'Derived du', type:'Derived', baseTex: ibpDerived.duTex, power: 1}} scale="scale-[0.45]" /></div>
-                                                <div className="text-fuchsia-500/50 font-bold ml-1">dx</div>
+                                                <div className="w-[85px]"><BattleCard card={{name: 'Derived du', type:'Derived', baseTex: ibpDerived.duTex, power: 1}} scale="scale-[0.45]" /></div><div className="text-fuchsia-500/50 font-bold ml-1">dx</div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
-
                                 {ibpU && ibpDv && ibpDerived && (
-                                    <div className="absolute inset-0 bg-fuchsia-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                                        <button onClick={confirmIbpWeave} className="px-10 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:shadow-[0_0_50px_rgba(217,70,239,0.8)] transition-all transform hover:scale-105">
-                                            Confirm Weave
-                                        </button>
-                                    </div>
+                                    <div className="absolute inset-0 bg-fuchsia-950/80 backdrop-blur-sm z-50 flex items-center justify-center"><button onClick={confirmIbpWeave} className="px-10 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:shadow-[0_0_50px_rgba(217,70,239,0.8)] transition-all transform hover:scale-105">Confirm Weave</button></div>
                                 )}
                             </div>
                         )}
@@ -1024,25 +936,73 @@
                         {activeMat === 'trigsub' && (
                             <div className="w-8/12 bg-amber-950/10 border-2 border-amber-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(245,158,11,0.05)] animate-slide-left overflow-hidden items-center">
                                 <h2 className="text-amber-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-8">Rune Circle (Trig Sub)</h2>
-                                
                                 <div className="flex-1 w-full flex justify-center items-center relative z-20">
                                     <div className="flex flex-col items-center">
                                         <span className="text-amber-400 font-bold uppercase tracking-widest text-[9px] mb-4 text-center">Stable Core Component</span>
                                         <div className="w-[220px] h-[220px] rounded-full border-4 border-dashed border-amber-900/60 flex items-center justify-center bg-black/40 relative shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-all">
-                                            {trigSubCard ? (
-                                                <BattleCard card={trigSubCard} scale="scale-75 hover:scale-95" onClick={handleTrigSubClick} />
-                                            ) : (
-                                                <span className="text-amber-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Slot Even Power<br/>Sine / Cosine</span>
-                                            )}
+                                            {trigSubCard ? ( <BattleCard card={trigSubCard} scale="scale-75 hover:scale-95" onClick={handleTrigSubClick} /> ) : ( <span className="text-amber-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Slot Even Power<br/>Sine / Cosine</span> )}
                                         </div>
                                     </div>
                                 </div>
-
                                 {trigSubCard && (
-                                    <div className="absolute inset-0 bg-amber-950/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                                        <button onClick={transmuteRune} className="px-10 py-4 bg-amber-600 hover:bg-amber-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(245,158,11,0.6)] hover:shadow-[0_0_50px_rgba(245,158,11,0.8)] transition-all transform hover:scale-105">
-                                            Transmute Runes
-                                        </button>
+                                    <div className="absolute inset-0 bg-amber-950/80 backdrop-blur-sm z-50 flex items-center justify-center"><button onClick={transmuteRune} className="px-10 py-4 bg-amber-600 hover:bg-amber-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(245,158,11,0.6)] hover:shadow-[0_0_50px_rgba(245,158,11,0.8)] transition-all transform hover:scale-105">Transmute Runes</button></div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* ABYSSAL STAIR (TABULAR) MAT */}
+                        {activeMat === 'tabular' && (
+                            <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col relative shadow-[inset_0_0_50px_rgba(20,184,166,0.05)] animate-slide-left overflow-hidden">
+                                <h2 className="text-teal-500/50 text-xs font-black tracking-[0.5em] uppercase text-center w-full mb-4 z-20">The Abyssal Stair (Tabular)</h2>
+                                <div className="flex-1 w-full overflow-y-auto log-scroll flex flex-col items-center pt-4 relative">
+                                    {tabularU.length === 0 && (
+                                        <div className="text-teal-900/50 font-bold text-xs uppercase tracking-widest text-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+                                            The Abyss awaits a Mortal Coil<br/>and an Eternal Echo.
+                                        </div>
+                                    )}
+                                    
+                                    {tabularU.map((uCard, index) => {
+                                        const dvCard = tabularDv[index];
+                                        const signStr = index % 2 === 0 ? '+' : '-';
+                                        const signColor = index % 2 === 0 ? 'text-amber-400 border-amber-500/50' : 'text-red-500 border-red-500/50';
+
+                                        return (
+                                            <div key={index} className="flex w-full items-center justify-center gap-8 mb-4 relative z-20">
+                                                <div className="w-[160px]">
+                                                    {index === 0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block">Mortal Coil (u)</span>}
+                                                    <BattleCard card={uCard} scale="scale-75" />
+                                                </div>
+
+                                                <div className="w-[100px] flex flex-col items-center justify-center relative h-[200px]">
+                                                    {index < tabularDv.length - 1 && (
+                                                        <div className="absolute top-[60%] left-1/2 w-full h-full border-l-4 border-b-4 border-dashed border-teal-500/30 rounded-bl-3xl -translate-x-1/2 pointer-events-none">
+                                                            <div className={`absolute bottom-[-15px] left-1/2 -translate-x-1/2 text-2xl pb-1 font-black ${signColor} bg-gray-950 rounded-full w-8 h-8 flex items-center justify-center border-2 shadow-[0_0_10px_currentColor]`}>
+                                                                {signStr}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="w-[160px]">
+                                                    {index === 0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block">Eternal Echo (dv)</span>}
+                                                    {dvCard ? <BattleCard card={dvCard} scale="scale-75" /> : <div className="w-[190px] h-[270px] scale-75 border-2 border-dashed border-teal-900/50 rounded-2xl flex items-center justify-center bg-black/40"><span className="text-teal-800 text-[10px] uppercase font-bold text-center">Waiting for<br/>Echo</span></div>}
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                {tabularU.length > 0 && tabularDv.length > 0 && (
+                                    <div className="w-full pt-4 mt-2 border-t border-teal-900/30 flex justify-center z-50">
+                                        {!tabularComplete ? (
+                                            <button onClick={stepIntoAbyss} className="px-8 py-3 bg-gray-900 border-2 border-teal-600 hover:bg-teal-900 text-teal-400 font-black uppercase tracking-widest rounded-full shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all transform hover:scale-105">
+                                                Step into the Abyss (-5 Mana)
+                                            </button>
+                                        ) : (
+                                            <button onClick={reapEchoes} className="px-10 py-4 bg-teal-600 hover:bg-teal-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(20,184,166,0.6)] transition-all transform hover:scale-105 animate-pulse">
+                                                Reap the Echoes
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -1054,11 +1014,7 @@
                             <h3 className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Refinement Log</h3>
                             <div className="overflow-y-auto flex-1 log-scroll pr-4">
                                 <ul className="space-y-2">
-                                    {logs.map((log, idx) => (
-                                        <li key={idx} className={`text-sm leading-relaxed ${idx === logs.length - 1 ? 'text-blue-400 font-bold' : 'text-gray-400'}`}>
-                                            <span className="opacity-30 mr-2">></span>{log}
-                                        </li>
-                                    ))}
+                                    {logs.map((log, idx) => ( <li key={idx} className={`text-sm leading-relaxed ${idx === logs.length - 1 ? 'text-blue-400 font-bold' : 'text-gray-400'}`}><span className="opacity-30 mr-2">></span>{log}</li> ))}
                                     <div ref={logEndRef} />
                                 </ul>
                             </div>
@@ -1069,52 +1025,19 @@
                                 <div>
                                     <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Tools (Overrides Mat)</h3>
                                     <div className="w-full grid grid-cols-3 gap-6">
-                                        <button onClick={() => { setActiveMode('slice'); setActiveMat(null); addLog("Slice Primed: Target an Exponent."); }} 
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMode === 'slice' ? 'border-blue-400 bg-blue-950/40 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20'}`}>
-                                            <span className="text-blue-500 text-[10px] font-black uppercase mb-1">Machine</span>
-                                            <span className="text-white font-bold text-lg group-hover:text-blue-400">Slice</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Cleave exponents to fragment components.</p>
-                                        </button>
-
-                                        <button onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); setActiveMat(null); addLog("Weaver's Needle equipped. Select the first component to stitch."); }} 
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMode === 'stitch_1' || activeMode === 'stitch_2' ? 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-emerald-900 bg-gray-950 hover:border-emerald-500 hover:bg-emerald-950/20'}`}>
-                                            <span className="text-emerald-500 text-[10px] font-black uppercase mb-1">Artifact</span>
-                                            <span className="text-white font-bold text-lg group-hover:text-emerald-400">Weaver's Needle</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Stitches identical spirits together (-10 Mana).</p>
-                                        </button>
-                                        
-                                        {activeMode && (
-                                            <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} 
-                                                className="p-4 rounded-2xl border-2 border-gray-800 bg-gray-900 hover:bg-gray-800 transition-all flex items-center justify-center">
-                                                <span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Cancel Tool</span>
-                                            </button>
-                                        )}
+                                        <button onClick={() => { setActiveMode('slice'); setActiveMat(null); addLog("Slice Primed: Target an Exponent."); }} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMode === 'slice' ? 'border-blue-400 bg-blue-950/40 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20'}`}><span className="text-blue-500 text-[10px] font-black uppercase mb-1">Machine</span><span className="text-white font-bold text-lg group-hover:text-blue-400">Slice</span><p className="text-xs text-gray-500 mt-2 leading-tight">Cleave exponents to fragment components.</p></button>
+                                        <button onClick={() => { setActiveMode('stitch_1'); setStitchTargetId(null); setActiveMat(null); addLog("Weaver's Needle equipped. Select the first component to stitch."); }} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMode === 'stitch_1' || activeMode === 'stitch_2' ? 'border-emerald-400 bg-emerald-950/40 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-emerald-900 bg-gray-950 hover:border-emerald-500 hover:bg-emerald-950/20'}`}><span className="text-emerald-500 text-[10px] font-black uppercase mb-1">Artifact</span><span className="text-white font-bold text-lg group-hover:text-emerald-400">Weaver's Needle</span><p className="text-xs text-gray-500 mt-2 leading-tight">Stitches identical spirits together (-10 Mana).</p></button>
+                                        {activeMode && ( <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} className="p-4 rounded-2xl border-2 border-gray-800 bg-gray-900 hover:bg-gray-800 transition-all flex items-center justify-center"><span className="text-gray-400 font-bold uppercase tracking-widest text-xs">Cancel Tool</span></button> )}
                                     </div>
                                 </div>
 
                                 <div className="mt-2">
                                     <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Integration Mats (Play Field)</h3>
-                                    <div className="w-full grid grid-cols-3 gap-6">
-                                        <button onClick={() => activeMat === 'altar' ? selectMat(null) : selectMat('altar')} 
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'altar' ? 'border-red-400 bg-red-950/40 shadow-[0_0_20px_rgba(220,38,38,0.3)]' : 'border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20'}`}>
-                                            <span className="text-red-500 text-[10px] font-black uppercase mb-1">Mat</span>
-                                            <span className="text-white font-bold text-lg group-hover:text-red-400">Sacrificial Altar</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">U-Substitution. Requires blood sacrifice.</p>
-                                        </button>
-
-                                        <button onClick={() => activeMat === 'ibp' ? selectMat(null) : selectMat('ibp')} 
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'ibp' ? 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_20px_rgba(217,70,239,0.3)]' : 'border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 hover:bg-fuchsia-950/20'}`}>
-                                            <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Mat</span>
-                                            <span className="text-white font-bold text-lg group-hover:text-fuchsia-400">Dual-Weave</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Integration By Parts (uv - ∫vdu).</p>
-                                        </button>
-
-                                        <button onClick={() => selectMat('trigsub')} 
-                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'trigsub' ? 'border-amber-400 bg-amber-950/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'border-amber-900 bg-gray-950 hover:border-amber-500 hover:bg-amber-950/20'}`}>
-                                            <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Mat</span>
-                                            <span className="text-white font-bold text-lg group-hover:text-amber-400">Rune Circle</span>
-                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Trigonometric Substitution.</p>
-                                        </button>
+                                    <div className="w-full grid grid-cols-4 gap-6">
+                                        <button onClick={() => activeMat === 'altar' ? selectMat(null) : selectMat('altar')} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'altar' ? 'border-red-400 bg-red-950/40 shadow-[0_0_20px_rgba(220,38,38,0.3)]' : 'border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20'}`}><span className="text-red-500 text-[10px] font-black uppercase mb-1">Mat</span><span className="text-white font-bold text-lg group-hover:text-red-400">Sacrificial Altar</span><p className="text-[10px] text-gray-500 mt-2 leading-tight">U-Substitution. Requires blood sacrifice.</p></button>
+                                        <button onClick={() => activeMat === 'ibp' ? selectMat(null) : selectMat('ibp')} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'ibp' ? 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_20px_rgba(217,70,239,0.3)]' : 'border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 hover:bg-fuchsia-950/20'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Mat</span><span className="text-white font-bold text-lg group-hover:text-fuchsia-400">Dual-Weave</span><p className="text-[10px] text-gray-500 mt-2 leading-tight">Integration By Parts (uv - ∫vdu).</p></button>
+                                        <button onClick={() => activeMat === 'tabular' ? selectMat(null) : selectMat('tabular')} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'tabular' ? 'border-teal-400 bg-teal-950/40 shadow-[0_0_20px_rgba(20,184,166,0.3)]' : 'border-teal-900 bg-gray-950 hover:border-teal-500 hover:bg-teal-950/20'}`}><span className="text-teal-500 text-[10px] font-black uppercase mb-1">Mat</span><span className="text-white font-bold text-lg group-hover:text-teal-400">Abyssal Stair</span><p className="text-[10px] text-gray-500 mt-2 leading-tight">Tabular Method. Grind mortals to dust.</p></button>
+                                        <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'trigsub' ? 'border-amber-400 bg-amber-950/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'border-amber-900 bg-gray-950 hover:border-amber-500 hover:bg-amber-950/20'}`}><span className="text-amber-500 text-[10px] font-black uppercase mb-1">Mat</span><span className="text-white font-bold text-lg group-hover:text-amber-400">Rune Circle</span><p className="text-[10px] text-gray-500 mt-2 leading-tight">Trigonometric Substitution.</p></button>
                                     </div>
                                 </div>
                             </>
@@ -1123,33 +1046,12 @@
                         {gamePhase === 'integration' && (
                             <div className="w-full flex flex-col items-center">
                                 <div className="w-full grid grid-cols-4 gap-4">
-                                    <button onClick={() => applyIntegrationRule('action1')} disabled={integrationStep !== 0}
-                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">{currentLabels[0]}</span>
-                                    </button>
-                                    <button onClick={() => applyIntegrationRule('action2')} disabled={integrationStep !== 1}
-                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">{currentLabels[1]}</span>
-                                    </button>
-                                    <button onClick={() => applyIntegrationRule('action3')} disabled={integrationStep !== 2}
-                                        className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20">
-                                        <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">{currentLabels[2]}</span>
-                                    </button>
-                                    <button onClick={() => applyIntegrationRule('plus_c')} disabled={integrationStep !== 3}
-                                        className="p-4 rounded-xl border-2 border-amber-500 bg-gray-950 hover:border-amber-300 transition-all text-center flex flex-col disabled:opacity-20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-                                        <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span>
-                                        <span className="text-white font-bold text-lg">Constant (+C)</span>
-                                    </button>
+                                    <button onClick={() => applyIntegrationRule('action1')} disabled={integrationStep !== 0 || integrationPath === 'tabular'} className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20"><span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span><span className="text-white font-bold text-lg">{currentLabels[0]}</span></button>
+                                    <button onClick={() => applyIntegrationRule('action2')} disabled={integrationStep !== 1 || integrationPath === 'tabular'} className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20"><span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span><span className="text-white font-bold text-lg">{currentLabels[1]}</span></button>
+                                    <button onClick={() => applyIntegrationRule('action3')} disabled={integrationStep !== 2 && integrationPath !== 'tabular'} className="p-4 rounded-xl border-2 border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 transition-all text-center flex flex-col disabled:opacity-20"><span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span><span className="text-white font-bold text-lg">{currentLabels[2]}</span></button>
+                                    <button onClick={() => applyIntegrationRule('plus_c')} disabled={integrationStep !== 3 && (integrationPath === 'tabular' && integrationStep !== 4)} className="p-4 rounded-xl border-2 border-amber-500 bg-gray-950 hover:border-amber-300 transition-all text-center flex flex-col disabled:opacity-20 shadow-[0_0_15px_rgba(245,158,11,0.2)]"><span className="text-amber-500 text-[10px] font-black uppercase mb-1">Token (-10 Mana)</span><span className="text-white font-bold text-lg">Constant (+C)</span></button>
                                 </div>
-                                
-                                {integrationStep === 4 && (
-                                    <button onClick={generateSpell} className="mt-8 px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:shadow-[0_0_50px_rgba(59,130,246,0.8)] transition-all transform hover:scale-105 animate-pulse">
-                                        Summon Next Spell
-                                    </button>
-                                )}
+                                {integrationStep === 4 && ( <button onClick={generateSpell} className="mt-8 px-12 py-4 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:shadow-[0_0_50px_rgba(59,130,246,0.8)] transition-all transform hover:scale-105 animate-pulse">Summon Next Spell</button> )}
                             </div>
                         )}
                     </div>
