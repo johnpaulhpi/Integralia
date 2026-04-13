@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 13</title>
+    <title>Integralia: The Shattered Weave - Phase 14</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -75,7 +75,7 @@
         };
 
         const ParticleBurst = ({ type }) => {
-            const colorClass = (type === 'Sina' || type === 'Residue') ? 'bg-blue-500' : 'bg-yellow-500';
+            const colorClass = (type === 'Sina') ? 'bg-blue-500' : 'bg-yellow-500';
             const particles = Array.from({ length: 15 }).map((_, i) => {
                 const angle = Math.random() * Math.PI * 2;
                 const distance = 40 + Math.random() * 60;
@@ -113,7 +113,8 @@
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
                             <polygon points="50,5 95,50 50,95 5,50" fill="#713f12" stroke="#eab308" strokeWidth="2" />
-                            <path d="M 30 50 L 70 50 M 50 30 L 50 70" stroke="#facc15" strokeWidth="2" opacity="0.5" />
+                            <path d="M 20 50 L 80 50 M 50 20 L 50 80" stroke="#facc15" strokeWidth="2" strokeDasharray="4 4" />
+                            <circle cx="50" cy="50" r="15" fill="#ca8a04" />
                         </svg>
                     );
                 } else if (card.name === 'U-State' || card.name === 'Refined Solution') {
@@ -222,16 +223,35 @@
             const [handCards, setHandCards] = useState({ slice: { available: true }, needle: { available: true }, altar: { available: true } });
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
+            const [matStep, setMatStep] = useState(0); 
             
             const [slashingId, setSlashingId] = useState(null);
             const [shatteringId, setShatteringId] = useState(null);
             const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
-            const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Refine the components to extract mana."]);
+            const [uData, setUData] = useState({ coreFamily: null });
+            
+            const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Prepare the board with your Tools and Mats."]);
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+
+            const selectMat = (matName) => {
+                setActiveMode(null); // Equipping a mat clears active tools
+                setActiveMat(matName);
+                setMatStep(0);
+                
+                if (matName === 'altar') {
+                    addLog("Sacrificial Altar Deployed. Select any stable Core on the board to bind it.");
+                } else if (matName === 'ibp') {
+                    addLog("Dual-Weave Mat (By Parts) Deployed. (Mechanic Unlocking Soon)");
+                } else if (matName === 'trigsub') {
+                    addLog("Rune Circle (Trig Sub) Deployed. (Mechanic Unlocking Soon)");
+                } else {
+                    addLog("Mat returned to inventory.");
+                }
+            };
 
             const handleCycle = (cardId) => {
                 setBossCards(prev => prev.map(c => {
@@ -252,8 +272,90 @@
             const handleBossCardClick = (card) => {
                 if (gamePhase !== 'setup') return;
 
-                // MAT SLOTTING LOGIC (If Altar is open)
-                if (activeMat === 'altar' && !activeMode) {
+                // TOOLS TAKE PRIORITY
+                if (activeMode) {
+                    if (activeMode === 'slice' && card.power > 1) {
+                        setSlashingId(card.id);
+                        addLog(`Slicing ${card.name}... extracting initial mana.`);
+                        setMana(m => m + 10);
+                        setTimeout(() => {
+                            setSlashingId(null);
+                            setShatteringId(card.id);
+                            setTimeout(() => {
+                                const newCards = [...bossCards];
+                                const idx = newCards.findIndex(c => c.id === card.id);
+                                newCards[idx] = { 
+                                    ...card, 
+                                    power: card.power - 1, 
+                                    canCycle: (card.name === 'Sina' && card.power - 1 === 2),
+                                    isBleeding: false 
+                                };
+                                newCards.splice(idx + 1, 0, { 
+                                    id: `cleaved-${Date.now()}`, 
+                                    name: card.name, 
+                                    type: 'Fragment', 
+                                    baseTex: card.baseTex, 
+                                    baseMath: card.baseMath, 
+                                    power: 1, 
+                                    canCycle: false, 
+                                    ability: "Cleaved Fragment. Bleeding mana.", 
+                                    isBleeding: true 
+                                });
+                                setBossCards(newCards);
+                                setShatteringId(null);
+                                setActiveMode(null);
+                            }, 500);
+                        }, 300);
+                        return;
+                    }
+
+                    if (activeMode === 'stitch_1') {
+                        setStitchTargetId(card.id);
+                        setActiveMode('stitch_2');
+                        addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch.`);
+                        return;
+                    } else if (activeMode === 'stitch_2') {
+                        if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
+                        const target1 = bossCards.find(c => c.id === stitchTargetId);
+                        const target2 = card;
+                        
+                        if (target1.name === target2.name) {
+                            if (mana < 10) {
+                                addLog("Not enough Mana! Sewing fragments costs 10 Mana.");
+                                setActiveMode(null);
+                                setStitchTargetId(null);
+                                return;
+                            }
+                            addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
+                            setMana(m => m - 10);
+                            const newPower = target1.power + target2.power;
+                            let resolvedType = target1.type;
+                            if (target1.name === 'Sina' || target1.name === 'Cosa') resolvedType = 'Core';
+                            
+                            const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
+                            newCards.push({
+                                ...target1,
+                                id: `stitched-${Date.now()}`,
+                                power: newPower,
+                                type: resolvedType,
+                                canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
+                                isBleeding: false,
+                                ability: `Combined Exponent: The weave grows thicker.`
+                            });
+                            setBossCards(newCards);
+                            setStitchTargetId(null);
+                            setActiveMode(null);
+                        } else {
+                            addLog("Incompatible spirits. Stitching requires matching identities.");
+                            setActiveMode('stitch_1');
+                            setStitchTargetId(null);
+                        }
+                        return;
+                    }
+                }
+
+                // MAT LOGIC (If no tools are active)
+                if (!activeMode && activeMat === 'altar') {
                     // Rule 1: Slotting the Core
                     if (!altarCore) {
                         if (card.type === 'Core' || card.name === 'Compound') {
@@ -261,6 +363,7 @@
                             addLog(`Slotted ${card.name} as Core. The Altar demands a bleeding sacrifice of opposite type!`);
                             setAltarCore({ ...card, family: coreFamily });
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            setMatStep(1);
                         } else {
                             addLog("The Altar requires a stable Core to begin refinement.");
                         }
@@ -292,96 +395,13 @@
                         return;
                     }
                 }
-
-                // SLICE LOGIC
-                if (activeMode === 'slice' && card.power > 1) {
-                    setSlashingId(card.id);
-                    addLog(`Slicing ${card.name}... extracting initial mana.`);
-                    setMana(m => m + 10);
-                    setTimeout(() => {
-                        setSlashingId(null);
-                        setShatteringId(card.id);
-                        setTimeout(() => {
-                            const newCards = [...bossCards];
-                            const idx = newCards.findIndex(c => c.id === card.id);
-                            
-                            newCards[idx] = { 
-                                ...card, 
-                                power: card.power - 1, 
-                                canCycle: (card.name === 'Sina' && card.power - 1 === 2),
-                                isBleeding: false 
-                            };
-                            
-                            newCards.splice(idx + 1, 0, { 
-                                id: `cleaved-${Date.now()}`, 
-                                name: card.name, 
-                                type: 'Fragment', 
-                                baseTex: card.baseTex, 
-                                baseMath: card.baseMath, 
-                                power: 1, 
-                                canCycle: false, 
-                                ability: "Cleaved Fragment. Bleeding mana.", 
-                                isBleeding: true 
-                            });
-                            
-                            setBossCards(newCards);
-                            setShatteringId(null);
-                            setActiveMode(null);
-                        }, 500);
-                    }, 300);
-                }
-
-                // WEAVER'S NEEDLE LOGIC
-                if (activeMode === 'stitch_1') {
-                    setStitchTargetId(card.id);
-                    setActiveMode('stitch_2');
-                    addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch.`);
-                } else if (activeMode === 'stitch_2') {
-                    if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
-                    const target1 = bossCards.find(c => c.id === stitchTargetId);
-                    const target2 = card;
-                    
-                    if (target1.name === target2.name) {
-                        if (mana < 10) {
-                            addLog("Not enough Mana! Sewing fragments costs 10 Mana.");
-                            setActiveMode(null);
-                            setStitchTargetId(null);
-                            return;
-                        }
-
-                        addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
-                        setMana(m => m - 10);
-                        const newPower = target1.power + target2.power;
-                        
-                        let resolvedType = target1.type;
-                        if (target1.name === 'Sina' || target1.name === 'Cosa') resolvedType = 'Core';
-                        
-                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({
-                            ...target1,
-                            id: `stitched-${Date.now()}`,
-                            power: newPower,
-                            type: resolvedType,
-                            canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
-                            isBleeding: false,
-                            ability: `Combined Exponent: The weave grows thicker.`
-                        });
-                        setBossCards(newCards);
-                        setStitchTargetId(null);
-                        setActiveMode(null);
-                    } else {
-                        addLog("Incompatible spirits. Stitching requires matching identities.");
-                        setActiveMode('stitch_1');
-                        setStitchTargetId(null);
-                    }
-                }
             };
 
-            // Un-Slotting Logic for the Altar
             const handleAltarClick = (role, id) => {
                 if (role === 'core') {
                     setBossCards(prev => [...prev, altarCore]);
                     setAltarCore(null);
+                    setMatStep(0);
                     addLog("Core removed from Altar.");
                 } else if (role === 'sacrifice') {
                     setBossCards(prev => [...prev, altarSacrifice]);
@@ -395,7 +415,6 @@
                 }
             };
 
-            // The final Altar execution
             const collapseWeave = () => {
                 addLog("Altar rituals complete! The Weave collapses into a U-State.");
                 setConsumeAll(true);
@@ -443,6 +462,19 @@
                 }
             };
 
+            let boardBg = "bg-gradient-to-r from-transparent via-blue-900/30 to-transparent";
+            let boardBorder = "border-white/5";
+            if (activeMat === 'altar') {
+                boardBg = "bg-gradient-to-r from-transparent via-red-900/50 to-transparent";
+                boardBorder = "border-red-900/50 shadow-[0_0_50px_rgba(220,38,38,0.2)]";
+            } else if (activeMat === 'ibp') {
+                boardBg = "bg-gradient-to-r from-transparent via-fuchsia-900/50 to-transparent";
+                boardBorder = "border-fuchsia-900/50 shadow-[0_0_50px_rgba(217,70,239,0.2)]";
+            } else if (activeMat === 'trigsub') {
+                boardBg = "bg-gradient-to-r from-transparent via-amber-900/50 to-transparent";
+                boardBorder = "border-amber-900/50 shadow-[0_0_50px_rgba(245,158,11,0.2)]";
+            }
+
             return (
                 <div className="min-h-screen p-8 flex flex-col items-center max-w-6xl mx-auto">
                     
@@ -463,13 +495,15 @@
                     </header>
 
                     {/* MAIN BOARD */}
-                    <div className="w-full bg-gray-950 border border-white/5 rounded-[2rem] pt-12 pb-10 px-8 mb-6 flex flex-col items-center relative shadow-2xl overflow-hidden min-h-[300px]">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-900/50 to-transparent"></div>
-                        <h2 className="absolute top-4 text-white/20 text-xs font-black tracking-[0.5em] uppercase">Used Spell Container</h2>
+                    <div className={`w-full bg-gray-950 border rounded-[2rem] pt-12 pb-10 px-8 mb-6 flex flex-col items-center relative shadow-2xl overflow-hidden transition-colors duration-700 ${boardBorder}`}>
+                        <div className={`absolute top-0 left-0 w-full h-1 transition-colors duration-700 ${boardBg}`}></div>
+                        <h2 className="absolute top-4 text-white/20 text-xs font-black tracking-[0.5em] uppercase">
+                            {activeMat === 'altar' ? 'Sacrificial Altar Active' : activeMat === 'ibp' ? 'Dual-Weave Mat Active' : activeMat === 'trigsub' ? 'Rune Circle Active' : 'Used Spell Container'}
+                        </h2>
                         
                         <div className={`absolute inset-0 bg-blue-950/10 z-10 transition-opacity duration-1000 ${consumeAll ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}></div>
 
-                        <div className="flex flex-row items-center justify-center gap-10 flex-wrap z-20 w-full h-full">
+                        <div className="flex flex-row items-center justify-center gap-10 flex-wrap z-20 w-full min-h-[280px]">
                             {bossCards.length > 0 && <div className={`text-8xl text-white/10 font-serif mr-2 select-none ${consumeAll ? 'animate-consume' : ''}`}>∫</div>}
                             
                             {bossCards.length === 0 && !consumeAll && (
@@ -498,14 +532,12 @@
                             <h2 className="absolute top-4 text-red-500/50 text-xs font-black tracking-[0.5em] uppercase">Sacrificial Altar Mat</h2>
                             
                             <div className="w-full flex justify-around mt-6 mb-8 relative">
-                                
-                                {/* Center Connector Graphic */}
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-red-500/30 text-6xl font-black">×</div>
 
                                 {/* Core Slot */}
                                 <div className="flex flex-col items-center">
                                     <span className="text-red-400 font-bold uppercase tracking-widest text-[10px] mb-2">Slot 1: Core (u)</span>
-                                    <div className="w-[180px] h-[250px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40">
+                                    <div className="w-[180px] h-[250px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
                                         {altarCore ? (
                                             <BattleCard card={altarCore} scale="scale-90 hover:scale-95" onClick={() => handleAltarClick('core', null)} />
                                         ) : (
@@ -546,7 +578,7 @@
 
                             {/* Collapse Button */}
                             {bossCards.length === 0 && altarCore && altarSacrifice && (
-                                <button onClick={collapseWeave} className="mt-8 px-12 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] transition-all transform hover:scale-105">
+                                <button onClick={collapseWeave} className="mt-8 px-12 py-4 bg-red-600 hover:bg-red-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:shadow-[0_0_50px_rgba(220,38,38,0.8)] transition-all transform hover:scale-105 z-50 relative">
                                     Collapse Weave
                                 </button>
                             )}
@@ -570,8 +602,9 @@
 
                         {gamePhase === 'setup' && (
                             <>
+                                {/* Row 1: Tools */}
                                 <div>
-                                    <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Tools</h3>
+                                    <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Tools (Overrides Mat)</h3>
                                     <div className="w-full grid grid-cols-3 gap-6">
                                         <button onClick={() => { setActiveMode('slice'); setActiveMat(null); addLog("Slice Primed: Target an Exponent."); }} 
                                             className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMode === 'slice' ? 'border-blue-400 bg-blue-950/40 shadow-[0_0_20px_rgba(59,130,246,0.3)]' : 'border-blue-900 bg-gray-950 hover:border-blue-500 hover:bg-blue-950/20'}`}>
@@ -586,7 +619,7 @@
                                             <span className="text-white font-bold text-lg group-hover:text-emerald-400">Weaver's Needle</span>
                                             <p className="text-xs text-gray-500 mt-2 leading-tight">Stitches identical spirits together (-10 Mana).</p>
                                         </button>
-                                        
+
                                         {activeMode && (
                                             <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} 
                                                 className="p-4 rounded-2xl border-2 border-gray-800 bg-gray-900 hover:bg-gray-800 transition-all flex items-center justify-center">
@@ -596,8 +629,9 @@
                                     </div>
                                 </div>
 
-                                <div className="mt-2">
-                                    <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Integration Mats</h3>
+                                {/* Row 2: Integration Mats */}
+                                <div className="mt-4">
+                                    <h3 className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mb-3 px-2">Hand: Integration Mats (Play Field)</h3>
                                     <div className="w-full grid grid-cols-3 gap-6">
                                         <button onClick={() => activeMat === 'altar' ? selectMat(null) : selectMat('altar')} 
                                             className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'altar' ? 'border-red-400 bg-red-950/40 shadow-[0_0_20px_rgba(220,38,38,0.3)]' : 'border-red-900 bg-gray-950 hover:border-red-500 hover:bg-red-950/20'}`}>
@@ -605,14 +639,20 @@
                                             <span className="text-white font-bold text-lg group-hover:text-red-400">Sacrificial Altar</span>
                                             <p className="text-xs text-gray-500 mt-2 leading-tight">U-Substitution. Requires blood sacrifice.</p>
                                         </button>
-                                        <div className="border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center opacity-30 p-4 text-center">
-                                            <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Locked Mat</span>
-                                            <span className="text-gray-500 font-bold text-lg">Dual-Weave</span>
-                                        </div>
-                                        <div className="border-2 border-dashed border-white/5 rounded-2xl flex flex-col items-center justify-center opacity-30 p-4 text-center">
-                                            <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Locked Mat</span>
-                                            <span className="text-gray-500 font-bold text-lg">Rune Circle</span>
-                                        </div>
+
+                                        <button onClick={() => selectMat('ibp')} 
+                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'ibp' ? 'border-fuchsia-400 bg-fuchsia-950/40 shadow-[0_0_20px_rgba(217,70,239,0.3)]' : 'border-fuchsia-900 bg-gray-950 hover:border-fuchsia-500 hover:bg-fuchsia-950/20'}`}>
+                                            <span className="text-fuchsia-500 text-[10px] font-black uppercase mb-1">Mat</span>
+                                            <span className="text-white font-bold text-lg group-hover:text-fuchsia-400">Dual-Weave</span>
+                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Integration By Parts.</p>
+                                        </button>
+
+                                        <button onClick={() => selectMat('trigsub')} 
+                                            className={`p-4 rounded-2xl border-2 transition-all text-left flex flex-col group ${activeMat === 'trigsub' ? 'border-amber-400 bg-amber-950/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'border-amber-900 bg-gray-950 hover:border-amber-500 hover:bg-amber-950/20'}`}>
+                                            <span className="text-amber-500 text-[10px] font-black uppercase mb-1">Mat</span>
+                                            <span className="text-white font-bold text-lg group-hover:text-amber-400">Rune Circle</span>
+                                            <p className="text-xs text-gray-500 mt-2 leading-tight">Trigonometric Substitution.</p>
+                                        </button>
                                     </div>
                                 </div>
                             </>
