@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 10.1</title>
+    <title>Integralia: The Shattered Weave - Phase 10.2</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -215,7 +215,6 @@
             const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
             
-            // This stores which core was bound to the altar so we can verify the sacrifice
             const [uData, setUData] = useState({ coreName: null });
             
             const [logs, setLogs] = useState(["Spell detected: sin³(x)cos²(x). Refine the components to extract mana."]);
@@ -292,11 +291,16 @@
                     if (target1.name === target2.name) {
                         addLog(`Stitching identical spirits... Exponents combined!`);
                         const newPower = target1.power + target2.power;
+                        
+                        let resolvedType = target1.type;
+                        if (target1.name === 'Sina' || target1.name === 'Cosa') resolvedType = 'Core';
+                        
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
                         newCards.push({
                             ...target1,
                             id: `stitched-${Date.now()}`,
                             power: newPower,
+                            type: resolvedType,
                             canCycle: (target1.name === 'Sina' && newPower % 2 === 0),
                             isBleeding: false,
                             ability: `Combined Exponent: The weave grows thicker.`
@@ -320,7 +324,6 @@
 
                 if (activeMode === 'altar_du') {
                     if (card.isBleeding && card.power === 1) {
-                        // The Mathematical Chain Rule Verification
                         if (card.name !== uData.coreName) {
                             addLog("Blood Sacrifice accepted! The Weave collapses into a U-State.");
                             setConsumeAll(true);
@@ -345,7 +348,6 @@
                 }
             };
 
-            // Phase 2: Integration Mechanics
             const applyIntegrationRule = (ruleType) => {
                 if (mana < 10) {
                     addLog("Not enough Mana! You need 10 Mana to cast a Rule Token.");
