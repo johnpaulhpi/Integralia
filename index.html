@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 10.2</title>
+    <title>Integralia: The Shattered Weave - Phase 11</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -288,8 +288,18 @@
                     if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
+                    
                     if (target1.name === target2.name) {
+                        // Equivalent Exchange Rule Check
+                        if (mana < 10) {
+                            addLog("Not enough Mana! Sewing fragments costs 10 Mana.");
+                            setActiveMode(null);
+                            setStitchTargetId(null);
+                            return;
+                        }
+
                         addLog(`Stitching identical spirits... Exponents combined!`);
+                        setMana(m => m - 10);
                         const newPower = target1.power + target2.power;
                         
                         let resolvedType = target1.type;
@@ -451,7 +461,7 @@
                                     className="p-5 rounded-2xl border-2 border-emerald-900 bg-gray-950 hover:border-emerald-500 hover:bg-emerald-950/20 transition-all text-left flex flex-col group">
                                     <span className="text-emerald-500 text-[10px] font-black uppercase mb-1">Artifact</span>
                                     <span className="text-white font-bold text-xl group-hover:text-emerald-400">Weaver's Needle</span>
-                                    <p className="text-sm text-gray-500 mt-3 leading-relaxed">Stitches identical spirits together, combining their exponents.</p>
+                                    <p className="text-sm text-gray-500 mt-3 leading-relaxed">Stitches identical spirits together (-10 Mana).</p>
                                 </button>
 
                                 <button onClick={() => { setActiveMode('altar_u'); addLog("Sacrificial Altar Active: Select a CORE."); }} 
