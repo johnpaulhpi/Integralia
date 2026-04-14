@@ -425,7 +425,7 @@
                                 const newCards = [...bossCards];
                                 const idx = newCards.findIndex(c => c.id === card.id);
                                 newCards[idx] = { ...card, power: card.power - 1, canCycle: (['Sina','Cosa','Tana','Seca'].includes(card.name) && (card.power-1)%2===0) || (card.name === 'Tana' && (card.power-1) === 1) };
-                                newCards.splice(idx+1, 0, buildCard(card.name, card.baseTex, card.baseMath, 1, 'Fragment', false, "Cleaved Fragment.", true));
+                                newCards.splice(idx+1, 0, buildCard(card.name, card.baseTex, card.baseMath, 1, 'Fragment', card.name === 'Tana', "Cleaved Fragment.", true));
                                 setBossCards(newCards); setShatteringId(null); setActiveMode(null);
                             }, 500);
                         }, 300);
