@@ -925,9 +925,6 @@
                             </div>
                         )}
 
-                        //==========================================
-// RUNE CIRCLE JSX
-//==========================================
                         {activeMat === 'trigsub' && (
                             <div className="w-8/12 bg-amber-950/10 border-2 border-amber-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
                                 <h2 className="text-amber-500/50 text-xs font-black uppercase mb-8">Rune Circle</h2>
@@ -947,9 +944,6 @@
                                 {trigSubCard && (trigSubCard.power%2===0 && !trigSubCard.baseTex.includes('\\sqrt')) && <button onClick={transmuteRune} className="mt-8 text-amber-500 text-[10px] font-bold underline uppercase tracking-widest hover:text-amber-400">Transmute Half-Angle</button>}
                             </div>
                         )}
-//==========================================
-// END RUNE CIRCLE JSX
-//==========================================
 
                         {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
