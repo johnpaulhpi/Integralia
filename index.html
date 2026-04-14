@@ -361,32 +361,32 @@
 
                 // NEW: Tana Shatter Logic (tan(x) -> sin(x) and sec(x))
                 if (card.name === 'Tana' && card.power === 1) {
-                    setMana(m => m - 10);
+                    setMana(m => m - 0);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
                         buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", false),
                         buildCard('Seca', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", false)
                     );
                     setBossCards(newCards);
-                    addLog(`Identity Cycled: Shattered Tangent into Sine and Secant! (-10 Mana)`);
+                    addLog(`Identity Cycled: Shattered Tangent into Sine and Secant!`);
                     return;
                 }
 
                 // NEW: Expona Morph Logic (e^{2x} -> (e^x)^2)
                 if (card.name === 'Expona' && card.baseTex === 'e^{2x}') {
-                    setMana(m => m - 10);
+                    setMana(m => m - 0);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', false, "Morphed Exponential.", false));
                     setBossCards(newCards);
-                    addLog(`Identity Cycled: Morphed Exponential base! (-10 Mana)`);
+                    addLog(`Identity Cycled: Morphed Exponential base!`);
                     return;
                 }
 
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
                 } else if (card.name === 'Residue') {
-                    if (mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
-                    setMana(m => m - 10); addLog(`Identity Cycled: Hardening Residue back into a Core. (-10 Mana)`);
+                    if (mana < 0) { addLog("Not enough Mana!"); return; }
+                    setMana(m => m - 0); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
                 setBossCards(prev => prev.map(c => {
@@ -462,8 +462,8 @@
 
                     if (target1.baseTex === target2.baseTex) {
                         if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
-                        addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
-                        setMana(m => m - 10);
+                        addLog(`Stitching identical spirits... Exponents combined!`);
+                        setMana(m => m - 0);
                         const newPower = target1.power + target2.power;
                         let resolvedType = target1.type;
                         if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name)) resolvedType = 'Core';
@@ -723,19 +723,19 @@
             };
 
             const applyIntegrationRule = (t) => {
-                if (mana < 10) return;
+                if (mana < 0) return;
                 if (integrationPath === 'tabular' && t === 'plus_c') {
                     setMana(m => m - 10 + 300); setIntegrationStep(4);
                     setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C' }]);
                     addLog("Token Applied: Added +C. REFINEMENT COMPLETE!");
                 } else if (integrationPath === 'altar') {
-                    setMana(m => m - 10);
+                    setMana(m => m - 0);
                     if (t === 'action1') { setIntegrationStep(1); setBossCards([{...bossCards[0], baseTex: `\\int (${bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+(x.p===1?'u':`u^${x.p}`)).join(' ')}) du`}]); }
                     else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+`\\int ${x.p===1?'u':`u^${x.p}`} du`).join(' ')}]); }
                     else if (t === 'action3') { setIntegrationStep(3); setBossCards([{...bossCards[0], baseTex: bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+`\\frac{u^{${x.p+1}}}{${x.p+1}}`).join(' ')}]); }
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
                 } else if (integrationPath === 'ibp') {
-                    setMana(m => m - 10);
+                    setMana(m => m - 0);
                     const meta = bossCards[0].meta;
                     if (t === 'action1') { setIntegrationStep(1); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - \\int ${meta.vTex==='-\\cos(x)'?'-\\cos(x)':meta.vTex} dx`}]); }
                     else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - (${meta.vTex==='\\sin(x)'?'-\\cos(x)':(meta.vTex==='-\\cos(x)'?'-\\sin(x)':'\\ln|\\sec(x)|')})`}]); }
