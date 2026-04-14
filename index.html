@@ -373,40 +373,46 @@
                 else addLog("Mat returned to inventory.");
             };
 
+//==========================================
+// HANDLE CYCLE
+//==========================================
             const handleCycle = (cardId) => {
                 const card = bossCards.find(c => c.id === cardId);
                 if (!card) return;
 
-                // NEW: Tana Shatter Logic (tan(x) -> sin(x) and sec(x))
+                // Tana Shatter Logic
                 if (card.name === 'Tana' && card.power === 1) {
-                    setMana(m => m - 0);
+                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                    setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
-                        buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", false),
-                        buildCard('Seca', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", false)
+                        buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", card.isBleeding),
+                        buildCard('Seca', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", card.isBleeding)
                     );
                     setBossCards(newCards);
                     addLog(`Identity Cycled: Shattered Tangent into Sine and Secant!`);
                     return;
                 }
 
-                // NEW: Expona Morph Logic (e^{2x} -> (e^x)^2)
+                // Expona Morph Logic
                 if (card.name === 'Expona' && card.baseTex === 'e^{2x}') {
-                    setMana(m => m - 0);
+                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                    setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
-                    newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', false, "Morphed Exponential.", false));
+                    newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', true, "Morphed Exponential.", card.isBleeding));
                     setBossCards(newCards);
                     addLog(`Identity Cycled: Morphed Exponential base!`);
                     return;
                 }
 
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
-                    setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
+                    setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell.`);
                 } else if (card.name === 'Residue') {
-                    setMana(m => m - 0); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
+                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
+                    setMana(m => m - 10); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
-               setBossCards(prev => prev.map(c => {
+                setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
                         if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine.", isBleeding: false };
                         else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine.", isBleeding: false };
@@ -420,28 +426,22 @@
                             }
                             return c;
                         } else {
-                            // RESTORES RESIDUE BACK TO ARMOR
+                            // RESTORES RESIDUE BACK TO ARMOR, OR GEOMETRY BACK TO RADICALS
                             if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Restored Armor.");
                             else if (c.baseTex && c.baseTex.includes('sin') && !c.baseTex.includes('\\theta')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', 2, 'Core', true, "Restored Armor.");
-                        }
-                    }
-                    return c;
-                }));
-                        } else {
-                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('sin') && !c.baseTex.includes('\\theta')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('\\sin(\\theta)')) return buildCard('Algebraica', '\\sqrt{1-x^2}', 'x', 1, 'Algebraic', true, "The Radiant Root.");
-                            else if (c.baseTex && c.baseTex.includes('\\sec(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2+1}', 'x', 1, 'Algebraic', true, "The Radiant Root.");
-                            else if (c.baseTex && c.baseTex.includes('\\tan(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2-1}', 'x', 1, 'Algebraic', true, "The Radiant Root.");
+                            else if (c.baseTex && c.baseTex.includes('sec') && !c.baseTex.includes('\\theta')) return buildCard('Tana', '\\tan(x)', 'tan(x)', 2, 'Core', true, "Restored Armor.");
+                            else if (c.baseTex && c.baseTex.includes('tan') && !c.baseTex.includes('\\theta')) return buildCard('Seca', '\\sec(x)', 'sec(x)', 2, 'Core', true, "Restored Armor.");
+                            else if (c.baseTex && c.baseTex.includes('\\sin(\\theta)')) return buildCard('Algebraica', '\\sqrt{1-x^2}', 'x', 1, 'Algebraic', false, "The Bound Root.");
+                            else if (c.baseTex && c.baseTex.includes('\\sec(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2-1}', 'x', 1, 'Algebraic', false, "The Fractured Root.");
+                            else if (c.baseTex && c.baseTex.includes('\\tan(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2+1}', 'x', 1, 'Algebraic', false, "The Unbound Root.");
                         }
                     }
                     return c;
                 }));
             };
+//==========================================
+// END OF HANDLE CYCLE
+//==========================================
 //==========================================
 // BOSSCARDS
 //==========================================
