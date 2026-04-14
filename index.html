@@ -461,12 +461,11 @@
                         addLog("That spirit is already bleeding.");
                         return;
                     }
-                    if (mana < 10) { addLog("Not enough Mana! Piercing costs 10 Mana."); setActiveMode(null); return; }
                     
-                    setMana(m => m - 10);
+                    setMana(m => m - 0);
                     setBossCards(prev => prev.map(c => c.id === card.id ? { ...c, isBleeding: true, ability: "Pierced and Bleeding." } : c));
                     setActiveMode(null);
-                    addLog(`Pierced the ${card.name}. It is now bleeding! (-10 Mana)`);
+                    addLog(`Pierced the ${card.name}. It is now bleeding!`);
                     return;
                 }
 
