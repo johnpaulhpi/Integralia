@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 22</title>
+    <title>Integralia: The Shattered Weave - Phase 23</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -58,6 +58,19 @@
             75% { transform: translateY(3px) rotate(2deg); }
         }
         .fang { animation: twitch 0.3s infinite; transform-origin: top center; }
+
+        @keyframes bubbleUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+        }
+        .pit-bubble {
+            position: absolute;
+            background: #4b5563;
+            border-radius: 50%;
+            animation: bubbleUp 2s infinite ease-in;
+            pointer-events: none;
+        }
 
         .mana-bar-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
         
@@ -317,6 +330,7 @@
 
             const [bossCards, setBossCards] = useState([]);
             
+            // Mat States
             const [altarCore, setAltarCore] = useState(null);
             const [altarSacrifice, setAltarSacrifice] = useState(null);
             const [altarExpanded, setAltarExpanded] = useState([]);
@@ -331,6 +345,10 @@
             const [tabularDv, setTabularDv] = useState([]); 
             const [tabularComplete, setTabularComplete] = useState(false);
 
+            // New Mat State for Leech Pit
+            const [leechMatTarget, setLeechMatTarget] = useState(null);
+            const [leechMatBlood, setLeechMatBlood] = useState(null);
+
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
             
@@ -343,7 +361,9 @@
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             
-            useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+            useEffect(() => { 
+                if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); 
+            }, [logs]);
 
             const generateSpell = () => {
                 const spellType = Math.floor(Math.random() * 3); 
@@ -379,6 +399,7 @@
                 setAltarCore(null); setAltarSacrifice(null); setAltarExpanded([]);
                 setIbpU(null); setIbpDv(null); setIbpDerived(null);
                 setTrigSubCard(null); setTabularU([]); setTabularDv([]); setTabularComplete(false);
+                setLeechMatTarget(null); setLeechMatBlood(null);
                 addLog(logMsg);
             };
 
@@ -390,6 +411,7 @@
                 else if (matName === 'ibp') addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
                 else if (matName === 'trigsub') addLog("Rune Circle Deployed. Slot a Trig Spirit to reveal its sacred geometry.");
                 else if (matName === 'tabular') addLog("The Abyssal Stair Deployed. Slot a Mortal Coil (x) and an Eternal Echo to begin the descent.");
+                else if (matName === 'leech') addLog("Leech Pit Deployed. Provide a Leech and a bleeding spirit sacrifice.");
                 else addLog("Mat returned to inventory.");
             };
 
@@ -462,48 +484,21 @@
                         return;
                     }
                     
-                    setMana(m => m - 0);
                     setBossCards(prev => prev.map(c => c.id === card.id ? { ...c, isBleeding: true, ability: "Pierced and Bleeding." } : c));
                     setActiveMode(null);
                     addLog(`Pierced the ${card.name}. It is now bleeding!`);
                     return;
                 }
 
-                // Tool: WEAVER'S NEEDLE
+                // Tool: WEAVER'S NEEDLE (No longer handles leeches)
                 if (activeMode === 'stitch_1') {
                     setStitchTargetId(card.id); setActiveMode('stitch_2');
-                    addLog(`Selected ${card.name} as the first thread. Select a matching card, or a Leech, to stitch.`);
+                    addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch.`);
                     return;
                 } else if (activeMode === 'stitch_2') {
                     if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
-                    
-                    const isLeech1 = target1.isLeech || target1.name === 'dx' || target1.name === 'dθ';
-                    const isLeech2 = target2.isLeech || target2.name === 'dx' || target2.name === 'dθ';
-                    
-                    // Stitching a Bleeding Spirit to a Leech
-                    if ((isLeech1 && target2.isBleeding) || (isLeech2 && target1.isBleeding)) {
-                        if (mana < 10) { addLog("Not enough Mana! Stitching to a Leech costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
-                        const leech = isLeech1 ? target1 : target2;
-                        const ghost = isLeech1 ? target2 : target1;
-                        
-                        let ghostTex = ghost.baseTex;
-                        if (ghost.power > 1) {
-                            if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
-                            else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
-                            else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
-                            else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
-                            else ghostTex = `${ghost.baseTex}^${ghost.power}`;
-                        }
-
-                        setMana(m => m - 10);
-                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ id: `compound-${Date.now()}`, name: 'Compound', type: 'Sacrifice', baseTex: `${ghostTex} \\, ${leech.baseTex}`, baseMath: `${ghost.baseMath}*${leech.baseMath}`, power: 1, canCycle: false, isBleeding: true, ability: "True Differential. Ready for Altar." });
-                        setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                        addLog(`Stitched the Differential! The Leech is full. (-10 Mana)`);
-                        return;
-                    }
 
                     // Special Logic for Sec(x)Tan(x) fusion
                     if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('tan')) || (target1.baseTex?.includes('tan') && target2.baseTex?.includes('sec'))) {
@@ -512,7 +507,7 @@
                             const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
                             newCards.push({ id: `sectan-${Date.now()}`, name: 'Fragment', type: 'Fragment', baseTex: '\\sec(x)\\tan(x)', baseMath: 'sec(x)*tan(x)', power: 1, canCycle: false, isBleeding: true, ability: "Fused Derivative Ghost." });
                             setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                            addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Sew it to a Leech next. (-10 Mana)");
+                            addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Feed it to a Leech next. (-10 Mana)");
                             return;
                         }
                     }
@@ -529,10 +524,34 @@
                         newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseMath, canCycle: (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                     } else {
-                        addLog("Incompatible spirits. Stitching generally requires matching identities, or sewing to a Leech.");
+                        addLog("Incompatible spirits. Stitching requires matching identities or compatible derivative parts.");
                         setActiveMode('stitch_1'); setStitchTargetId(null);
                     }
                     return;
+                }
+
+                // NEW MAT: LEECH PIT
+                if (activeMat === 'leech') {
+                    if (!leechMatTarget) {
+                        if (card.isLeech) {
+                            setLeechMatTarget(card);
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Slotted ${card.name} into the Leech Pit.`);
+                        } else {
+                            addLog("The Pit requires a Leech (dx or dθ) first.");
+                        }
+                        return;
+                    }
+                    if (leechMatTarget && !leechMatBlood) {
+                        if (card.isBleeding && !card.isLeech) {
+                            setLeechMatBlood(card);
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Offered ${card.name} as blood to the Leech.`);
+                        } else {
+                            addLog("The Leech demands a bleeding spirit.");
+                        }
+                        return;
+                    }
                 }
 
                 if (activeMat === 'altar') {
@@ -585,6 +604,31 @@
                 }
                 
                 if (activeMat === 'trigsub') { setTrigSubCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+            };
+
+            const handleLeechMatClick = (role) => {
+                if (role === 'leech') { setBossCards(prev => [...prev, leechMatTarget]); setLeechMatTarget(null); }
+                else if (role === 'blood') { setBossCards(prev => [...prev, leechMatBlood]); setLeechMatBlood(null); }
+            };
+
+            const feedTheLeech = () => {
+                const leech = leechMatTarget;
+                const ghost = leechMatBlood;
+                
+                let ghostTex = ghost.baseTex;
+                if (ghost.power > 1) {
+                    if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
+                    else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
+                    else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
+                    else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
+                    else ghostTex = `${ghost.baseTex}^${ghost.power}`;
+                }
+
+                const newCards = [...bossCards];
+                newCards.push({ id: `compound-${Date.now()}`, name: 'Compound', type: 'Sacrifice', baseTex: `${ghostTex} \\, ${leech.baseTex}`, baseMath: `${ghost.baseMath}*${leech.baseMath}`, power: 1, canCycle: false, isBleeding: true, ability: "True Differential. Ready for Altar." });
+                setBossCards(newCards); 
+                setLeechMatTarget(null); setLeechMatBlood(null); setActiveMat(null);
+                addLog(`The Leech gorges on the blood. A True Differential Compound is born!`);
             };
 
             const handleAltarClick = (role, id) => {
@@ -775,7 +819,7 @@
                 }
             };
 
-            const boardBorder = activeMat === 'altar' ? "border-red-900/50" : activeMat === 'ibp' ? "border-fuchsia-900/50" : activeMat === 'trigsub' ? "border-amber-900/50" : activeMat === 'tabular' ? "border-teal-900/50" : "border-white/5";
+            const boardBorder = activeMat === 'altar' ? "border-red-900/50" : activeMat === 'ibp' ? "border-fuchsia-900/50" : activeMat === 'trigsub' ? "border-amber-900/50" : activeMat === 'tabular' ? "border-teal-900/50" : activeMat === 'leech' ? "border-gray-700" : "border-white/5";
             const currentLabels = integrationPath === 'tabular' ? ['-','-','-'] : ['Distribute', 'Linearity', 'Power Rule'];
 
             return (
@@ -789,7 +833,7 @@
                         <div className={`bg-gray-950 border rounded-[2rem] p-6 flex flex-col items-center relative overflow-hidden transition-all ${activeMat ? 'w-4/12' : 'w-full'} ${boardBorder}`}>
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
                                 {bossCards.length > 0 && <div className="text-6xl text-white/10 font-serif">∫</div>}
-                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
+                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
                             </div>
                         </div>
 
@@ -804,6 +848,34 @@
                                     {altarExpanded.map(c => <BattleCard key={c.id} card={c} scale="scale-[0.5]" onClick={() => handleAltarClick('expanded', c.id)} />)}
                                 </div>
                                 {altarCore && altarSacrifice && <button onClick={collapseWeave} className="mt-4 bg-red-600 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.5)]">Collapse Weave</button>}
+                            </div>
+                        )}
+
+                        {activeMat === 'leech' && (
+                            <div className="w-8/12 bg-black/80 border-2 border-gray-700 rounded-[2rem] p-6 flex flex-col items-center relative shadow-[inset_0_0_50px_rgba(0,0,0,1)] animate-slide-left overflow-hidden">
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="pit-bubble w-8 h-8 left-[20%] bottom-10" style={{animationDelay: '0s'}}></div>
+                                    <div className="pit-bubble w-12 h-12 left-[50%] bottom-5" style={{animationDelay: '0.5s'}}></div>
+                                    <div className="pit-bubble w-6 h-6 left-[80%] bottom-15" style={{animationDelay: '1s'}}></div>
+                                </div>
+                                <h2 className="text-gray-500 text-xs font-black tracking-[0.5em] uppercase w-full text-center mb-4 z-20">Leech Pit</h2>
+                                <div className="flex justify-center gap-6 z-20 w-full mt-4">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-gray-400 font-bold uppercase text-[9px] mb-2">1. The Leech</span>
+                                        <div className="w-[160px] h-[220px] border-2 border-dashed border-gray-700 rounded-2xl flex items-center justify-center bg-black/60 relative">
+                                            {leechMatTarget ? <BattleCard card={leechMatTarget} scale="scale-75" onClick={() => handleLeechMatClick('leech')} /> : <span className="text-gray-600 text-[10px] uppercase font-bold text-center">Slot Leech<br/>(dx / dθ)</span>}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-red-500 font-bold uppercase text-[9px] mb-2">2. The Blood</span>
+                                        <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-red-950/20 relative">
+                                            {leechMatBlood ? <BattleCard card={leechMatBlood} scale="scale-75" onClick={() => handleLeechMatClick('blood')} /> : <span className="text-red-900/60 text-[10px] uppercase font-bold text-center">Slot Bleeding<br/>Spirit</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                                {leechMatTarget && leechMatBlood && (
+                                    <button onClick={feedTheLeech} className="mt-8 bg-gray-800 border-2 border-gray-600 hover:bg-gray-700 text-white px-10 py-3 rounded-full font-black uppercase text-xs z-20 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)]">Feed the Leech</button>
+                                )}
                             </div>
                         )}
 
@@ -893,7 +965,7 @@
                                 {activeMode ? (
                                     <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800 text-center font-bold text-gray-400 uppercase text-xs hover:bg-gray-700 hover:text-white transition-all">Cancel Tool</button>
                                 ) : (
-                                    <div className="p-4 rounded-xl border-2 border-transparent bg-transparent"></div>
+                                    <button onClick={() => selectMat('leech')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='leech'?'border-gray-500 bg-gray-800/80':'border-gray-800 bg-black hover:border-gray-600 hover:bg-gray-900'}`}><span className="text-gray-400 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold text-gray-300">Leech Pit</span></button>
                                 )}
 
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
