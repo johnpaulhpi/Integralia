@@ -385,7 +385,6 @@
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
                 } else if (card.name === 'Residue') {
-                    if (mana < 0) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 0); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
@@ -461,7 +460,6 @@
                     }
 
                     if (target1.baseTex === target2.baseTex) {
-                        if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
                         addLog(`Stitching identical spirits... Exponents combined!`);
                         setMana(m => m - 0);
                         const newPower = target1.power + target2.power;
@@ -723,7 +721,6 @@
             };
 
             const applyIntegrationRule = (t) => {
-                if (mana < 0) return;
                 if (integrationPath === 'tabular' && t === 'plus_c') {
                     setMana(m => m - 10 + 300); setIntegrationStep(4);
                     setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C' }]);
