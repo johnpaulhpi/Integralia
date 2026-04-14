@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 23</title>
+    <title>Integralia: The Shattered Weave - Phase 23 (Refactored)</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -87,6 +87,98 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
+        // ==========================================
+        // SYSTEM REGISTRIES (Data Dictionaries)
+        // ==========================================
+
+        const THEMES = {
+            blue: { bg: 'bg-blue-950/40', border: 'border-blue-900 hover:border-blue-600', particle: 'bg-blue-500', svg: { main: '#1e3a8a', stroke: '#3b82f6', inner: '#60a5fa' } },
+            yellow: { bg: 'bg-yellow-950/40', border: 'border-yellow-900 hover:border-yellow-600', particle: 'bg-yellow-500', svg: { main: '#713f12', stroke: '#eab308', inner: '#facc15' } },
+            orange: { bg: 'bg-orange-950/40', border: 'border-orange-900 hover:border-orange-600', particle: 'bg-orange-500', svg: { main: '#7c2d12', stroke: '#ea580c', inner: '#fb923c' } },
+            green: { bg: 'bg-green-950/40', border: 'border-green-800 hover:border-green-500', particle: 'bg-green-500', svg: { main: '#134e4a', stroke: '#14b8a6', inner: '#5eead4' } },
+            emerald: { bg: 'bg-emerald-950/40', border: 'border-emerald-900 hover:border-emerald-600', particle: 'bg-emerald-500', svg: { main: '#064e3b', stroke: '#10b981', inner: '#34d399' } },
+            red: { bg: 'bg-red-950/40', border: 'border-red-900 hover:border-red-600', particle: 'bg-red-500', svg: { main: '#7f1d1d', stroke: '#ef4444', inner: '#f87171' } },
+            fuchsia: { bg: 'bg-fuchsia-950/40', border: 'border-fuchsia-800 hover:border-fuchsia-500', particle: 'bg-fuchsia-500', svg: { main: '#701a75', stroke: '#d946ef', inner: '#f0abfc' } },
+            black: { bg: 'bg-black/95', border: 'border-gray-700 hover:border-gray-500', particle: 'bg-gray-500', svg: { main: '#111827', stroke: '#9ca3af', inner: '#4b5563' } },
+            gray: { bg: 'bg-gray-950/80', border: 'border-gray-800 border-dashed hover:border-gray-600', particle: 'bg-gray-500', svg: { main: '#374151', stroke: '#9ca3af', inner: '#6b7280' } }
+        };
+
+        const CARD_REGISTRY = {
+            'Sina': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
+                    <circle cx="50" cy="50" r="45" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="2" opacity="0.9" />
+                    <circle cx="50" cy="50" r="32" fill="#3b82f6" opacity="0.5" />
+                    <polygon points="50,25 70,60 30,60" fill="#eab308" />
+                </svg>
+            ),
+            'Cosa': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
+                    <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
+                    <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
+                    <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
+                </svg>
+            ),
+            'Tana': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(249,115,22,0.6)] svg-pulse">
+                    <circle cx="50" cy="50" r="35" fill="none" stroke="#ea580c" strokeWidth="4" />
+                    <line x1="10" y1="85" x2="90" y2="15" stroke="#fdba74" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+            ),
+            'Seca': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.6)]">
+                    <path d="M 20 80 Q 50 10 80 80" fill="none" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
+                    <line x1="10" y1="50" x2="90" y2="50" stroke="#86efac" strokeWidth="2" strokeDasharray="4 4" />
+                </svg>
+            ),
+            'Algebraica': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                    <path d="M 20 50 L 35 50 L 45 80 L 80 20" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+            ),
+            'Expona': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] svg-pulse">
+                    <path d="M 20 80 Q 60 80, 80 20" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" />
+                </svg>
+            ),
+            'Leech': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.5)]">
+                    <circle cx="50" cy="50" r="25" fill="#111827" stroke="#4b5563" strokeWidth="4" strokeDasharray="4 4" />
+                    <path d="M 40 40 Q 50 20 60 40 T 40 40" fill="none" stroke="#9ca3af" strokeWidth="3" />
+                </svg>
+            ),
+            'Residue': (colors) => (
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <polygon points="50,5 95,50 50,95 5,50" fill={colors.main} stroke={colors.stroke} strokeWidth="2" />
+                    <circle cx="50" cy="50" r="10" fill={colors.stroke} opacity="0.5" />
+                </svg>
+            ),
+            'Derived': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#d946ef" strokeWidth="2" strokeDasharray="8 4" />
+                    <circle cx="50" cy="50" r="10" fill="#f0abfc" />
+                </svg>
+            ),
+            'State': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="#a855f7" strokeWidth="3" strokeDasharray="5 5" />
+                    <text x="50" y="65" fontSize="40" fill="#d8b4fe" textAnchor="middle" fontFamily="serif" fontStyle="italic">u</text>
+                </svg>
+            ),
+            'Dust': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.3)]">
+                    <circle cx="50" cy="50" r="2" fill="#9ca3af" />
+                    <circle cx="40" cy="40" r="1" fill="#6b7280" />
+                    <circle cx="60" cy="60" r="1.5" fill="#4b5563" />
+                    <circle cx="30" cy="60" r="1" fill="#9ca3af" />
+                    <circle cx="70" cy="30" r="2" fill="#4b5563" />
+                </svg>
+            )
+        };
+
+        // ==========================================
+        // GAME COMPONENTS
+        // ==========================================
+
         const MathEquation = ({ equation, size = "text-3xl", inline = false, color = "text-yellow-400" }) => {
             const containerRef = useRef();
             useEffect(() => {
@@ -98,15 +190,7 @@
             return <div ref={containerRef} className={`${size} ${color} drop-shadow-md pointer-events-none`}></div>;
         };
 
-        const ParticleBurst = ({ card }) => {
-            const tex = card.baseTex || '';
-            let colorClass = 'bg-gray-500';
-            if (tex.includes('cos') || card.name === 'Cosa') colorClass = 'bg-yellow-500';
-            else if (tex.includes('sin') || card.name === 'Sina') colorClass = 'bg-blue-500';
-            else if (tex.includes('sec') || card.name === 'Seca') colorClass = 'bg-green-500';
-            else if (tex.includes('tan') || card.name === 'Tana') colorClass = 'bg-orange-500';
-            else if (card.type === 'Algebraic' || card.name === 'Algebraica') colorClass = 'bg-emerald-500';
-
+        const ParticleBurst = ({ theme }) => {
             const particles = Array.from({ length: 15 }).map((_, i) => {
                 const angle = Math.random() * Math.PI * 2;
                 const distance = 40 + Math.random() * 60;
@@ -114,7 +198,7 @@
                 const tx = Math.cos(angle) * distance + 'px';
                 const ty = Math.sin(angle) * distance + 'px';
                 return (
-                    <div key={i} className={`particle ${colorClass} shadow-[0_0_10px_currentColor]`}
+                    <div key={i} className={`particle ${theme.particle} shadow-[0_0_10px_currentColor]`}
                         style={{ width: size, height: size, '--tx': tx, '--ty': ty, clipPath: 'circle(50%)' }} />
                 );
             });
@@ -122,10 +206,10 @@
         };
 
         const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed, scale = "scale-100" }) => {
-            
             const tex = card.baseTex || '';
             const name = card.name || '';
             
+            // 1. Identify Logic & Theme
             let isLeech = card.isLeech || name === 'dx' || name === 'dθ';
             let isYellow = tex.includes('cos') || name === 'Cosa';
             let isBlue = tex.includes('sin') || name === 'Sina';
@@ -133,139 +217,54 @@
             let isOrange = tex.includes('tan') || name === 'Tana';
             let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Algebraica') && !isYellow && !isBlue && !isGreen && !isOrange;
 
-            const renderVisual = () => {
-                if (isBlue && !card.name.includes('State') && !card.type.includes('Derived')) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="45" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="2" opacity="0.9" />
-                            <circle cx="50" cy="50" r="32" fill="#3b82f6" opacity="0.5" />
-                            <polygon points="50,25 70,60 30,60" fill="#eab308" />
-                        </svg>
-                    );
-                } else if (isYellow && !card.name.includes('State') && !card.type.includes('Derived')) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
-                            <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
-                            <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
-                            <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
-                        </svg>
-                    );
-                } else if (isOrange && !card.name.includes('State') && !card.type.includes('Derived')) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(249,115,22,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="35" fill="none" stroke="#ea580c" strokeWidth="4" />
-                            <line x1="10" y1="85" x2="90" y2="15" stroke="#fdba74" strokeWidth="4" strokeLinecap="round" />
-                        </svg>
-                    );
-                } else if (isGreen && !card.name.includes('State') && !card.type.includes('Derived')) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.6)]">
-                            <path d="M 20 80 Q 50 10 80 80" fill="none" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="10" y1="50" x2="90" y2="50" stroke="#86efac" strokeWidth="2" strokeDasharray="4 4" />
-                        </svg>
-                    );
-                } else if (isLeech) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.5)]">
-                            <circle cx="50" cy="50" r="25" fill="#111827" stroke="#4b5563" strokeWidth="4" strokeDasharray="4 4" />
-                            <path d="M 40 40 Q 50 20 60 40 T 40 40" fill="none" stroke="#9ca3af" strokeWidth="3" />
-                        </svg>
-                    );
-                } else if (isEmerald) {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
-                            <path d="M 20 50 L 35 50 L 45 80 L 80 20" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                    );
-                } else if (card.name === 'Residue' || card.name === 'Compound') {
-                    let mainColor = "#713f12"; // default yellow/cos
-                    let strokeColor = "#eab308";
-                    
-                    if (isBlue) { mainColor = "#1e3a8a"; strokeColor = "#3b82f6"; }
-                    if (isGreen) { mainColor = "#134e4a"; strokeColor = "#14b8a6"; }
-                    if (isOrange) { mainColor = "#7c2d12"; strokeColor = "#ea580c"; }
+            let themeName = 'gray';
+            if (isLeech) themeName = 'black';
+            else if (isYellow) themeName = 'yellow';
+            else if (isBlue) themeName = 'blue';
+            else if (isGreen) themeName = 'green';
+            else if (isOrange) themeName = 'orange';
+            else if (isEmerald) themeName = 'emerald';
+            else if (name === 'Expona') themeName = 'red';
+            else if (card.type === 'Derived' || card.type === 'Resonant' || name === 'Bleeding Coil' || name.includes('State') || name === 'Refined Solution') themeName = 'fuchsia';
 
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full">
-                            <polygon points="50,5 95,50 50,95 5,50" fill={mainColor} stroke={strokeColor} strokeWidth="2" />
-                            <circle cx="50" cy="50" r="10" fill={strokeColor} opacity="0.5" />
-                        </svg>
-                    );
-                } else if (name === 'Expona') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] svg-pulse">
-                            <path d="M 20 80 Q 60 80, 80 20" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" />
-                        </svg>
-                    );
-                } else if (card.type === 'Derived' || card.type === 'Resonant' || card.type === 'Void') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#d946ef" strokeWidth="2" strokeDasharray="8 4" />
-                            <circle cx="50" cy="50" r="10" fill="#f0abfc" />
-                        </svg>
-                    );
-                } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Tabular-State' || card.name === 'Refined Solution') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#a855f7" strokeWidth="3" strokeDasharray="5 5" />
-                            <text x="50" y="65" fontSize="40" fill="#d8b4fe" textAnchor="middle" fontFamily="serif" fontStyle="italic">u</text>
-                        </svg>
-                    );
-                }
-                
-                // Fallback geometry
-                return (
-                    <svg viewBox="0 0 100 100" className="w-full h-full">
-                        <circle cx="50" cy="50" r="20" fill="none" stroke="gray" strokeWidth="2" />
-                    </svg>
-                );
+            const theme = THEMES[themeName] || THEMES.gray;
+
+            // 2. Fetch Rendering Function from Registry
+            const renderVisual = () => {
+                if (isLeech) return CARD_REGISTRY['Leech']();
+                if (name === 'Sina' || (isBlue && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Sina']();
+                if (name === 'Cosa' || (isYellow && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Cosa']();
+                if (name === 'Tana' || (isOrange && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Tana']();
+                if (name === 'Seca' || (isGreen && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Seca']();
+                if (isEmerald && name !== 'Residue' && name !== 'Compound') return CARD_REGISTRY['Algebraica']();
+                if (name === 'Residue' || name === 'Compound') return CARD_REGISTRY['Residue'](theme.svg);
+                if (name === 'Expona') return CARD_REGISTRY['Expona']();
+                if (name === 'Dust') return CARD_REGISTRY['Dust']();
+                if (name.includes('State') || name === 'Refined Solution') return CARD_REGISTRY['State']();
+                if (card.type === 'Derived' || card.type === 'Resonant' || card.type === 'Void') return CARD_REGISTRY['Derived']();
+
+                // Fallback geometry if none matched
+                return <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="50" r="20" fill="none" stroke="gray" strokeWidth="2" /></svg>;
             };
 
-            let baseBg = 'bg-gray-900/95';
-            let baseBorder = 'border-gray-800 hover:border-gray-600';
-            
-            // Apply background colors dynamically based on text rules
-            if (isLeech) { 
-                baseBg = 'bg-black/95'; 
-                baseBorder = 'border-gray-700 hover:border-gray-500'; 
-            } else if (isYellow) { 
-                baseBg = 'bg-yellow-950/40'; 
-                baseBorder = 'border-yellow-900 hover:border-yellow-600'; 
-            } else if (isBlue) { 
-                baseBg = 'bg-blue-950/40'; 
-                baseBorder = 'border-blue-900 hover:border-blue-600'; 
-            } else if (isGreen) { 
-                baseBg = 'bg-green-950/40'; 
-                baseBorder = 'border-green-800 hover:border-green-500'; 
-            } else if (isOrange) { 
-                baseBg = 'bg-orange-950/40'; 
-                baseBorder = 'border-orange-900 hover:border-orange-600'; 
-            } else if (isEmerald) { 
-                baseBg = 'bg-emerald-950/40'; 
-                baseBorder = 'border-emerald-900 hover:border-emerald-600'; 
-            } else if (name === 'Expona') { 
-                baseBg = 'bg-red-950/40'; 
-                baseBorder = 'border-red-900 hover:border-red-600'; 
-            } else if (card.type === 'Derived' || card.type === 'Resonant' || card.name === 'Bleeding Coil' || card.name.includes('State')) {
-                baseBg = 'bg-fuchsia-950/40';
-                baseBorder = 'border-fuchsia-800 hover:border-fuchsia-500';
-            }
-
-            let borderClass = baseBorder;
+            // 3. Dynamic Border Classes for tools
+            let borderClass = theme.border;
             if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.5)] scale-105';
             if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
             if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.7)] animate-pulse scale-105';
 
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
-                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${baseBg} ${borderClass}`}>
+                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass}`}>
                         
+                        {/* Sigil: Machine Slice */}
                         {isSlashing && <div className="animate-slash"></div>}
 
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">
                             {card.type}
                         </div>
 
+                        {/* Sigil: Cycle Identity */}
                         {(card.canCycle || card.type === 'Algebraic') && onCycle && (
                             <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
                                 className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">
@@ -273,12 +272,14 @@
                             </div>
                         )}
 
+                        {/* Sigil: Bleeding Spirit */}
                         {card.isBleeding && !isLeech && (
                             <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center text-red-400 text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] z-50">
                                 🩸
                             </div>
                         )}
 
+                        {/* Sigil: Twitching Leech */}
                         {isLeech && (
                             <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-2 z-50 pointer-events-none">
                                 <svg viewBox="0 0 20 40" className="w-3 h-5 fang fill-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]"><path d="M0,0 L10,40 L20,0 Z"/></svg>
@@ -286,27 +287,29 @@
                             </div>
                         )}
 
+                        {/* Sigil: Power Stack */}
                         {card.power > 1 && (
                             <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
                                 {card.power}
                             </div>
                         )}
 
+                        {/* Center Graphic */}
                         <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3">
-                            {isShattering && <ParticleBurst card={card} />}
-                            {/* Graphic 50% smaller */}
+                            {isShattering && <ParticleBurst theme={theme} />}
                             <div className={`w-full h-full scale-50 ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>
                                 {renderVisual()}
                             </div>
                         </div>
 
+                        {/* Math Text */}
                         <div className="flex-1 flex flex-col items-center justify-center px-2">
                             <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
                             <div className="pointer-events-none scale-90"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
                         </div>
 
+                        {/* Footer Flavor Text & Blood Drops */}
                         <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
-                            {/* Flavor Text restored! */}
                             <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1 z-10">"{card.ability}"</p>
                             
                             {(card.isBleeding && !isLeech) && (
@@ -330,7 +333,6 @@
 
             const [bossCards, setBossCards] = useState([]);
             
-            // Mat States
             const [altarCore, setAltarCore] = useState(null);
             const [altarSacrifice, setAltarSacrifice] = useState(null);
             const [altarExpanded, setAltarExpanded] = useState([]);
@@ -345,7 +347,6 @@
             const [tabularDv, setTabularDv] = useState([]); 
             const [tabularComplete, setTabularComplete] = useState(false);
 
-            // New Mat State for Leech Pit
             const [leechMatTarget, setLeechMatTarget] = useState(null);
             const [leechMatBlood, setLeechMatBlood] = useState(null);
 
@@ -453,7 +454,6 @@
             const handleBossCardClick = (card) => {
                 if (gamePhase !== 'setup') return;
 
-                // Tool: SLICE
                 if (activeMode === 'slice') {
                     if (card.power > 1) {
                         setSlashingId(card.id); setMana(m => m + 10);
@@ -477,7 +477,6 @@
                     return;
                 }
 
-                // Tool: BLOOD NEEDLE (Make a card bleed manually)
                 if (activeMode === 'bleed') {
                     if (card.isBleeding) {
                         addLog("That spirit is already bleeding.");
@@ -490,7 +489,6 @@
                     return;
                 }
 
-                // Tool: WEAVER'S NEEDLE (No longer handles leeches)
                 if (activeMode === 'stitch_1') {
                     setStitchTargetId(card.id); setActiveMode('stitch_2');
                     addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch.`);
@@ -500,7 +498,6 @@
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
 
-                    // Special Logic for Sec(x)Tan(x) fusion
                     if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('tan')) || (target1.baseTex?.includes('tan') && target2.baseTex?.includes('sec'))) {
                         if (target1.power === 1 && target2.power === 1 && mana >= 10) {
                             setMana(m => m - 10);
@@ -512,7 +509,6 @@
                         }
                     }
 
-                    // Standard Power Combine
                     if (target1.baseTex === target2.baseTex) {
                         if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
                         addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
@@ -530,7 +526,6 @@
                     return;
                 }
 
-                // NEW MAT: LEECH PIT
                 if (activeMat === 'leech') {
                     if (!leechMatTarget) {
                         if (card.isLeech) {
