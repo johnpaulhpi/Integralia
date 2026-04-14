@@ -262,7 +262,9 @@
         };
 
         const IntegraliaGame = () => {
-            const [mana, setMana] = useState(0);
+            const IntegraliaGame = () => {
+            const ENABLE_MANA = false; // Set to true when you want the mechanic back!
+            const [mana, setMana] = useState(0); 
             const [gamePhase, setGamePhase] = useState('setup');
             const [integrationStep, setIntegrationStep] = useState(0);
             const [integrationPath, setIntegrationPath] = useState(null); 
@@ -385,7 +387,7 @@
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
                 } else if (card.name === 'Residue') {
-                    if (mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
+                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
                     setMana(m => m - 10); addLog(`Identity Cycled: Hardening Residue back into a Core. (-10 Mana)`);
                 }
 
@@ -450,19 +452,19 @@
                     const target2 = card;
 
                     if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('tan')) || (target1.baseTex?.includes('tan') && target2.baseTex?.includes('sec'))) {
-                        if (target1.power === 1 && target2.power === 1 && mana >= 10) {
+                        if (target1.power === 1 && target2.power === 1) {
                             setMana(m => m - 10);
                             const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
                             newCards.push(buildCard('Fragment', '\\sec(x)\\tan(x)', 'sec(x)*tan(x)', 1, 'Fragment', false, "Fused Derivative Ghost.", true));
                             setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                            addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Feed it to a Leech next. (-10 Mana)");
+                            addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Feed it to a Leech next.");
                             return;
                         }
                     }
 
                     if (target1.baseTex === target2.baseTex) {
-                        if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
-                        addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
+                        if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
+                        addLog(`Stitching identical spirits... Exponents combined!`);
                         setMana(m => m - 10);
                         const newPower = target1.power + target2.power;
                         let resolvedType = target1.type;
@@ -723,7 +725,7 @@
             };
 
             const applyIntegrationRule = (t) => {
-                if (mana < 10) return;
+                if (ENABLE_MANA && mana < 10) return;
                 if (integrationPath === 'tabular' && t === 'plus_c') {
                     setMana(m => m - 10 + 300); setIntegrationStep(4);
                     setBossCards([{ ...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C' }]);
