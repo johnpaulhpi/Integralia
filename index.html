@@ -218,7 +218,7 @@
                         {isSlashing && <div className="animate-slash"></div>}
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">{card.type}</div>
 
-                        {(card.canCycle || card.type === 'Algebraic') && onCycle && (
+                        {(card.canCycle || (card.type === 'Algebraic' && !card.baseTex?.includes('\\sqrt'))) && onCycle && (
                             <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
                                 className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">⟳</div>
                         )}
@@ -406,16 +406,29 @@
                     setMana(m => m - 0); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
-                setBossCards(prev => prev.map(c => {
+               setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
                         if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine.", isBleeding: false };
                         else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine.", isBleeding: false };
                         else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant.", isBleeding: false };
                         else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent.", isBleeding: false };
                         else if (c.type === 'Algebraic') {
-                            if (c.baseTex.includes('\\sqrt{1-x^2}')) return buildCard('Sina', '\\sin(\\theta)', 'sin(x)', 1, 'Core', true, "Transmuted from Geometry.");
-                            if (c.baseTex.includes('\\sqrt{x^2+1}')) return buildCard('Seca', '\\sec(\\theta)', 'sec(x)', 1, 'Core', true, "Transmuted from Geometry.");
-                            if (c.baseTex.includes('\\sqrt{x^2-1}')) return buildCard('Tana', '\\tan(\\theta)', 'tan(x)', 1, 'Core', true, "Transmuted from Geometry.");
+                            // Radicals are handled by the Rune Circle now. 
+                            // Future algebraic cycles (like 1 -> sin^2 + cos^2) will go here!
+                            if (c.baseTex === '1') {
+                                return buildCard('Compound', '\\sin^2(x)+\\cos^2(x)', 'sin(x)^2+cos(x)^2', 1, 'Algebraic', true, "Pythagorean Unraveling.");
+                            }
+                            return c;
+                        } else {
+                            // RESTORES RESIDUE BACK TO ARMOR
+                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Restored Armor.");
+                            else if (c.baseTex && c.baseTex.includes('sin') && !c.baseTex.includes('\\theta')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Restored Armor.");
+                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', 2, 'Core', true, "Restored Armor.");
+                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', 2, 'Core', true, "Restored Armor.");
+                        }
+                    }
+                    return c;
+                }));
                         } else {
                             if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Restored Armor.");
                             else if (c.baseTex && c.baseTex.includes('sin') && !c.baseTex.includes('\\theta')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Restored Armor.");
