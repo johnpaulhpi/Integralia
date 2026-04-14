@@ -1,316 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 20</title>
-    
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-
-    <style>
-        body { background-color: #030712; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
-        .card-hover:hover { transform: translateY(-5px); transition: transform 0.2s ease-in-out; }
-        
-        .log-scroll::-webkit-scrollbar { width: 8px; }
-        .log-scroll::-webkit-scrollbar-track { background: #111827; border-radius: 4px; }
-        .log-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-        
-        @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.03); opacity: 1; } }
-        .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
-
-        @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
-        .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
-        
-        @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(180deg); filter: blur(20px); opacity: 0; } }
-        .animate-consume { animation: consume 1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
-
-        @keyframes slash {
-            0% { clip-path: inset(0 100% 0 0); opacity: 1; }
-            50% { clip-path: inset(0 0 0 0); opacity: 1; }
-            100% { clip-path: inset(0 0 0 100%); opacity: 0; }
-        }
-        .animate-slash {
-            position: absolute; top: 45%; left: -20%; right: -20%; height: 8px;
-            background: white; box-shadow: 0 0 20px 8px rgba(255,255,255,0.9);
-            transform: rotate(-25deg); animation: slash 0.4s ease-out forwards; z-index: 60; pointer-events: none;
-        }
-
-        @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(60px) scale(0.3); opacity: 0; } }
-        .blood-drop {
-            position: absolute; bottom: 0; width: 6px; height: 12px; border-radius: 50%;
-            background-color: #dc2626; box-shadow: 0 0 8px #dc2626;
-            animation: bleed 1.2s infinite ease-in; z-index: 45; pointer-events: none;
-        }
-        .drop-1 { left: 20%; animation-delay: 0.1s; }
-        .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 14px; }
-        .drop-3 { left: 80%; animation-delay: 0.3s; }
-
-        .mana-bar-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-        
-        .mat-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        @keyframes slideLeft { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .animate-slide-left { animation: slideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        const MathEquation = ({ equation, size = "text-3xl", inline = false, color = "text-yellow-400" }) => {
-            const containerRef = useRef();
-            useEffect(() => {
-                if (containerRef.current && equation) {
-                    try { katex.render(equation, containerRef.current, { displayMode: !inline, throwOnError: false }); } 
-                    catch (e) { console.error("KaTeX error:", e); }
-                }
-            }, [equation, inline]);
-            return <div ref={containerRef} className={`${size} ${color} drop-shadow-md pointer-events-none`}></div>;
-        };
-
-        const ParticleBurst = ({ card }) => {
-            let isBlue = false;
-            let isCyan = false;
-            let isOrange = false;
-
-            if (card.name === 'Sina') isBlue = true;
-            if (card.name === 'Seca') isCyan = true;
-            if (card.name === 'Tana') isOrange = true;
-            if ((card.name === 'Residue' || card.name === 'Compound') && card.baseTex && card.baseTex.includes('sin')) isBlue = true;
-
-            const colorClass = isBlue ? 'bg-blue-500' : (isCyan ? 'bg-cyan-400' : (isOrange ? 'bg-orange-500' : 'bg-yellow-500'));
-            
-            const particles = Array.from({ length: 15 }).map((_, i) => {
-                const angle = Math.random() * Math.PI * 2;
-                const distance = 40 + Math.random() * 60;
-                const size = 4 + Math.random() * 6;
-                const tx = Math.cos(angle) * distance + 'px';
-                const ty = Math.sin(angle) * distance + 'px';
-                return (
-                    <div key={i} className={`particle ${colorClass} shadow-[0_0_10px_currentColor]`}
-                        style={{ width: size, height: size, '--tx': tx, '--ty': ty, clipPath: 'circle(50%)' }} />
-                );
-            });
-            return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
-        };
-
-        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed, scale = "scale-100" }) => {
-            const renderVisual = () => {
-                if (card.name === 'Sina') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="45" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="2" opacity="0.9" />
-                            <circle cx="50" cy="50" r="32" fill="#3b82f6" opacity="0.5" />
-                            <polygon points="50,25 70,60 30,60" fill="#eab308" />
-                        </svg>
-                    );
-                } else if (card.name === 'Cosa') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
-                            <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
-                            <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
-                            <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
-                            <circle cx="48" cy="78" r="1.5" fill="#60a5fa" />
-                        </svg>
-                    );
-                } else if (card.name === 'Tana') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(249,115,22,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="35" fill="none" stroke="#ea580c" strokeWidth="4" />
-                            <line x1="10" y1="85" x2="90" y2="15" stroke="#fdba74" strokeWidth="4" strokeLinecap="round" />
-                            <circle cx="68" cy="34" r="5" fill="#fffedd" />
-                        </svg>
-                    );
-                } else if (card.name === 'Seca') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(45,212,191,0.6)]">
-                            <path d="M 20 80 Q 50 10 80 80" fill="none" stroke="#14b8a6" strokeWidth="4" strokeLinecap="round" />
-                            <line x1="10" y1="50" x2="90" y2="50" stroke="#5eead4" strokeWidth="2" strokeDasharray="4 4" />
-                            <circle cx="50" cy="32" r="4" fill="#ccfbf1" />
-                        </svg>
-                    );
-                } else if (card.name === 'Residue' || card.name === 'Compound') {
-                    const isBlue = card.baseTex && card.baseTex.includes('sin');
-                    const isCyan = card.baseTex && card.baseTex.includes('sec');
-                    const isOrange = card.baseTex && card.baseTex.includes('tan');
-                    
-                    let mainColor = "#713f12"; // default yellow/cos
-                    let strokeColor = "#eab308";
-                    let innerColor = "#facc15";
-
-                    if (isBlue) { mainColor = "#1e3a8a"; strokeColor = "#3b82f6"; innerColor = "#60a5fa"; }
-                    if (isCyan) { mainColor = "#134e4a"; strokeColor = "#14b8a6"; innerColor = "#5eead4"; }
-                    if (isOrange) { mainColor = "#7c2d12"; strokeColor = "#ea580c"; innerColor = "#fb923c"; }
-                    
-                    const innerPath = card.name === 'Residue' 
-                        ? <path d="M 30 50 L 70 50 M 50 30 L 50 70" stroke={innerColor} strokeWidth="2" opacity="0.5" />
-                        : <><path d="M 20 50 L 80 50 M 50 20 L 50 80" stroke={innerColor} strokeWidth="2" strokeDasharray="4 4" /><circle cx="50" cy="50" r="15" fill={strokeColor} /></>;
-
-                    return (
-                        <svg viewBox="0 0 100 100" className={`w-full h-full drop-shadow-[0_0_15px_rgba(${isBlue?'59,130,246':isCyan?'45,212,191':isOrange?'249,115,22':'234,179,8'},0.5)]`}>
-                            <polygon points="50,5 95,50 50,95 5,50" fill={mainColor} stroke={strokeColor} strokeWidth="2" />
-                            {innerPath}
-                        </svg>
-                    );
-                } else if (card.name === 'Algebraica') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]">
-                            <line x1="30" y1="70" x2="70" y2="30" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
-                            <line x1="30" y1="30" x2="70" y2="70" stroke="#22c55e" strokeWidth="6" strokeLinecap="round" />
-                        </svg>
-                    );
-                } else if (card.name === 'Expona') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(239,68,68,0.5)] svg-pulse">
-                            <path d="M 20 80 Q 60 80, 80 20" fill="none" stroke="#ef4444" strokeWidth="6" strokeLinecap="round" />
-                            <circle cx="80" cy="20" r="6" fill="#f87171" />
-                        </svg>
-                    );
-                } else if (card.type === 'Derived' || card.type === 'Resonant' || card.name === 'Bleeding Coil') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(217,70,239,0.6)] svg-pulse">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#d946ef" strokeWidth="2" strokeDasharray="8 4" />
-                            <path d="M 50 10 L 90 50 L 50 90 L 10 50 Z" fill="#701a75" opacity="0.6"/>
-                            <circle cx="50" cy="50" r="10" fill="#f0abfc" />
-                        </svg>
-                    );
-                } else if (card.name === 'Dust') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.3)]">
-                            <circle cx="50" cy="50" r="2" fill="#9ca3af" />
-                            <circle cx="40" cy="40" r="1" fill="#6b7280" />
-                            <circle cx="60" cy="60" r="1.5" fill="#4b5563" />
-                            <circle cx="30" cy="60" r="1" fill="#9ca3af" />
-                            <circle cx="70" cy="30" r="2" fill="#4b5563" />
-                        </svg>
-                    );
-                } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Tabular-State' || card.name === 'Refined Solution') {
-                    return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(168,85,247,0.8)] svg-pulse">
-                            <circle cx="50" cy="50" r="42" fill="none" stroke="#a855f7" strokeWidth="3" strokeDasharray="5 5" />
-                            <text x="50" y="65" fontSize="40" fill="#d8b4fe" textAnchor="middle" fontFamily="serif" fontStyle="italic">u</text>
-                        </svg>
-                    );
-                }
-                return null;
-            };
-
-            let baseBg = 'bg-gray-900/95';
-            let baseBorder = 'border-gray-800 hover:border-gray-600 hover:bg-gray-800';
-            
-            if (card.name === 'Sina') {
-                baseBg = 'bg-blue-950/40';
-                baseBorder = 'border-blue-900 hover:border-blue-700 hover:bg-blue-900/60';
-            } else if (card.name === 'Cosa') {
-                baseBg = 'bg-yellow-950/40';
-                baseBorder = 'border-yellow-900 hover:border-yellow-700 hover:bg-yellow-900/60';
-            } else if (card.name === 'Tana') {
-                baseBg = 'bg-orange-950/40';
-                baseBorder = 'border-orange-900 hover:border-orange-700 hover:bg-orange-900/60';
-            } else if (card.name === 'Seca') {
-                baseBg = 'bg-cyan-950/30';
-                baseBorder = 'border-cyan-800 hover:border-cyan-600 hover:bg-cyan-900/50';
-            } else if (card.name === 'Algebraica') {
-                baseBg = 'bg-emerald-950/40';
-                baseBorder = 'border-emerald-900 hover:border-emerald-700 hover:bg-emerald-900/60';
-            } else if (card.name === 'Expona') {
-                baseBg = 'bg-red-950/40';
-                baseBorder = 'border-red-900 hover:border-red-700 hover:bg-red-900/60';
-            } else if (card.name === 'Dust') {
-                baseBg = 'bg-gray-950/80';
-                baseBorder = 'border-gray-800 border-dashed';
-            } else if (card.name === 'Residue' || card.name === 'Compound') {
-                if (card.baseTex && card.baseTex.includes('sin')) {
-                    baseBg = 'bg-blue-950/40';
-                    baseBorder = 'border-blue-700 shadow-[inset_0_0_20px_rgba(59,130,246,0.1)] hover:border-blue-500';
-                } else if (card.baseTex && card.baseTex.includes('sec')) {
-                    baseBg = 'bg-cyan-950/30';
-                    baseBorder = 'border-cyan-700 shadow-[inset_0_0_20px_rgba(45,212,191,0.1)] hover:border-cyan-500';
-                } else if (card.baseTex && card.baseTex.includes('tan')) {
-                    baseBg = 'bg-orange-950/40';
-                    baseBorder = 'border-orange-700 shadow-[inset_0_0_20px_rgba(249,115,22,0.1)] hover:border-orange-500';
-                } else {
-                    baseBg = 'bg-yellow-950/40';
-                    baseBorder = 'border-yellow-700 shadow-[inset_0_0_20px_rgba(234,179,8,0.1)] hover:border-yellow-500';
-                }
-            } else if (card.type === 'Derived' || card.type === 'Resonant' || card.name === 'Bleeding Coil') {
-                baseBg = 'bg-fuchsia-950/40';
-                baseBorder = 'border-fuchsia-600 shadow-[inset_0_0_30px_rgba(217,70,239,0.2)] hover:border-fuchsia-400';
-            } else if (card.name === 'U-State' || card.name === 'IBP-State' || card.name === 'Tabular-State' || card.name === 'Refined Solution') {
-                baseBg = 'bg-fuchsia-950/40';
-                baseBorder = 'border-fuchsia-900 shadow-[inset_0_0_20px_rgba(168,85,247,0.1)] hover:border-fuchsia-700';
-            }
-
-            let borderClass = baseBorder;
-            if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.5)] scale-105';
-            if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
-            if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.7)] scale-105 animate-pulse';
-
-            return (
-                <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
-                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${baseBg} ${borderClass}`}>
-                        
-                        {isSlashing && <div className="animate-slash"></div>}
-
-                        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">
-                            {card.type}
-                        </div>
-
-                        {card.canCycle && onCycle && (
-                            <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
-                                className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">
-                                ⟳
-                            </div>
-                        )}
-
-                        {card.isBleeding && (
-                            <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center text-red-400 text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] z-50">
-                                🩸
-                            </div>
-                        )}
-
-                        {card.power > 1 && (
-                            <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">
-                                {card.power}
-                            </div>
-                        )}
-
-                        <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3">
-                            {isShattering && <ParticleBurst card={card} />}
-                            <div className={`w-full h-full ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>
-                                {renderVisual()}
-                            </div>
-                        </div>
-
-                        <div className="flex-1 flex flex-col items-center justify-center px-2">
-                            <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
-                            <div className="pointer-events-none scale-90"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
-                        </div>
-
-                        <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
-                            <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1">"{card.ability}"</p>
-                            
-                            {(card.isBleeding || isSacrificeTarget) && (
-                                <>
-                                    <div className="blood-drop drop-1"></div>
-                                    <div className="blood-drop drop-2"></div>
-                                    <div className="blood-drop drop-3"></div>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        };
 const IntegraliaGame = () => {
             const [mana, setMana] = useState(0);
             const [gamePhase, setGamePhase] = useState('setup');
@@ -613,7 +300,7 @@ const IntegraliaGame = () => {
                         if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(card.name)) {
                             setTrigSubCard(card);
                             setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`Slotted ${card.name} into the Rune Circle. The sacred geometry aligns.`);
+                            addLog(`Slotted ${card.name} into the Rune Circle. The sacred geometry aligns. Click the triangle to Extract.`);
                         } else { addLog("The Rune Circle requires a Trigonometric Spirit to cast a geometry."); }
                         return;
                     }
@@ -656,6 +343,436 @@ const IntegraliaGame = () => {
                 if (trigSubCard) { setBossCards(prev => [...prev, trigSubCard]); setTrigSubCard(null); addLog("Spirit returned to the board."); }
             };
 
+            const transmuteRune = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 30);
+                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                setBossCards(prev => [ ...prev, { id: `resonant-${Date.now()}`, name: 'Resonant Core', type: 'Resonant', baseTex: newKaTeX, baseMath: '', power: trigSubCard.power / 2, canCycle: false, ability: "Transmuted via Half-Angle Identity.", isBleeding: false } ]);
+                setTrigSubCard(null); setActiveMat(null);
+                addLog("Transmutation complete! The Rune Circle fades.");
+            };
+
+            // NEW: Extract Geometry Logic
+            const extractGeometry = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 20);
+                
+                let xTex, dxTex, radTex;
+                let xMath, dxMath, radMath;
+
+                if (trigSubCard.name === 'Sina') {
+                    xTex = '\\sin(\\theta)'; xMath = 'sin(x)';
+                    dxTex = '\\cos(\\theta) \\, d\\theta'; dxMath = 'cos(x)';
+                    radTex = '\\sqrt{1-x^2} = \\cos(\\theta)'; radMath = 'cos(x)';
+                } else if (trigSubCard.name === 'Tana') {
+                    xTex = '\\tan(\\theta)'; xMath = 'tan(x)';
+                    dxTex = '\\sec^2(\\theta) \\, d\\theta'; dxMath = 'sec(x)^2';
+                    radTex = '\\sqrt{x^2+1} = \\sec(\\theta)'; radMath = 'sec(x)';
+                } else if (trigSubCard.name === 'Seca') {
+                    xTex = '\\sec(\\theta)'; xMath = 'sec(x)';
+                    dxTex = '\\sec(\\theta)\\tan(\\theta) \\, d\\theta'; dxMath = 'sec(x)*tan(x)';
+                    radTex = '\\sqrt{x^2-1} = \\tan(\\theta)'; radMath = 'tan(x)';
+                } else {
+                    // Fallback for Cosine (rarely used as a primary sub, but good to have)
+                    xTex = '\\cos(\\theta)'; xMath = 'cos(x)';
+                    dxTex = '-\\sin(\\theta) \\, d\\theta'; dxMath = '-sin(x)';
+                    radTex = '\\sqrt{1-x^2} = \\sin(\\theta)'; radMath = 'sin(x)';
+                }
+
+                const newCards = [
+                    { id: `geo-x-${Date.now()}`, name: 'Geometric (x)', type: 'Fragment', baseTex: xTex, baseMath: xMath, power: 1, canCycle: false, ability: "Extracted x-substitution.", isBleeding: false },
+                    { id: `geo-dx-${Date.now()}`, name: 'Geometric (dx)', type: 'Fragment', baseTex: dxTex, baseMath: dxMath, power: 1, canCycle: false, ability: "Extracted differential.", isBleeding: true },
+                    { id: `geo-rad-${Date.now()}`, name: 'Geometric (Rad)', type: 'Fragment', baseTex: radTex, baseMath: radMath, power: 1, canCycle: false, ability: "Extracted radical identity.", isBleeding: false }
+                ];
+
+                setBossCards(prev => [...prev, ...newCards]);
+                setTrigSubCard(null);
+                setActiveMat(null);
+                addLog("Sacred Geometry Extracted! Three new fragments materialize.");
+            };
+                                const IntegraliaGame = () => {
+            const [mana, setMana] = useState(0);
+            const [gamePhase, setGamePhase] = useState('setup');
+            const [integrationStep, setIntegrationStep] = useState(0);
+            const [integrationPath, setIntegrationPath] = useState(null); 
+
+            const [bossCards, setBossCards] = useState([]);
+            
+            // Random Spell Generator
+            const generateSpell = () => {
+                const spellType = Math.floor(Math.random() * 3); // 0: Sin/Cos, 1: Sec/Tan, 2: IBP/Tabular
+                const newCards = [];
+                let logMsg = "";
+
+                if (spellType === 0) {
+                    const sinPower = Math.floor(Math.random() * 3) + 1; 
+                    const cosPower = Math.floor(Math.random() * 3) + 1; 
+                    if (sinPower > 0) newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: sinPower, canCycle: (sinPower % 2 === 0), ability: "Primal Spirit.", isBleeding: false });
+                    if (cosPower > 0) newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
+                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`;
+                } else if (spellType === 1) {
+                    const secPower = Math.floor(Math.random() * 3) + 1; 
+                    const tanPower = Math.floor(Math.random() * 3) + 1; 
+                    if (secPower > 0) newCards.push({ id: `seca-${Date.now()}`, name: 'Seca', type: 'Core', baseTex: '\\sec(x)', baseMath: 'sec(x)', power: secPower, canCycle: (secPower % 2 === 0), ability: "Piercing Spirit.", isBleeding: false });
+                    if (tanPower > 0) newCards.push({ id: `tana-${Date.now()}`, name: 'Tana', type: 'Core', baseTex: '\\tan(x)', baseMath: 'tan(x)', power: tanPower, canCycle: (tanPower % 2 === 0), ability: "Shifting Core.", isBleeding: false });
+                    logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x) to extract its mana.`;
+                } else {
+                    const xPower = Math.floor(Math.random() * 3) + 1; 
+                    newCards.push({ id: `algebraica-${Date.now()}`, name: 'Algebraica', type: 'Core', baseTex: xPower === 1 ? 'x' : `x^${xPower}`, baseMath: xPower === 1 ? 'x' : `x^${xPower}`, power: xPower, canCycle: false, ability: "Algebraic Thread.", isBleeding: false });
+
+                    const ibpType = Math.floor(Math.random() * 3);
+                    if (ibpType === 0) {
+                        newCards.push({ id: `expona-${Date.now()}`, name: 'Expona', type: 'Core', baseTex: 'e^x', baseMath: 'exp(x)', power: 1, canCycle: false, ability: "Exponential Spirit.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} e^x using Dual-Weave or Tabular Method.`;
+                    } else if (ibpType === 1) {
+                        newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Armored Core.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} cos(x) using Dual-Weave or Tabular Method.`;
+                    } else {
+                        newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 1, canCycle: false, ability: "Primal Spirit.", isBleeding: false });
+                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} sin(x) using Dual-Weave or Tabular Method.`;
+                    }
+                }
+                
+                setBossCards(newCards);
+                setGamePhase('setup');
+                setIntegrationStep(0);
+                setIntegrationPath(null);
+                setActiveMode(null);
+                setActiveMat(null);
+                setAltarCore(null);
+                setAltarSacrifice(null);
+                setAltarExpanded([]);
+                setIbpU(null);
+                setIbpDv(null);
+                setIbpDerived(null);
+                setTrigSubCard(null);
+                setTabularU([]);
+                setTabularDv([]);
+                setTabularComplete(false);
+                
+                addLog(logMsg);
+            };
+
+            useEffect(() => {
+                generateSpell();
+            }, []);
+
+            // Mat States
+            const [altarCore, setAltarCore] = useState(null);
+            const [altarSacrifice, setAltarSacrifice] = useState(null);
+            const [altarExpanded, setAltarExpanded] = useState([]);
+            
+            const [ibpU, setIbpU] = useState(null);
+            const [ibpDv, setIbpDv] = useState(null);
+            const [ibpDerived, setIbpDerived] = useState(null);
+
+            const [trigSubCard, setTrigSubCard] = useState(null);
+
+            const [tabularU, setTabularU] = useState([]); 
+            const [tabularDv, setTabularDv] = useState([]); 
+            const [tabularComplete, setTabularComplete] = useState(false);
+
+            const [activeMode, setActiveMode] = useState(null); 
+            const [activeMat, setActiveMat] = useState(null); 
+            
+            const [slashingId, setSlashingId] = useState(null);
+            const [shatteringId, setShatteringId] = useState(null);
+            const [stitchTargetId, setStitchTargetId] = useState(null);
+            const [consumeAll, setConsumeAll] = useState(false);
+            
+            const [logs, setLogs] = useState([]);
+            const logEndRef = useRef(null);
+            const addLog = (msg) => setLogs(prev => [...prev, msg]);
+            useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+
+            const selectMat = (matName) => {
+                setActiveMode(null); 
+                setActiveMat(matName);
+                
+                if (matName === 'altar') addLog("Sacrificial Altar Deployed. Slot your Core and Sacrifice into the Mat!");
+                else if (matName === 'ibp') addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
+                else if (matName === 'trigsub') addLog("Rune Circle Deployed. Slot a Trig Spirit to reveal its sacred geometry.");
+                else if (matName === 'tabular') addLog("The Abyssal Stair Deployed. Slot a Mortal Coil (x) and an Eternal Echo to begin the descent.");
+                else addLog("Mat returned to inventory.");
+            };
+
+            const handleCycle = (cardId) => {
+                const card = bossCards.find(c => c.id === cardId);
+                if (!card) return;
+
+                if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca') {
+                    setMana(m => m + 10);
+                    addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
+                } else if (card.name === 'Residue') {
+                    if (mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
+                    setMana(m => m - 10);
+                    addLog(`Identity Cycled: Hardening Residue back into a Core. (-10 Mana)`);
+                }
+
+                setBossCards(prev => prev.map(c => {
+                    if (c.id === cardId) {
+                        if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine.", isBleeding: false };
+                        else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine.", isBleeding: false };
+                        else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant.", isBleeding: false };
+                        else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent.", isBleeding: false };
+                        else {
+                            if (c.baseTex && c.baseTex.includes('cos')) return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                            else if (c.baseTex && c.baseTex.includes('sin')) return { ...c, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                            else if (c.baseTex && c.baseTex.includes('sec')) return { ...c, name: 'Tana', type: 'Core', baseTex: '\\tan(x)', baseMath: 'tan(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                            else if (c.baseTex && c.baseTex.includes('tan')) return { ...c, name: 'Seca', type: 'Core', baseTex: '\\sec(x)', baseMath: 'sec(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
+                        }
+                    }
+                    return c;
+                }));
+            };
+
+            const handleBossCardClick = (card) => {
+                if (gamePhase !== 'setup') return;
+
+                if (activeMode) {
+                    if (activeMode === 'slice' && card.power > 1) {
+                        setSlashingId(card.id);
+                        addLog(`Slicing ${card.name}... extracting initial mana.`);
+                        setMana(m => m + 10);
+                        setTimeout(() => {
+                            setSlashingId(null);
+                            setShatteringId(card.id);
+                            setTimeout(() => {
+                                const newCards = [...bossCards];
+                                const idx = newCards.findIndex(c => c.id === card.id);
+                                
+                                newCards[idx] = { 
+                                    ...card, 
+                                    baseTex: card.name === 'Algebraica' ? (card.power - 1 === 1 ? 'x' : `x^${card.power - 1}`) : card.baseTex,
+                                    baseMath: card.name === 'Algebraica' ? (card.power - 1 === 1 ? 'x' : `x^${card.power - 1}`) : card.baseMath,
+                                    power: card.power - 1, 
+                                    canCycle: ((card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca') && (card.power - 1) % 2 === 0),
+                                    isBleeding: false 
+                                };
+                                
+                                newCards.splice(idx + 1, 0, { 
+                                    id: `cleaved-${Date.now()}`, 
+                                    name: card.name, 
+                                    type: 'Fragment', 
+                                    baseTex: card.name === 'Algebraica' ? 'x' : card.baseTex, 
+                                    baseMath: card.name === 'Algebraica' ? 'x' : card.baseMath, 
+                                    power: 1, 
+                                    canCycle: false, 
+                                    ability: "Cleaved Fragment. Bleeding mana.", 
+                                    isBleeding: true 
+                                });
+                                
+                                setBossCards(newCards);
+                                setShatteringId(null);
+                                setActiveMode(null);
+                            }, 500);
+                        }, 300);
+                        return;
+                    }
+
+                    if (activeMode === 'stitch_1') {
+                        setStitchTargetId(card.id);
+                        setActiveMode('stitch_2');
+                        addLog(`Selected ${card.name} as the first thread. Select a matching card to stitch.`);
+                        return;
+                    } else if (activeMode === 'stitch_2') {
+                        if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
+                        const target1 = bossCards.find(c => c.id === stitchTargetId);
+                        const target2 = card;
+                        
+                        // Special Logic for Sec(x)Tan(x) fusion!
+                        if ((target1.name === 'Seca' && target2.name === 'Tana') || (target1.name === 'Tana' && target2.name === 'Seca')) {
+                            if (target1.power === 1 && target2.power === 1 && mana >= 10) {
+                                setMana(m => m - 10);
+                                const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
+                                newCards.push({ id: `sectan-${Date.now()}`, name: 'Compound', type: 'Fragment', baseTex: '\\sec(x)\\tan(x)', baseMath: 'sec(x)*tan(x)', power: 1, canCycle: false, isBleeding: true, ability: "Fused Derivative Catalyst." });
+                                setBossCards(newCards);
+                                setStitchTargetId(null); setActiveMode(null);
+                                addLog("Stitched distinct spirits... A Secant/Tangent Catalyst created! (-10 Mana)");
+                                return;
+                            }
+                        }
+
+                        if (target1.name === target2.name) {
+                            if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
+                            addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
+                            setMana(m => m - 10);
+                            const newPower = target1.power + target2.power;
+                            let resolvedType = target1.type;
+                            if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name)) resolvedType = 'Core';
+                            
+                            const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
+                            newCards.push({
+                                ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType,
+                                baseTex: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseTex,
+                                baseMath: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseMath,
+                                canCycle: (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name) && newPower % 2 === 0),
+                                isBleeding: false, ability: `Combined Exponent: The weave grows thicker.`
+                            });
+                            setBossCards(newCards);
+                            setStitchTargetId(null); setActiveMode(null);
+                        } else {
+                            addLog("Incompatible spirits. Stitching generally requires matching identities.");
+                            setActiveMode('stitch_1'); setStitchTargetId(null);
+                        }
+                        return;
+                    }
+                }
+
+                // MAT SLOTTING LOGIC: ALTAR
+                if (!activeMode && activeMat === 'altar') {
+                    if (!altarCore) {
+                        if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(card.name)) {
+                            let coreFamily = card.name.toLowerCase().replace('a', '');
+                            setAltarCore({ ...card, family: coreFamily });
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Slotted ${card.name} into the Core. Now provide an appropriate sacrifice.`);
+                        } else { addLog("The Altar only accepts Trigonometric Cores."); }
+                        return;
+                    }
+                    if (altarCore && !altarSacrifice) {
+                        // Validate Sacrifices
+                        let isValid = false;
+                        if (altarCore.family === 'sin' && card.name === 'Cosa' && card.power === 1) isValid = true;
+                        if (altarCore.family === 'cos' && card.name === 'Sina' && card.power === 1) isValid = true;
+                        if (altarCore.family === 'tan' && card.name === 'Seca' && card.power === 2) isValid = true; // Needs sec^2 x
+                        if (altarCore.family === 'sec' && card.name === 'Compound' && card.baseTex.includes('sec(x)\\tan(x)')) isValid = true; // Needs sec x tan x
+
+                        if (isValid) {
+                            setAltarSacrifice(card);
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog("Blood Sacrifice accepted! Now move all remaining equation cards into the Expanded Weave.");
+                        } else { 
+                            addLog(`Invalid sacrifice! ${altarCore.name} demands a specific derivative as tribute.`); 
+                        }
+                        return;
+                    }
+                    if (altarCore && altarSacrifice) {
+                        setAltarExpanded(prev => [...prev, card]);
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`${card.name} slotted into the Expanded Weave.`);
+                        return;
+                    }
+                }
+
+                // MAT SLOTTING LOGIC: IBP
+                if (!activeMode && activeMat === 'ibp') {
+                    if (!ibpU) {
+                        if (card.name !== 'Algebraica') { addLog("For current Dual-Weave techniques, 'u' (Bind) must be an Algebraic Thread."); return; }
+                        setIbpU(card);
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Bound ${card.name} as 'u'. Math engine calculating derivative...`);
+                        return;
+                    }
+                    if (ibpU && !ibpDv) {
+                        if (card.power > 1 && card.name !== 'Seca') { addLog("Invalid poison. 'dv' requires a pure, power-1 spirit (or sec^2)."); return; }
+                        if (card.name === 'Seca' && card.power !== 2) { addLog("Secant must be power 2 to be integrable directly."); return; }
+
+                        setIbpDv(card);
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Poisoned with ${card.name} as 'dv'. Synthesizing Expansion Weave...`);
+                        
+                        let calculatedDuTex = 'du';
+                        try { const node = math.derivative(ibpU.baseMath, 'x'); calculatedDuTex = node.toTex().replace(/~/g, ''); } catch(e) { }
+
+                        let calculatedVTex = `\\int ${card.baseTex} dx`;
+                        if (card.baseMath === 'cos(x)' || (card.baseTex && card.baseTex.includes('cos'))) calculatedVTex = '\\sin(x)';
+                        else if (card.baseMath === 'sin(x)' || (card.baseTex && card.baseTex.includes('sin'))) calculatedVTex = '-\\cos(x)';
+                        else if (card.baseMath === 'exp(x)' || (card.baseTex && card.baseTex.includes('e^x'))) calculatedVTex = 'e^x';
+                        else if (card.baseTex.includes('sec') && card.power === 2) calculatedVTex = '\\tan(x)';
+
+                        setIbpDerived({ duTex: calculatedDuTex, vTex: calculatedVTex });
+                        return;
+                    }
+                }
+
+                // MAT SLOTTING LOGIC: TRIGSUB
+                if (!activeMode && activeMat === 'trigsub') {
+                    if (!trigSubCard) {
+                        if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(card.name)) {
+                            setTrigSubCard(card);
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Slotted ${card.name} into the Rune Circle. The sacred geometry aligns. Click the triangle to Extract.`);
+                        } else { addLog("The Rune Circle requires a Trigonometric Spirit to cast a geometry."); }
+                        return;
+                    }
+                }
+
+                // MAT SLOTTING LOGIC: TABULAR
+                if (!activeMode && activeMat === 'tabular') {
+                    if (tabularU.length === 0) {
+                        if (card.name !== 'Algebraica') { addLog("The Abyss demands a Mortal Coil (Algebraica) to bleed first."); return; }
+                        setTabularU([card]); setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Bound ${card.name} as the Mortal Coil. Now provide an Eternal Echo.`);
+                        return;
+                    }
+                    if (tabularU.length > 0 && tabularDv.length === 0) {
+                        if (card.name === 'Algebraica' || card.type === 'Residue') { addLog("The Abyss demands a pure Eternal Echo (Exponential/Trig) to resonate."); return; }
+                        setTabularDv([card]); setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        addLog(`Bound ${card.name} as the Eternal Echo. The descent begins.`);
+                        return;
+                    }
+                }
+            };
+
+            const handleAltarClick = (role, id) => {
+                if (role === 'core') { setBossCards(prev => [...prev, altarCore]); setAltarCore(null); addLog("Core returned to the board."); } 
+                else if (role === 'sacrifice') { setBossCards(prev => [...prev, altarSacrifice]); setAltarSacrifice(null); addLog("Sacrifice returned to the board."); } 
+                else if (role === 'expanded') {
+                    const cardToReturn = altarExpanded.find(c => c.id === id);
+                    setBossCards(prev => [...prev, cardToReturn]);
+                    setAltarExpanded(prev => prev.filter(c => c.id !== id));
+                    addLog(`${cardToReturn.name} returned to the board.`);
+                }
+            };
+
+            const handleIbpClick = (role) => {
+                if (role === 'u') { setBossCards(prev => [...prev, ibpU]); setIbpU(null); setIbpDerived(null); addLog("'u' binding released."); } 
+                else if (role === 'dv') { setBossCards(prev => [...prev, ibpDv]); setIbpDv(null); setIbpDerived(null); addLog("'dv' poison released."); }
+            };
+
+            const handleTrigSubClick = () => {
+                if (trigSubCard) { setBossCards(prev => [...prev, trigSubCard]); setTrigSubCard(null); addLog("Spirit returned to the board."); }
+            };
+
+            // NEW: Extract Geometry Logic
+            const extractGeometry = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 20);
+                
+                let xTex, dxTex, radTex;
+                let xMath, dxMath, radMath;
+
+                if (trigSubCard.name === 'Sina') {
+                    xTex = '\\sin(\\theta)'; xMath = 'sin(x)';
+                    dxTex = '\\cos(\\theta) \\, d\\theta'; dxMath = 'cos(x)';
+                    radTex = '\\sqrt{1-x^2} = \\cos(\\theta)'; radMath = 'cos(x)';
+                } else if (trigSubCard.name === 'Tana') {
+                    xTex = '\\tan(\\theta)'; xMath = 'tan(x)';
+                    dxTex = '\\sec^2(\\theta) \\, d\\theta'; dxMath = 'sec(x)^2';
+                    radTex = '\\sqrt{x^2+1} = \\sec(\\theta)'; radMath = 'sec(x)';
+                } else if (trigSubCard.name === 'Seca') {
+                    xTex = '\\sec(\\theta)'; xMath = 'sec(x)';
+                    dxTex = '\\sec(\\theta)\\tan(\\theta) \\, d\\theta'; dxMath = 'sec(x)*tan(x)';
+                    radTex = '\\sqrt{x^2-1} = \\tan(\\theta)'; radMath = 'tan(x)';
+                } else {
+                    xTex = '\\cos(\\theta)'; xMath = 'cos(x)';
+                    dxTex = '-\\sin(\\theta) \\, d\\theta'; dxMath = '-sin(x)';
+                    radTex = '\\sqrt{1-x^2} = \\sin(\\theta)'; radMath = 'sin(x)';
+                }
+
+                const newCards = [
+                    { id: `geo-x-${Date.now()}`, name: 'Geometric (x)', type: 'Fragment', baseTex: xTex, baseMath: xMath, power: 1, canCycle: false, ability: "Extracted x-substitution.", isBleeding: false },
+                    { id: `geo-dx-${Date.now()}`, name: 'Geometric (dx)', type: 'Fragment', baseTex: dxTex, baseMath: dxMath, power: 1, canCycle: false, ability: "Extracted differential.", isBleeding: true },
+                    { id: `geo-rad-${Date.now()}`, name: 'Geometric (Rad)', type: 'Fragment', baseTex: radTex, baseMath: radMath, power: 1, canCycle: false, ability: "Extracted radical identity.", isBleeding: false }
+                ];
+
+                setBossCards(prev => [...prev, ...newCards]);
+                setTrigSubCard(null);
+                setActiveMat(null);
+                addLog("Sacred Geometry Extracted! Three new fragments materialize.");
+            };
+
             const collapseWeave = () => {
                 let expectedExpandedName = '';
                 let expectedResidueTex = '';
@@ -686,10 +803,6 @@ const IntegraliaGame = () => {
 
                 setTimeout(() => {
                     let sign = (altarCore.family === 'cos') ? -1 : 1; 
-                    // Note: sec^2(x)-1 expands differently. 
-                    // u^P * (u^2 - 1) = u^{P+2} - u^P
-                    // u^P * (1 - u^2) = u^P - u^{P+2}
-                    // u^P * (1 + u^2) = u^P + u^{P+2}
                     
                     let terms = [];
                     if (residueCount === 0) { terms.push({ c: sign, p: uPower }); } 
@@ -920,7 +1033,7 @@ const IntegraliaGame = () => {
                                     <div className="flex flex-col items-center w-[160px]">
                                         <span className="text-red-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center">2. Sacrifice (du)</span>
                                         <div className="w-full h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center bg-black/40 relative">
-                                            {altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('sacrifice', null)} /> : <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Valid Tributed<br/>to Assign</span>}
+                                            {altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75 hover:scale-95" onClick={() => handleAltarClick('sacrifice', null)} /> : <span className="text-red-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Click Valid Tribute<br/>to Assign</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -983,7 +1096,7 @@ const IntegraliaGame = () => {
                                 <div className="flex-1 w-full flex justify-center items-center gap-12 relative z-20">
                                     <div className="flex flex-col items-center">
                                         <span className="text-amber-400 font-bold uppercase tracking-widest text-[9px] mb-4 text-center">Trig Spirit</span>
-                                        <div className="w-[220px] h-[220px] rounded-full border-4 border-dashed border-amber-900/60 flex items-center justify-center bg-black/40 relative shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-all">
+                                        <div className="w-[220px] h-[220px] rounded-full border-4 border-dashed border-amber-900/60 flex items-center justify-center bg-black/40 relative shadow-[0_0_40px_rgba(245,158,11,0.1)] transition-all cursor-pointer">
                                             {trigSubCard ? ( <BattleCard card={trigSubCard} scale="scale-75 hover:scale-95" onClick={handleTrigSubClick} /> ) : ( <span className="text-amber-900/70 font-bold text-[10px] uppercase tracking-widest text-center px-4">Slot Any Trig Card<br/>To Reveal Geometry</span> )}
                                         </div>
                                     </div>
@@ -991,23 +1104,28 @@ const IntegraliaGame = () => {
                                     {/* The Sacred Triangle! */}
                                     <div className="w-[220px] h-[220px] relative flex items-center justify-center">
                                         {trigSubCard ? (
-                                            <div className="w-full h-full relative animate-slide-left">
-                                                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(245,158,11,0.5)]">
-                                                    <polygon points="10,90 90,90 90,10" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinejoin="round" />
-                                                    <rect x="80" y="80" width="10" height="10" fill="none" stroke="#f59e0b" strokeWidth="2" />
-                                                    <path d="M 25 90 A 15 15 0 0 0 22 80" fill="none" stroke="#f59e0b" strokeWidth="2" />
-                                                    <text x="25" y="86" fontSize="10" fill="#fcd34d" fontStyle="italic">θ</text>
-                                                </svg>
-                                                
-                                                <div className="absolute top-1/2 right-[-20px] -translate-y-1/2 text-amber-200 font-serif text-xl">
-                                                    <MathEquation equation={trigSubCard.name === 'Sina' ? 'x' : (trigSubCard.name === 'Tana' ? 'x' : (trigSubCard.name === 'Seca' ? '\\sqrt{x^2-1}' : '\\sqrt{1-x^2}'))} size="text-xl" />
+                                            <div className="w-full h-full relative animate-slide-left flex flex-col items-center justify-center">
+                                                <div className="w-full h-full relative cursor-pointer group" onClick={extractGeometry}>
+                                                    <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_20px_rgba(245,158,11,0.5)] group-hover:drop-shadow-[0_0_30px_rgba(245,158,11,0.8)] transition-all group-hover:scale-105">
+                                                        <polygon points="10,90 90,90 90,10" fill="rgba(245,158,11,0.1)" stroke="#f59e0b" strokeWidth="3" strokeLinejoin="round" />
+                                                        <rect x="80" y="80" width="10" height="10" fill="none" stroke="#f59e0b" strokeWidth="2" />
+                                                        <path d="M 25 90 A 15 15 0 0 0 22 80" fill="none" stroke="#f59e0b" strokeWidth="2" />
+                                                        <text x="25" y="86" fontSize="10" fill="#fcd34d" fontStyle="italic">θ</text>
+                                                    </svg>
+                                                    
+                                                    <div className="absolute top-1/2 right-[-20px] -translate-y-1/2 text-amber-200 font-serif text-xl pointer-events-none">
+                                                        <MathEquation equation={trigSubCard.name === 'Sina' ? 'x' : (trigSubCard.name === 'Tana' ? 'x' : (trigSubCard.name === 'Seca' ? '\\sqrt{x^2-1}' : '\\sqrt{1-x^2}'))} size="text-xl" />
+                                                    </div>
+                                                    <div className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-amber-200 font-serif text-xl pointer-events-none">
+                                                        <MathEquation equation={trigSubCard.name === 'Sina' ? '\\sqrt{1-x^2}' : (trigSubCard.name === 'Tana' ? '1' : (trigSubCard.name === 'Seca' ? '1' : 'x'))} size="text-xl" />
+                                                    </div>
+                                                    <div className="absolute top-[40%] left-[30%] -translate-x-1/2 -translate-y-1/2 text-amber-200 font-serif text-xl rotate-[-45deg] pointer-events-none">
+                                                        <MathEquation equation={trigSubCard.name === 'Sina' ? '1' : (trigSubCard.name === 'Tana' ? '\\sqrt{x^2+1}' : (trigSubCard.name === 'Seca' ? 'x' : '1'))} size="text-xl" />
+                                                    </div>
                                                 </div>
-                                                <div className="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-amber-200 font-serif text-xl">
-                                                    <MathEquation equation={trigSubCard.name === 'Sina' ? '\\sqrt{1-x^2}' : (trigSubCard.name === 'Tana' ? '1' : (trigSubCard.name === 'Seca' ? '1' : 'x'))} size="text-xl" />
-                                                </div>
-                                                <div className="absolute top-[40%] left-[30%] -translate-x-1/2 -translate-y-1/2 text-amber-200 font-serif text-xl rotate-[-45deg]">
-                                                    <MathEquation equation={trigSubCard.name === 'Sina' ? '1' : (trigSubCard.name === 'Tana' ? '\\sqrt{x^2+1}' : (trigSubCard.name === 'Seca' ? 'x' : '1'))} size="text-xl" />
-                                                </div>
+                                                <button onClick={extractGeometry} className="absolute -bottom-8 px-6 py-2 bg-amber-600/80 hover:bg-amber-500 text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-full shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all">
+                                                    Extract Geometry
+                                                </button>
                                             </div>
                                         ) : (
                                             <div className="w-full h-full border-2 border-amber-900/30 rounded-xl flex items-center justify-center bg-black/20">
@@ -1016,14 +1134,6 @@ const IntegraliaGame = () => {
                                         )}
                                     </div>
                                 </div>
-
-                                {/* We only transmute if they slotted an even sine/cosine previously, but let's keep the logic running! */}
-                                {trigSubCard && (trigSubCard.name === 'Sina' || trigSubCard.name === 'Cosa') && trigSubCard.power % 2 === 0 && (
-                                    <div className="absolute inset-0 bg-amber-950/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-4">
-                                        <p className="text-amber-400 text-xs font-bold tracking-widest uppercase">Half-Angle Resonance Detected</p>
-                                        <button onClick={transmuteRune} className="px-10 py-4 bg-amber-600 hover:bg-amber-500 text-white font-black uppercase tracking-[0.3em] rounded-full shadow-[0_0_30px_rgba(245,158,11,0.6)] hover:shadow-[0_0_50px_rgba(245,158,11,0.8)] transition-all transform hover:scale-105">Transmute Runes</button>
-                                    </div>
-                                )}
                             </div>
                         )}
 
@@ -1141,4 +1251,3 @@ const IntegraliaGame = () => {
     </script>
 </body>
 </html>
-        // END OF PART 1 - AWAITING PROMPT FOR PART 2
