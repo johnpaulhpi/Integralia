@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integralia: The Shattered Weave - Phase 23 (Refactored)</title>
+    <title>Integralia: The Shattered Weave - Phase 24 (Refactored Cycles)</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -16,27 +16,67 @@
     <style>
         body { background-color: #030712; color: #e5e7eb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
         .card-hover:hover { transform: translateY(-5px); transition: transform 0.2s ease-in-out; }
+        
         .log-scroll::-webkit-scrollbar { width: 8px; }
         .log-scroll::-webkit-scrollbar-track { background: #111827; border-radius: 4px; }
         .log-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        
         @keyframes pulse-soft { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.03); opacity: 1; } }
         .svg-pulse { animation: pulse-soft 3s ease-in-out infinite; }
+
         @keyframes particle-explode { 0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(180deg); opacity: 0; } }
         .particle { position: absolute; top: 50%; left: 50%; animation: particle-explode 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; z-index: 50; }
+        
         @keyframes consume { 0% { transform: scale(1); filter: blur(0); } 100% { transform: scale(0) rotate(180deg); filter: blur(20px); opacity: 0; } }
         .animate-consume { animation: consume 1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
-        @keyframes slash { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 50% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 100%); opacity: 0; } }
-        .animate-slash { position: absolute; top: 45%; left: -20%; right: -20%; height: 8px; background: white; box-shadow: 0 0 20px 8px rgba(255,255,255,0.9); transform: rotate(-25deg); animation: slash 0.4s ease-out forwards; z-index: 60; pointer-events: none; }
+
+        @keyframes slash {
+            0% { clip-path: inset(0 100% 0 0); opacity: 1; }
+            50% { clip-path: inset(0 0 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0 0 100%); opacity: 0; }
+        }
+        .animate-slash {
+            position: absolute; top: 45%; left: -20%; right: -20%; height: 8px;
+            background: white; box-shadow: 0 0 20px 8px rgba(255,255,255,0.9);
+            transform: rotate(-25deg); animation: slash 0.4s ease-out forwards; z-index: 60; pointer-events: none;
+        }
+
         @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(60px) scale(0.3); opacity: 0; } }
-        .blood-drop { position: absolute; bottom: 0; width: 6px; height: 12px; border-radius: 50%; background-color: #dc2626; box-shadow: 0 0 8px #dc2626; animation: bleed 1.2s infinite ease-in; z-index: 45; pointer-events: none; }
-        .drop-1 { left: 20%; animation-delay: 0.1s; } .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 14px; } .drop-3 { left: 80%; animation-delay: 0.3s; }
-        @keyframes twitch { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(2px) rotate(5deg); } 50% { transform: translateY(-1px) rotate(-5deg); } 75% { transform: translateY(3px) rotate(2deg); } }
+        .blood-drop {
+            position: absolute; bottom: 0; width: 6px; height: 12px; border-radius: 50%;
+            background-color: #dc2626; box-shadow: 0 0 8px #dc2626;
+            animation: bleed 1.2s infinite ease-in; z-index: 45; pointer-events: none;
+        }
+        .drop-1 { left: 20%; animation-delay: 0.1s; }
+        .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 14px; }
+        .drop-3 { left: 80%; animation-delay: 0.3s; }
+
+        @keyframes twitch {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(2px) rotate(5deg); }
+            50% { transform: translateY(-1px) rotate(-5deg); }
+            75% { transform: translateY(3px) rotate(2deg); }
+        }
         .fang { animation: twitch 0.3s infinite; transform-origin: top center; }
-        @keyframes bubbleUp { 0% { transform: translateY(0) scale(1); opacity: 0; } 50% { opacity: 0.3; } 100% { transform: translateY(-40px) scale(1.5); opacity: 0; } }
-        .pit-bubble { position: absolute; background: #4b5563; border-radius: 50%; animation: bubbleUp 2s infinite ease-in; pointer-events: none; }
+
+        @keyframes bubbleUp {
+            0% { transform: translateY(0) scale(1); opacity: 0; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-40px) scale(1.5); opacity: 0; }
+        }
+        .pit-bubble {
+            position: absolute;
+            background: #4b5563;
+            border-radius: 50%;
+            animation: bubbleUp 2s infinite ease-in;
+            pointer-events: none;
+        }
+
         .mana-bar-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        
         .mat-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         @keyframes slideLeft { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .animate-slide-left { animation: slideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
@@ -298,7 +338,9 @@
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             
-            useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+            useEffect(() => { 
+                if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); 
+            }, [logs]);
 
             // Utility to build a card quickly
             const buildCard = (name, baseTex, baseMath, power, type = 'Core', canCycle = false, ability = '', isBleeding = false, isLeech = false) => {
@@ -327,8 +369,8 @@
                     newCards.push(buildCard('Algebraica', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread."));
                     const ibpType = Math.floor(Math.random() * 3);
                     if (ibpType === 0) newCards.push(buildCard('Expona', 'e^{2x}', 'exp(2*x)', 1, 'Core', true, "Exponential Spirit."));
-                    else if (ibpType === 1) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', 1, 'Core', false, "Armored Core."));
-                    else newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Primal Spirit."));
+                    else if (ibpType === 1) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', 1, 'Core', true, "Armored Core.")); // Made power-1 trig cyclable
+                    else newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', true, "Primal Spirit.")); // Made power-1 trig cyclable
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
                 }
 
@@ -364,7 +406,7 @@
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
-                        buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", false),
+                        buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', true, "Shattered Numerator.", false),
                         buildCard('Seca', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", false)
                     );
                     setBossCards(newCards);
@@ -382,6 +424,20 @@
                     return;
                 }
 
+                // NEW: Double Angle Flip (Sina or Cosa back and forth)
+                if (card.power === 1 && (card.name === 'Sina' || card.name === 'Cosa') && !card.baseTex.includes('2x')) {
+                    setMana(m => m - 10);
+                    const newCards = bossCards.filter(c => c.id !== cardId);
+                    let newName = card.name === 'Sina' ? 'Cosa' : 'Sina';
+                    let newTex = card.name === 'Sina' ? '\\cos(-x)' : '\\sin(-x)';
+                    let newMath = card.name === 'Sina' ? 'cos(-x)' : 'sin(-x)';
+                    newCards.push(buildCard(newName, newTex, newMath, 1, 'Core', true, "Flipped Parity.", false));
+                    setBossCards(newCards);
+                    addLog(`Identity Cycled: Flipped Parity! (-10 Mana)`);
+                    return;
+                }
+
+                // Standard Pythagorean Hardening / Extracting
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
                 } else if (card.name === 'Residue') {
@@ -584,6 +640,7 @@
             };
 
             const extractGeometry = () => {
+                const extractGeometry = () => {
                 if (!trigSubCard) return;
                 setMana(m => m + 20);
                 let xTex, dxTex, radTex;
