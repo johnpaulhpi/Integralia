@@ -448,139 +448,6 @@
                 }));
             };
 
-            const [integrationStep, setIntegrationStep] = useState(0);
-            const [integrationPath, setIntegrationPath] = useState(null); 
-
-            const [bossCards, setBossCards] = useState([]);
-            
-            // Random Spell Generator
-            const generateSpell = () => {
-                const spellType = Math.floor(Math.random() * 3); // 0: Sin/Cos, 1: Sec/Tan, 2: IBP/Tabular
-                const newCards = [];
-                let logMsg = "";
-
-                if (spellType === 0) {
-                    const sinPower = Math.floor(Math.random() * 3) + 1; 
-                    const cosPower = Math.floor(Math.random() * 3) + 1; 
-                    if (sinPower > 0) newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: sinPower, canCycle: (sinPower % 2 === 0), ability: "Primal Spirit.", isBleeding: false });
-                    if (cosPower > 0) newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: cosPower, canCycle: (cosPower % 2 === 0), ability: "Armored Core.", isBleeding: false });
-                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x) to extract its mana.`;
-                } else if (spellType === 1) {
-                    const secPower = Math.floor(Math.random() * 3) + 1; 
-                    const tanPower = Math.floor(Math.random() * 3) + 1; 
-                    if (secPower > 0) newCards.push({ id: `seca-${Date.now()}`, name: 'Seca', type: 'Core', baseTex: '\\sec(x)', baseMath: 'sec(x)', power: secPower, canCycle: (secPower % 2 === 0), ability: "Piercing Spirit.", isBleeding: false });
-                    if (tanPower > 0) newCards.push({ id: `tana-${Date.now()}`, name: 'Tana', type: 'Core', baseTex: '\\tan(x)', baseMath: 'tan(x)', power: tanPower, canCycle: (tanPower % 2 === 0), ability: "Shifting Core.", isBleeding: false });
-                    logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x) to extract its mana.`;
-                } else {
-                    const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push({ id: `algebraica-${Date.now()}`, name: 'Algebraica', type: 'Core', baseTex: xPower === 1 ? 'x' : `x^${xPower}`, baseMath: xPower === 1 ? 'x' : `x^${xPower}`, power: xPower, canCycle: false, ability: "Algebraic Thread.", isBleeding: false });
-
-                    const ibpType = Math.floor(Math.random() * 3);
-                    if (ibpType === 0) {
-                        newCards.push({ id: `expona-${Date.now()}`, name: 'Expona', type: 'Core', baseTex: 'e^x', baseMath: 'exp(x)', power: 1, canCycle: false, ability: "Exponential Spirit.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} e^x using Dual-Weave or Tabular Method.`;
-                    } else if (ibpType === 1) {
-                        newCards.push({ id: `cosa-${Date.now()}`, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 1, canCycle: false, ability: "Armored Core.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} cos(x) using Dual-Weave or Tabular Method.`;
-                    } else {
-                        newCards.push({ id: `sina-${Date.now()}`, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 1, canCycle: false, ability: "Primal Spirit.", isBleeding: false });
-                        logMsg = `A wild spell appears! Refine x${xPower > 1 ? '^'+xPower : ''} sin(x) using Dual-Weave or Tabular Method.`;
-                    }
-                }
-                
-                setBossCards(newCards);
-                setGamePhase('setup');
-                setIntegrationStep(0);
-                setIntegrationPath(null);
-                setActiveMode(null);
-                setActiveMat(null);
-                setAltarCore(null);
-                setAltarSacrifice(null);
-                setAltarExpanded([]);
-                setIbpU(null);
-                setIbpDv(null);
-                setIbpDerived(null);
-                setTrigSubCard(null);
-                setTabularU([]);
-                setTabularDv([]);
-                setTabularComplete(false);
-                
-                addLog(logMsg);
-            };
-
-            useEffect(() => {
-                generateSpell();
-            }, []);
-
-            // Mat States
-            const [altarCore, setAltarCore] = useState(null);
-            const [altarSacrifice, setAltarSacrifice] = useState(null);
-            const [altarExpanded, setAltarExpanded] = useState([]);
-            
-            const [ibpU, setIbpU] = useState(null);
-            const [ibpDv, setIbpDv] = useState(null);
-            const [ibpDerived, setIbpDerived] = useState(null);
-
-            const [trigSubCard, setTrigSubCard] = useState(null);
-
-            const [tabularU, setTabularU] = useState([]); 
-            const [tabularDv, setTabularDv] = useState([]); 
-            const [tabularComplete, setTabularComplete] = useState(false);
-
-            const [activeMode, setActiveMode] = useState(null); 
-            const [activeMat, setActiveMat] = useState(null); 
-            
-            const [slashingId, setSlashingId] = useState(null);
-            const [shatteringId, setShatteringId] = useState(null);
-            const [stitchTargetId, setStitchTargetId] = useState(null);
-            const [consumeAll, setConsumeAll] = useState(false);
-            
-            const [logs, setLogs] = useState([]);
-            const logEndRef = useRef(null);
-            const addLog = (msg) => setLogs(prev => [...prev, msg]);
-            useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
-
-            const selectMat = (matName) => {
-                setActiveMode(null); 
-                setActiveMat(matName);
-                
-                if (matName === 'altar') addLog("Sacrificial Altar Deployed. Slot your Core and Sacrifice into the Mat!");
-                else if (matName === 'ibp') addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
-                else if (matName === 'trigsub') addLog("Rune Circle Deployed. Slot a Trig Spirit to reveal its sacred geometry.");
-                else if (matName === 'tabular') addLog("The Abyssal Stair Deployed. Slot a Mortal Coil (x) and an Eternal Echo to begin the descent.");
-                else addLog("Mat returned to inventory.");
-            };
-
-            const handleCycle = (cardId) => {
-                const card = bossCards.find(c => c.id === cardId);
-                if (!card) return;
-
-                if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca') {
-                    setMana(m => m + 10);
-                    addLog(`Identity Cycled: Extracting mana from the shell. (+10 Mana)`);
-                } else if (card.name === 'Residue') {
-                    if (mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
-                    setMana(m => m - 10);
-                    addLog(`Identity Cycled: Hardening Residue back into a Core. (-10 Mana)`);
-                }
-
-                setBossCards(prev => prev.map(c => {
-                    if (c.id === cardId) {
-                        if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine.", isBleeding: false };
-                        else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine.", isBleeding: false };
-                        else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant.", isBleeding: false };
-                        else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent.", isBleeding: false };
-                        else {
-                            if (c.baseTex && c.baseTex.includes('cos')) return { ...c, name: 'Sina', type: 'Core', baseTex: '\\sin(x)', baseMath: 'sin(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
-                            else if (c.baseTex && c.baseTex.includes('sin')) return { ...c, name: 'Cosa', type: 'Core', baseTex: '\\cos(x)', baseMath: 'cos(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
-                            else if (c.baseTex && c.baseTex.includes('sec')) return { ...c, name: 'Tana', type: 'Core', baseTex: '\\tan(x)', baseMath: 'tan(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
-                            else if (c.baseTex && c.baseTex.includes('tan')) return { ...c, name: 'Seca', type: 'Core', baseTex: '\\sec(x)', baseMath: 'sec(x)', power: 2, canCycle: true, ability: "Restored Armor.", isBleeding: false };
-                        }
-                    }
-                    return c;
-                }));
-            };
-
             const handleBossCardClick = (card) => {
                 if (gamePhase !== 'setup') return;
 
@@ -827,6 +694,15 @@
                 setTrigSubCard(null);
                 setActiveMat(null);
                 addLog("Sacred Geometry Extracted! Three new fragments materialize.");
+            };
+
+            const transmuteRune = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 30);
+                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                setBossCards(prev => [ ...prev, { id: `resonant-${Date.now()}`, name: 'Resonant Core', type: 'Resonant', baseTex: newKaTeX, baseMath: '', power: trigSubCard.power / 2, canCycle: false, ability: "Transmuted via Half-Angle Identity.", isBleeding: false } ]);
+                setTrigSubCard(null); setActiveMat(null);
+                addLog("Transmutation complete! The Rune Circle fades.");
             };
 
             const collapseWeave = () => {
