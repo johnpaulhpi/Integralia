@@ -306,7 +306,7 @@
             };
 
             const generateSpell = () => {
-                const spellType = Math.floor(Math.random() * 3); 
+                const spellType = Math.floor(Math.random() * 4); 
                 const newCards = [];
                 let logMsg = "";
 
@@ -322,15 +322,33 @@
                     if (secPower > 0) newCards.push(buildCard('Seca', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "Piercing Spirit."));
                     if (tanPower > 0) newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Shifting Core."));
                     logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
-                } else {
+                } else if (spellType === 2) {
+                    // Previous IBP Logic (Now an else if)
                     const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push(buildCard('Algebraica', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread."));
+                    newCards.push(buildCard('Algebraica', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread.", false));
+
                     const ibpType = Math.floor(Math.random() * 3);
-                    if (ibpType === 0) newCards.push(buildCard('Expona', 'e^{2x}', 'exp(2*x)', 1, 'Core', true, "Exponential Spirit."));
-                    else if (ibpType === 1) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', 1, 'Core', false, "Armored Core."));
-                    else newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Primal Spirit."));
+                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Cosa', t:'\\cos(x)', m:'cos(x)'} : {n:'Sina', t:'\\sin(x)', m:'sin(x)'});
+                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, "Eternal Spirit.", false));
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
+
+                } else {
+                    // NEW: Spell Type 3 - The Radical / Trig Sub Spells!
+                    const radType = Math.floor(Math.random() * 3); 
+                    
+                    if (radType === 0) {
+                        newCards.push(buildCard('Algebraica', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', false, "The Bound Root.", false));
+                    } else if (radType === 1) {
+                        newCards.push(buildCard('Algebraica', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "The Unbound Root.", false));
+                    } else {
+                        newCards.push(buildCard('Algebraica', '\\sqrt{x^2-1}', 'sqrt(x^2-1)', 1, 'Algebraic', false, "The Fractured Root.", false));
+                    }
+                    
+                    logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
                 }
+
+                // (The dx Leech line stays right here below it!)
+                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', false, "The Differential Leech.", false, true));
 
                 newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', false, "The Differential Leech.", false, true));
                 
