@@ -459,61 +459,9 @@
                         }
                     }
 
-              } else if (activeMode === 'stitch_2') {
-                    if (card.id === stitchTargetId) { addLog("Cannot stitch a card to itself."); return; }
-                    const target1 = bossCards.find(c => c.id === stitchTargetId);
-                    const target2 = card;
-
-                    const isLeech1 = target1.isLeech || target1.name === 'dx' || target1.name === 'dθ';
-                    const isLeech2 = target2.isLeech || target2.name === 'dx' || target2.name === 'dθ';
-
-                    // 1. Stitching a Bleeding Spirit to a Leech
-                    if ((isLeech1 && target2.isBleeding) || (isLeech2 && target1.isBleeding)) {
-                        const leech = isLeech1 ? target1 : target2;
-                        const ghost = isLeech1 ? target2 : target1;
-                        
-                        let ghostTex = ghost.baseTex;
-                        if (ghost.power > 1) {
-                            if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
-                            else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
-                            else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
-                            else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
-                            else ghostTex = `${ghost.baseTex}^${ghost.power}`;
-                        }
-
-                        const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ id: `compound-${Date.now()}`, name: 'Compound', type: 'Sacrifice', baseTex: `${ghostTex} \\, ${leech.baseTex}`, baseMath: `${ghost.baseMath}*${leech.baseMath}`, power: 1, canCycle: false, isBleeding: true, ability: "True Differential. Ready for Altar." });
-                        setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                        addLog(`Stitched the Differential! The Leech is full.`);
-                        return;
-                    }
-
-                    // 2. Special Logic for Sec(x)Tan(x) fusion
-                    if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('tan')) || (target1.baseTex?.includes('tan') && target2.baseTex?.includes('sec'))) {
-                        if (target1.power === 1 && target2.power === 1) {
-                            const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                            newCards.push({ id: `sectan-${Date.now()}`, name: 'Fragment', type: 'Fragment', baseTex: '\\sec(x)\\tan(x)', baseMath: 'sec(x)*tan(x)', power: 1, canCycle: false, isBleeding: true, ability: "Fused Derivative Ghost." });
-                            setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                            addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Feed it to a Leech next.");
-                            return;
-                        }
-                    }
-
-                    // 3. NEW: Special Logic for Sec(x)Sin(x) -> Tan(x) fusion
-                    if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('sin')) || (target1.baseTex?.includes('sin') && target2.baseTex?.includes('sec'))) {
-                        if (target1.power === 1 && target2.power === 1) {
-                            const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                            // Spawns a brand new Tana core!
-                            newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', 1, 'Core', true, "Stitched Quotient Spirit.", false));
-                            setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
-                            addLog("Stitched Sine and Secant... A Tangent Core is forged!");
-                            return;
-                        }
-                    }
-
-                    // 4. Standard Power Combine
                     if (target1.baseTex === target2.baseTex) {
                         addLog(`Stitching identical spirits... Exponents combined!`);
+                        setMana(m => m - 0);
                         const newPower = target1.power + target2.power;
                         let resolvedType = target1.type;
                         if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name)) resolvedType = 'Core';
