@@ -655,29 +655,55 @@
                 addLog("Transmutation complete! The Rune Circle fades.");
             };
 
-            const collapseWeave = () => {
-                let expectedExpandedName = ''; let expectedResidueTex = ''; let coreFamily = altarCore.family;
+           const collapseWeave = () => {
+                // 1. GATEKEEPER: Ensure the main board is completely empty!
+                if (bossCards.length > 0) {
+                    addLog("The Weave is incomplete! Move ALL remaining cards into the Expanded Weave before collapsing.");
+                    return;
+                }
+
+                let expectedExpandedName = '';
+                let expectedResidueTex = '';
+                let coreFamily = altarCore.family;
+
                 if (coreFamily === 'sin') { expectedExpandedName = 'Sina'; expectedResidueTex = '(1-\\sin^2(x))'; }
                 else if (coreFamily === 'cos') { expectedExpandedName = 'Cosa'; expectedResidueTex = '(1-\\cos^2(x))'; }
                 else if (coreFamily === 'tan') { expectedExpandedName = 'Tana'; expectedResidueTex = '(\\sec^2(x)-1)'; }
                 else if (coreFamily === 'sec') { expectedExpandedName = 'Seca'; expectedResidueTex = '(1+\\tan^2(x))'; }
 
+                if (altarSacrifice.name !== 'Compound') { 
+                    addLog("The Sacrifice is invalid! You must stitch a Ghost to a Leech to create a True Differential Compound."); 
+                    return; 
+                }
+
+                // 2. VALIDATION: Check the Expanded Weave for stray, unconverted cards
                 const isInvalid = altarExpanded.some(c => {
                     const isBaseMatch = c.baseTex && (c.baseTex.includes(coreFamily) || c.baseTex === expectedResidueTex);
                     return !isBaseMatch; 
                 });
-                if (isInvalid) { addLog("The Weave is unstable! You left unconverted opposite spirits in the Expanded Weave. Cycle them into Residue first."); return; }
 
-                let uPower = altarCore.power; let residueCount = 0;
+                if (isInvalid) { 
+                    addLog("The Weave is unstable! You left unconverted opposite spirits in the Expanded Weave. Cycle them into Residue first."); 
+                    return; 
+                }
+
+                let uPower = altarCore.power;
+                let residueCount = 0;
                 altarExpanded.forEach(c => {
                     if (c.baseTex && c.baseTex.includes(coreFamily) && !c.name.includes('Residue')) uPower += c.power;
                     if (c.name === 'Residue' || c.baseTex === expectedResidueTex) residueCount++;
                 });
 
-                if (residueCount > 1) { addLog("The Altar can only process one Residue at a time right now. The spell is too complex!"); return; }
+                if (residueCount > 1) { 
+                    addLog("The Altar can only process one Residue at a time right now. The spell is too complex!"); 
+                    return; 
+                }
 
                 addLog("Altar rituals complete! The Weave collapses into a U-State.");
-                setConsumeAll(true); setMana(m => m + 50);
+                setConsumeAll(true); 
+                
+                // Note: Add `ENABLE_MANA &&` before this if you have the mana toggle active!
+                setMana(m => m + 50);
 
                 setTimeout(() => {
                     let sign = (coreFamily === 'cos') ? -1 : 1; 
@@ -696,7 +722,9 @@
                         if (coreFamily === 'tan') rText = '(u^2-1)';
                         if (coreFamily === 'sec') rText = '(1+u^2)';
                         initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}${rText} \\, du`; 
-                    } else { initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`; }
+                    } else { 
+                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`; 
+                    }
 
                     setBossCards([{ id: 'u-state', name: 'U-State', type: 'Unresolved', baseTex: initialEq, power: 1, canCycle: false, ability: residueCount === 1 ? "Needs Distribution." : "Needs Power Rule.", isBleeding: false, meta: { terms, hasResidue: residueCount === 1 } }]);
                     setConsumeAll(false); setActiveMat(null); setAltarCore(null); setAltarSacrifice(null); setAltarExpanded([]);
