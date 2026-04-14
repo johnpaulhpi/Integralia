@@ -60,8 +60,10 @@
         .fang { animation: twitch 0.3s infinite; transform-origin: top center; }
 
         .mana-bar-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        
         .mat-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
         @keyframes slideLeft { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .animate-slide-left { animation: slideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
@@ -151,7 +153,7 @@
                     );
                 } else if (isLeech) {
                     return (
-                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.5)]">
                             <circle cx="50" cy="50" r="25" fill="#111827" stroke="#4b5563" strokeWidth="4" strokeDasharray="4 4" />
                             <path d="M 40 40 Q 50 20 60 40 T 40 40" fill="none" stroke="#9ca3af" strokeWidth="3" />
                         </svg>
@@ -160,6 +162,20 @@
                     return (
                         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                             <path d="M 20 50 L 35 50 L 45 80 L 80 20" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    );
+                } else if (card.name === 'Residue' || card.name === 'Compound') {
+                    let mainColor = "#713f12"; // default yellow/cos
+                    let strokeColor = "#eab308";
+                    
+                    if (isBlue) { mainColor = "#1e3a8a"; strokeColor = "#3b82f6"; }
+                    if (isGreen) { mainColor = "#134e4a"; strokeColor = "#14b8a6"; }
+                    if (isOrange) { mainColor = "#7c2d12"; strokeColor = "#ea580c"; }
+
+                    return (
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                            <polygon points="50,5 95,50 50,95 5,50" fill={mainColor} stroke={strokeColor} strokeWidth="2" />
+                            <circle cx="50" cy="50" r="10" fill={strokeColor} opacity="0.5" />
                         </svg>
                     );
                 } else if (name === 'Expona') {
@@ -265,7 +281,7 @@
 
                         <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3">
                             {isShattering && <ParticleBurst card={card} />}
-                            {/* Graphic 50% smaller per rules */}
+                            {/* Graphic 50% smaller */}
                             <div className={`w-full h-full scale-50 ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>
                                 {renderVisual()}
                             </div>
@@ -277,7 +293,7 @@
                         </div>
 
                         <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
-                            {/* Flavor Text remains! */}
+                            {/* Flavor Text restored! */}
                             <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1 z-10">"{card.ability}"</p>
                             
                             {(card.isBleeding && !isLeech) && (
@@ -412,40 +428,10 @@
                 }));
             };
 
-            const extractGeometry = () => {
-                if (!trigSubCard) return;
-                setMana(m => m + 20);
-                
-                let xTex, dxTex, radTex;
-                if (trigSubCard.name === 'Sina') { xTex = '\\sin(\\theta)'; dxTex = '\\cos(\\theta)'; radTex = '\\sqrt{1-x^2}'; }
-                else if (trigSubCard.name === 'Tana') { xTex = '\\tan(\\theta)'; dxTex = '\\sec^2(\\theta)'; radTex = '\\sqrt{x^2+1}'; }
-                else if (trigSubCard.name === 'Seca') { xTex = '\\sec(\\theta)'; dxTex = '\\sec(\\theta)\\tan(\\theta)'; radTex = '\\sqrt{x^2-1}'; }
-                else { xTex = '\\cos(\\theta)'; dxTex = '-\\sin(\\theta)'; radTex = '\\sqrt{1-x^2}'; }
-
-                const newCards = [
-                    { id: `geo-x-${Date.now()}`, name: 'Algebraica', type: 'Algebraic', baseTex: xTex, baseMath: 'x', power: 1, canCycle: false, ability: "Extracted Identity.", isBleeding: false },
-                    { id: `geo-dtheta-${Date.now()}`, name: 'dθ', type: 'Fragment', baseTex: 'd\\theta', baseMath: 'dtheta', power: 1, canCycle: false, ability: "The New Leech.", isBleeding: false, isLeech: true },
-                    { id: `geo-trig-${Date.now()}`, name: 'Fragment', type: 'Fragment', baseTex: dxTex, baseMath: 'dx', power: 1, canCycle: false, ability: "The Geometric Ghost.", isBleeding: true },
-                    { id: `geo-rad-${Date.now()}`, name: 'Algebraica', type: 'Algebraic', baseTex: radTex, baseMath: 'x', power: 1, canCycle: true, ability: "The Radiant Root.", isBleeding: false }
-                ];
-
-                setBossCards(prev => [...prev, ...newCards]);
-                setTrigSubCard(null); setActiveMat(null);
-                addLog("Sacred Geometry Extracted! Geometry and Differential Fragments materialized.");
-            };
-
-            const transmuteRune = () => {
-                if (!trigSubCard) return;
-                setMana(m => m + 30);
-                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
-                setBossCards(prev => [ ...prev, { id: `resonant-${Date.now()}`, name: 'Resonant Core', type: 'Resonant', baseTex: newKaTeX, baseMath: '', power: trigSubCard.power / 2, canCycle: false, ability: "Transmuted via Half-Angle Identity.", isBleeding: false } ]);
-                setTrigSubCard(null); setActiveMat(null);
-                addLog("Transmutation complete! The Rune Circle fades.");
-            };
-
             const handleBossCardClick = (card) => {
                 if (gamePhase !== 'setup') return;
 
+                // Tool: SLICE
                 if (activeMode === 'slice') {
                     if (card.power > 1) {
                         setSlashingId(card.id); setMana(m => m + 10);
@@ -469,6 +455,22 @@
                     return;
                 }
 
+                // Tool: BLOOD NEEDLE (Make a card bleed manually)
+                if (activeMode === 'bleed') {
+                    if (card.isBleeding) {
+                        addLog("That spirit is already bleeding.");
+                        return;
+                    }
+                    if (mana < 10) { addLog("Not enough Mana! Piercing costs 10 Mana."); setActiveMode(null); return; }
+                    
+                    setMana(m => m - 10);
+                    setBossCards(prev => prev.map(c => c.id === card.id ? { ...c, isBleeding: true, ability: "Pierced and Bleeding." } : c));
+                    setActiveMode(null);
+                    addLog(`Pierced the ${card.name}. It is now bleeding! (-10 Mana)`);
+                    return;
+                }
+
+                // Tool: WEAVER'S NEEDLE
                 if (activeMode === 'stitch_1') {
                     setStitchTargetId(card.id); setActiveMode('stitch_2');
                     addLog(`Selected ${card.name} as the first thread. Select a matching card, or a Leech, to stitch.`);
@@ -481,17 +483,30 @@
                     const isLeech1 = target1.isLeech || target1.name === 'dx' || target1.name === 'dθ';
                     const isLeech2 = target2.isLeech || target2.name === 'dx' || target2.name === 'dθ';
                     
+                    // Stitching a Bleeding Spirit to a Leech
                     if ((isLeech1 && target2.isBleeding) || (isLeech2 && target1.isBleeding)) {
+                        if (mana < 10) { addLog("Not enough Mana! Stitching to a Leech costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
                         const leech = isLeech1 ? target1 : target2;
                         const ghost = isLeech1 ? target2 : target1;
+                        
+                        let ghostTex = ghost.baseTex;
+                        if (ghost.power > 1) {
+                            if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
+                            else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
+                            else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
+                            else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
+                            else ghostTex = `${ghost.baseTex}^${ghost.power}`;
+                        }
+
                         setMana(m => m - 10);
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ id: `compound-${Date.now()}`, name: 'Compound', type: 'Sacrifice', baseTex: `${ghost.baseTex} \\, ${leech.baseTex}`, baseMath: `${ghost.baseMath}*${leech.baseMath}`, power: 1, canCycle: false, isBleeding: true, ability: "True Differential. Ready for Altar." });
+                        newCards.push({ id: `compound-${Date.now()}`, name: 'Compound', type: 'Sacrifice', baseTex: `${ghostTex} \\, ${leech.baseTex}`, baseMath: `${ghost.baseMath}*${leech.baseMath}`, power: 1, canCycle: false, isBleeding: true, ability: "True Differential. Ready for Altar." });
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                         addLog(`Stitched the Differential! The Leech is full. (-10 Mana)`);
                         return;
                     }
 
+                    // Special Logic for Sec(x)Tan(x) fusion
                     if ((target1.baseTex?.includes('sec') && target2.baseTex?.includes('tan')) || (target1.baseTex?.includes('tan') && target2.baseTex?.includes('sec'))) {
                         if (target1.power === 1 && target2.power === 1 && mana >= 10) {
                             setMana(m => m - 10);
@@ -503,6 +518,7 @@
                         }
                     }
 
+                    // Standard Power Combine
                     if (target1.baseTex === target2.baseTex) {
                         if (mana < 10) { addLog("Not enough Mana! Sewing fragments costs 10 Mana."); setActiveMode(null); setStitchTargetId(null); return; }
                         addLog(`Stitching identical spirits... Exponents combined! (-10 Mana)`);
@@ -592,11 +608,42 @@
                 if (trigSubCard) { setBossCards(prev => [...prev, trigSubCard]); setTrigSubCard(null); addLog("Spirit returned to the board."); }
             };
 
+            const extractGeometry = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 20);
+                
+                let xTex, dxTex, radTex;
+                if (trigSubCard.name === 'Sina') { xTex = '\\sin(\\theta)'; dxTex = '\\cos(\\theta)'; radTex = '\\sqrt{1-x^2}'; }
+                else if (trigSubCard.name === 'Tana') { xTex = '\\tan(\\theta)'; dxTex = '\\sec^2(\\theta)'; radTex = '\\sqrt{x^2+1}'; }
+                else if (trigSubCard.name === 'Seca') { xTex = '\\sec(\\theta)'; dxTex = '\\sec(\\theta)\\tan(\\theta)'; radTex = '\\sqrt{x^2-1}'; }
+                else { xTex = '\\cos(\\theta)'; dxTex = '-\\sin(\\theta)'; radTex = '\\sqrt{1-x^2}'; }
+
+                const newCards = [
+                    { id: `geo-x-${Date.now()}`, name: 'Algebraica', type: 'Algebraic', baseTex: xTex, baseMath: 'x', power: 1, canCycle: false, ability: "Extracted Identity.", isBleeding: false },
+                    { id: `geo-dtheta-${Date.now()}`, name: 'dθ', type: 'Fragment', baseTex: 'd\\theta', baseMath: 'dtheta', power: 1, canCycle: false, ability: "The New Leech.", isBleeding: false, isLeech: true },
+                    { id: `geo-trig-${Date.now()}`, name: 'Fragment', type: 'Fragment', baseTex: dxTex, baseMath: 'dx', power: 1, canCycle: false, ability: "The Geometric Ghost.", isBleeding: true },
+                    { id: `geo-rad-${Date.now()}`, name: 'Algebraica', type: 'Algebraic', baseTex: radTex, baseMath: 'x', power: 1, canCycle: true, ability: "The Radiant Root.", isBleeding: false }
+                ];
+
+                setBossCards(prev => [...prev, ...newCards]);
+                setTrigSubCard(null); setActiveMat(null);
+                addLog("Sacred Geometry Extracted! Geometry and Differential Fragments materialized.");
+            };
+
+            const transmuteRune = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 30);
+                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                setBossCards(prev => [ ...prev, { id: `resonant-${Date.now()}`, name: 'Resonant Core', type: 'Resonant', baseTex: newKaTeX, baseMath: '', power: trigSubCard.power / 2, canCycle: false, ability: "Transmuted via Half-Angle Identity.", isBleeding: false } ]);
+                setTrigSubCard(null); setActiveMat(null);
+                addLog("Transmutation complete! The Rune Circle fades.");
+            };
+
             const collapseWeave = () => {
                 let expectedExpandedName = '';
                 let expectedResidueTex = '';
-                
                 let coreFamily = altarCore.family;
+
                 if (coreFamily === 'sin') { expectedExpandedName = 'Sina'; expectedResidueTex = '(1-\\sin^2(x))'; }
                 else if (coreFamily === 'cos') { expectedExpandedName = 'Cosa'; expectedResidueTex = '(1-\\cos^2(x))'; }
                 else if (coreFamily === 'tan') { expectedExpandedName = 'Tana'; expectedResidueTex = '(\\sec^2(x)-1)'; }
@@ -743,7 +790,7 @@
                         <div className={`bg-gray-950 border rounded-[2rem] p-6 flex flex-col items-center relative overflow-hidden transition-all ${activeMat ? 'w-4/12' : 'w-full'} ${boardBorder}`}>
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
                                 {bossCards.length > 0 && <div className="text-6xl text-white/10 font-serif">∫</div>}
-                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
+                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
                             </div>
                         </div>
 
@@ -841,13 +888,19 @@
 
                         {gamePhase === 'setup' && (
                             <div className="grid grid-cols-4 gap-4 w-full">
-                                <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Tool</span><br/><span className="font-bold">Slice</span></button>
+                                <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Machine</span><br/><span className="font-bold">Slice</span></button>
+                                <button onClick={() => { setActiveMode('bleed'); setActiveMat(null); addLog("Blood Needle equipped. Select a spirit to pierce."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='bleed'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Blood Needle</span></button>
                                 <button onClick={() => setActiveMode('stitch_1')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='stitch_1'||activeMode==='stitch_2'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Weaver's Needle</span></button>
+                                {activeMode ? (
+                                    <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800 text-center font-bold text-gray-400 uppercase text-xs hover:bg-gray-700 hover:text-white transition-all">Cancel Tool</button>
+                                ) : (
+                                    <div className="p-4 rounded-xl border-2 border-transparent bg-transparent"></div>
+                                )}
+
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
                                 <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Abyssal Stair</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
-                                {activeMode && <button onClick={() => { setActiveMode(null); setStitchTargetId(null); addLog("Tool unequipped."); }} className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800 text-center font-bold text-gray-400 uppercase text-xs hover:bg-gray-700 hover:text-white transition-all">Cancel Tool</button>}
                             </div>
                         )}
 
