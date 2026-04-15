@@ -873,15 +873,6 @@
                 addLog("Transmutation complete! The Rune Circle fades.");
             };
 
-           const transmuteRune = () => {
-                if (!trigSubCard) return;
-                setMana(m => m + 30);
-                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
-                setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
-                setTrigSubCard(null); setActiveMat(null);
-                addLog("Transmutation complete! The Rune Circle fades.");
-            };
-
             // ==========================================
             // NEW: Shrine Ascension
             // ==========================================
@@ -1062,8 +1053,30 @@
                     else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - (${meta.vTex==='\\sin(x)'?'-\\cos(x)':(meta.vTex==='-\\cos(x)'?'-\\sin(x)':'\\ln|\\sec(x)|')})`}]); }
                     else if (t === 'action3') { setIntegrationStep(3); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} ${meta.vTex==='\\sin(x)'?'+ \\cos(x)':(meta.vTex==='-\\cos(x)'?'+ \\sin(x)':'- \\ln|\\sec(x)|')}`}]); }
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
+                
+                // --- NEW: Add this block right here ---
+                } else if (integrationPath === 'direct') {
+                    if (t === 'action3') {
+                        setIntegrationStep(3);
+                        let tex = bossCards[0].meta.originalTex || '';
+                        let result = 'F(x)';
+                        if (tex.includes('\\cos')) result = '\\sin(x)';
+                        else if (tex.includes('\\sin')) result = '-\\cos(x)';
+                        else if (tex.includes('\\sec^2')) result = '\\tan(x)';
+                        else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
+                        else if (tex.includes('e^x')) result = 'e^x';
+                        
+                        setBossCards([{...bossCards[0], baseTex: result, ability: "Needs Constant of Integration."}]);
+                        addLog("Integral evaluated! Finalize the refinement.");
+                    } else if (t === 'plus_c') {
+                        setMana(m=>m+200); setIntegrationStep(4); 
+                        setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]);
+                        addLog("Token Applied: Added +C. REFINEMENT COMPLETE!");
+                    }
                 }
-            }; 
+                // --------------------------------------
+
+            };
 
             // ==========================================
             // NEW UI HELPERS
