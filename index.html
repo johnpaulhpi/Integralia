@@ -299,7 +299,16 @@
             const logEndRef = useRef(null);
             const addLog = (msg) => setLogs(prev => [...prev, msg]);
             
+            // Existing log scroll effect
             useEffect(() => { if (logEndRef.current) logEndRef.current.scrollIntoView({ behavior: 'smooth' }); }, [logs]);
+
+            // ==========================================
+            // NEW: Deal the starting hand on initial load!
+            // ==========================================
+            useEffect(() => {
+                generateSpell();
+            }, []); 
+            // ==========================================
 
             // Utility to build a card quickly
             const buildCard = (name, baseTex, baseMath, power, type = 'Core', canCycle = false, ability = '', isBleeding = false, isLeech = false) => {
