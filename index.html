@@ -39,6 +39,16 @@
         @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes slideLeft { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .animate-slide-left { animation: slideLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        @keyframes fragile-tremble {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-1px, 1px) rotate(-0.5deg); }
+            50% { transform: translate(1px, -1px) rotate(0.5deg); }
+            75% { transform: translate(-1px, -1px) rotate(0deg); }
+        }
+        .fragile-tremble { animation: fragile-tremble 0.15s infinite alternate; }
+
+        
     </style>
 </head>
 <body>
@@ -177,6 +187,9 @@
             let isOrange = tex.includes('tan') || name === 'Tana';
             let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Algebraica') && !isYellow && !isBlue && !isGreen && !isOrange;
 
+            // NEW: Define Fragility Constraints
+            const isFragile = (name === 'Tana' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
+
             let themeName = 'gray';
             if (isLeech) themeName = 'black';
             else if (isYellow) themeName = 'yellow';
@@ -205,16 +218,32 @@
                 return <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="50" r="20" fill="none" stroke="gray" strokeWidth="2" /></svg>;
             };
 
-            // 3. Dynamic Border Classes
+            // 3. Dynamic Border Classes & Flavor Text Override
             let borderClass = theme.border;
             if (isActive) borderClass = 'border-blue-400 shadow-[0_0_25px_rgba(59,130,246,0.5)] scale-105';
             if (isStitchTarget) borderClass = 'border-emerald-400 shadow-[0_0_25px_rgba(16,185,129,0.5)] scale-105';
             if (isSacrificeTarget) borderClass = 'border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.7)] animate-pulse scale-105';
 
+            let displayAbility = card.ability;
+            if (isFragile) displayAbility = "Fragile, and ready to shatter.";
+            if (card.isBleeding && !isLeech) displayAbility = "Pierced and Bleeding.";
+
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
-                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass}`}>
+                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass} ${isFragile ? 'fragile-tremble' : ''}`}>
                         
+                        {/* NEW: Shattered Glass Overlay */}
+                        {isFragile && (
+                            <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden rounded-2xl opacity-70 mix-blend-overlay">
+                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full drop-shadow-md">
+                                    <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
+                                    <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#000000" strokeWidth="2" opacity="0.4" />
+                                    <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
+                                    <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#000000" strokeWidth="1" opacity="0.3" />
+                                </svg>
+                            </div>
+                        )}
+
                         {isSlashing && <div className="animate-slash"></div>}
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">{card.type}</div>
 
@@ -249,7 +278,7 @@
                         </div>
 
                         <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
-                            <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1 z-10">"{card.ability}"</p>
+                            <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1 z-10">"{displayAbility}"</p>
                             {(card.isBleeding && !isLeech) && (
                                 <>
                                     <div className="blood-drop drop-1"></div><div className="blood-drop drop-2"></div><div className="blood-drop drop-3"></div>
