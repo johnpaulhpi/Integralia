@@ -380,9 +380,9 @@
                 const card = bossCards.find(c => c.id === cardId);
                 if (!card) return;
 
-                // Tana Shatter Logic
+                // 1. Tana Shatter Logic (The one physical break in the game!)
                 if (card.name === 'Tana' && card.power === 1) {
-                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                    if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
@@ -394,49 +394,59 @@
                     return;
                 }
 
-                // Expona Morph Logic
-                if (card.name === 'Expona' && card.baseTex === 'e^{2x}') {
-                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                // 2. Expona Rolodex (e^{2x} <-> (e^x)^2)
+                if (card.name === 'Expona') {
+                    if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
-                    newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', true, "Morphed Exponential.", card.isBleeding));
+                    
+                    if (card.baseTex === 'e^{2x}') {
+                        newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', true, "Morphed Exponential.", card.isBleeding));
+                        addLog(`Identity Cycled: Morphed Exponential base!`);
+                    } else {
+                        newCards.push(buildCard('Expona', 'e^{2x}', 'exp(2*x)', 1, 'Core', true, "Restored Exponential base.", card.isBleeding));
+                        addLog(`Identity Cycled: Restored Exponential base!`);
+                    }
                     setBossCards(newCards);
-                    addLog(`Identity Cycled: Morphed Exponential base!`);
                     return;
                 }
 
+                // 3. Mana Accounting for standard cycles
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell.`);
                 } else if (card.name === 'Residue') {
-                    if (ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
+                    if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
                     setMana(m => m - 10); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
+                // 4. The Core / Residue / Algebraic Rolodex
                 setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
-                        if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine.", isBleeding: false };
-                        else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine.", isBleeding: false };
-                        else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant.", isBleeding: false };
-                        else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent.", isBleeding: false };
+                        // Core -> Residue
+                        if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', canCycle: true, ability: "Transmuted into Cosine." };
+                        else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine." };
+                        else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant." };
+                        else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent." };
+                        
+                        // Algebraic Rolodex
                         else if (c.type === 'Algebraic') {
-                            // Radicals are handled by the Rune Circle now. 
-                            // Future algebraic cycles (like 1 -> sin^2 + cos^2) will go here!
                             if (c.baseTex === '1') {
-                                return buildCard('Compound', '\\sin^2(x)+\\cos^2(x)', 'sin(x)^2+cos(x)^2', 1, 'Algebraic', true, "Pythagorean Unraveling.");
+                                return buildCard('Compound', '\\sin^2(x)+\\cos^2(x)', 'sin(x)^2+cos(x)^2', 1, 'Algebraic', true, "Pythagorean Form.");
+                            } else if (c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
+                                return buildCard('Algebraica', '1', '1', 1, 'Algebraic', true, "The Monad.");
                             }
-                            return c;
-                        } else {
-                            // RESTORES RESIDUE BACK TO ARMOR, OR GEOMETRY BACK TO RADICALS
-                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('sin') && !c.baseTex.includes('\\theta')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('sec') && !c.baseTex.includes('\\theta')) return buildCard('Tana', '\\tan(x)', 'tan(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('tan') && !c.baseTex.includes('\\theta')) return buildCard('Seca', '\\sec(x)', 'sec(x)', 2, 'Core', true, "Restored Armor.");
-                            else if (c.baseTex && c.baseTex.includes('\\sin(\\theta)')) return buildCard('Algebraica', '\\sqrt{1-x^2}', 'x', 1, 'Algebraic', false, "The Bound Root.");
-                            else if (c.baseTex && c.baseTex.includes('\\sec(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2-1}', 'x', 1, 'Algebraic', false, "The Fractured Root.");
-                            else if (c.baseTex && c.baseTex.includes('\\tan(\\theta)')) return buildCard('Algebraica', '\\sqrt{x^2+1}', 'x', 1, 'Algebraic', false, "The Unbound Root.");
+                        } 
+                        
+                        // Residue -> Core
+                        else if (c.name === 'Residue') {
+                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', c.power, 'Core', true, "Restored Armor.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', c.power, 'Core', true, "Restored Armor.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', c.power, 'Core', true, "Restored Armor.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', c.power, 'Core', true, "Restored Armor.", c.isBleeding);
                         }
                     }
-                    return c;
+                    // This fallback guarantees we never return undefined and crash React!
+                    return c; 
                 }));
             };
 //==========================================
