@@ -159,14 +159,19 @@
         // ==========================================
 
         const MathEquation = ({ equation, size = "text-3xl", inline = false, color = "text-yellow-400" }) => {
-            const containerRef = useRef();
-            useEffect(() => {
-                if (containerRef.current && equation) {
-                    try { katex.render(equation, containerRef.current, { displayMode: !inline, throwOnError: false }); } 
-                    catch (e) { console.error("KaTeX error:", e); }
+            // Generate the KaTeX HTML string during the render cycle, heavily memoized for performance
+            const htmlContent = React.useMemo(() => {
+                if (!equation) return { __html: '' };
+                try {
+                    return { __html: katex.renderToString(equation, { displayMode: !inline, throwOnError: false }) };
+                } catch (e) {
+                    console.error("KaTeX error:", e);
+                    return { __html: '<span>Error</span>' };
                 }
             }, [equation, inline]);
-            return <div ref={containerRef} className={`${size} ${color} drop-shadow-md pointer-events-none`}></div>;
+
+            // Hand the HTML directly to React so it never gets wiped during a state update
+            return <div dangerouslySetInnerHTML={htmlContent} className={`${size} ${color} drop-shadow-md pointer-events-none`}></div>;
         };
 
         const ParticleBurst = ({ theme }) => {
