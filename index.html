@@ -268,6 +268,7 @@
             const [integrationPath, setIntegrationPath] = useState(null); 
 
             const [bossCards, setBossCards] = useState([]);
+            const [initialCards, setInitialCards] = useState([]); // NEW: Stores the snapshot!
             
             const [altarCore, setAltarCore] = useState(null);
             const [altarSacrifice, setAltarSacrifice] = useState(null);
@@ -304,7 +305,9 @@
             const buildCard = (name, baseTex, baseMath, power, type = 'Core', canCycle = false, ability = '', isBleeding = false, isLeech = false) => {
                 return { id: `${name.toLowerCase()}-${Date.now()}-${Math.floor(Math.random()*1000)}`, name, type, baseTex, baseMath, power, canCycle, ability, isBleeding, isLeech };
             };
-
+//=======================
+//GENERATE SPELL
+//=======================
             const generateSpell = () => {
                 const spellType = Math.floor(Math.random() * 4); 
                 const newCards = [];
@@ -323,7 +326,6 @@
                     if (tanPower > 0) newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Shifting Core."));
                     logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
                 } else if (spellType === 2) {
-                    // Previous IBP Logic (Now an else if)
                     const xPower = Math.floor(Math.random() * 3) + 1; 
                     newCards.push(buildCard('Algebraica', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread.", false));
 
@@ -333,7 +335,6 @@
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
                 } else {
-                    // NEW: Spell Type 3 - The Radical / Trig Sub Spells!
                     const radType = Math.floor(Math.random() * 3); 
                     
                     if (radType === 0) {
@@ -347,31 +348,24 @@
                     logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
                 }
 
-                // (The dx Leech line stays right here below it!)
+                // Exactly ONE Leech!
                 newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', false, "The Differential Leech.", false, true));
-
                 
                 setBossCards(newCards);
+                setInitialCards([...newCards]); // Take the snapshot!
+                
+                // Clear all states cleanly
                 setGamePhase('setup'); setIntegrationStep(0); setIntegrationPath(null); setActiveMode(null); setActiveMat(null);
                 setAltarCore(null); setAltarSacrifice(null); setAltarExpanded([]);
                 setIbpU(null); setIbpDv(null); setIbpDerived(null);
                 setTrigSubCard(null); setTabularU([]); setTabularDv([]); setTabularComplete(false);
                 setLeechMatTarget(null); setLeechMatBlood(null);
+                
                 addLog(logMsg);
             };
-
-            useEffect(() => { generateSpell(); }, []);
-
-            const selectMat = (matName) => {
-                setActiveMode(null); setActiveMat(matName);
-                if (matName === 'altar') addLog("Sacrificial Altar Deployed. Slot your Core and Sacrifice into the Mat!");
-                else if (matName === 'ibp') addLog("Dual-Weave Mat Deployed. Slot 'u' (Bind) and 'dv' (Poison) to calculate the expansion.");
-                else if (matName === 'trigsub') addLog("Rune Circle Deployed. Slot a Trig Spirit to reveal its sacred geometry.");
-                else if (matName === 'tabular') addLog("The Abyssal Stair Deployed. Slot a Mortal Coil (x) and an Eternal Echo to begin the descent.");
-                else if (matName === 'leech') addLog("Leech Pit Deployed. Provide a Leech and a bleeding spirit sacrifice.");
-                else addLog("Mat returned to inventory.");
-            };
-
+//==========================================
+//END GENERATE SPELL
+//==========================================
 //==========================================
 // HANDLE CYCLE
 //==========================================
@@ -1049,10 +1043,10 @@
                         )}
                     </div>
 
-                    <div className="w-full flex flex-col gap-6">
-                        <div className="w-full h-32 bg-gray-950 border border-white/5 rounded-2xl p-4 log-scroll overflow-y-auto">
+                    <div className="w-full h-32 bg-gray-950 border border-white/5 rounded-2xl p-4 log-scroll overflow-y-auto relative">
                             {logs.map((l, i) => <p key={i} className="text-xs text-gray-500 mb-1 font-mono">> {l}</p>)}
                             <div ref={logEndRef} />
+                            <button onClick={resetSpell} className="absolute top-4 right-4 px-3 py-1 bg-red-950/30 border border-red-900/50 text-red-500 hover:bg-red-900/80 hover:text-red-300 text-[9px] font-black uppercase tracking-widest rounded transition-all z-10">⟲ Reset Spell</button>
                         </div>
 
                         {gamePhase === 'setup' && (
