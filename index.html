@@ -74,6 +74,14 @@
             gray: { bg: 'bg-gray-950/80', border: 'border-gray-800 border-dashed hover:border-gray-600', particle: 'bg-gray-500', svg: { main: '#374151', stroke: '#9ca3af', inner: '#6b7280' } }
         };
 
+        const CATALYSTS = [
+            { id: 'prism', name: 'Cleaving Prism', lore: 'Linearity & Distribute', icon: '💎', color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/30' },
+            { id: 'sieve', name: 'Sieve of Avarice', lore: 'Extract Constants', icon: '⚱️', color: 'text-yellow-500', border: 'border-yellow-500/50', bg: 'bg-yellow-950/30' },
+            { id: 'wheel', name: 'Wheel of Rebirth', lore: 'Direct Trig Eval', icon: '☸️', color: 'text-indigo-400', border: 'border-indigo-500/50', bg: 'bg-indigo-950/30' },
+            { id: 'flame', name: 'Abyssal Flame', lore: 'The Power Rule', icon: '🔥', color: 'text-orange-500', border: 'border-orange-500/50', bg: 'bg-orange-950/30' },
+            { id: 'anchor', name: 'Void Anchor', lore: 'Finalize (+C)', icon: '⚓', color: 'text-gray-300', border: 'border-gray-500/50', bg: 'bg-gray-900/50' }
+        ];
+
         const CARD_REGISTRY = {
             'Sina': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
@@ -317,6 +325,9 @@
             const [leechMatTarget, setLeechMatTarget] = useState(null);
             const [leechMatBlood, setLeechMatBlood] = useState(null);
 
+            const [shrineCard, setShrineCard] = useState(null); 
+            const [activeCatalyst, setActiveCatalyst] = useState(null);
+            
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
             
@@ -512,6 +523,51 @@
 // BOSSCARDS
 //==========================================
             const handleBossCardClick = (card) => {
+                // ==========================================
+                // PHASE 2: CRUCIBLE COMBAT LOGIC
+                // ==========================================
+                if (gamePhase === 'integration') {
+                    if (!activeCatalyst) { addLog("Equip a Catalyst from the Forge below first."); return; }
+                    
+                    let action = null;
+                    const catId = activeCatalyst;
+                    
+                    // The Altar (U-Substitution) Path
+                    if (integrationPath === 'altar') {
+                        if (integrationStep === 0 && catId === 'prism') action = 'action1'; // Prism distributes
+                        else if (integrationStep === 1 && catId === 'prism') action = 'action2'; // Prism splits integral
+                        else if (integrationStep === 2 && catId === 'flame') action = 'action3'; // Flame does power rule
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c'; // Anchor adds +C
+                    } 
+                    // The Shrine (Direct Eval) Path
+                    else if (integrationPath === 'direct') {
+                        if (integrationStep === 2 && catId === 'wheel') action = 'action3'; // Wheel evals Trig
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    } 
+                    // The Dual-Weave (IBP) Path
+                    else if (integrationPath === 'ibp') {
+                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Sieve simplifies
+                        else if (integrationStep === 1 && catId === 'wheel') action = 'action2'; 
+                        else if (integrationStep === 2 && (catId === 'wheel' || catId === 'flame')) action = 'action3';
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    } 
+                    // The Tabular Path
+                    else if (integrationPath === 'tabular') {
+                        if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    }
+
+                    if (action) {
+                        applyIntegrationRule(action);
+                        addLog(`The ${CATALYSTS.find(c=>c.id===catId).name} reacts violently with the integral!`);
+                    } else {
+                        addLog(`The Catalyst rejects this spirit. Use a different elemental tool.`);
+                    }
+                    setActiveCatalyst(null);
+                    return;
+                }
+                // ==========================================
+
+                // If not in setup phase, ignore standard clicks
                 if (gamePhase !== 'setup') return;
 
                 if (activeMode === 'slice') {
@@ -958,6 +1014,7 @@
                 setGamePhase('setup');
                 setIntegrationStep(0);
                 setIntegrationPath(null);
+                setActiveCatalyst(null);
                 setActiveMode(null);
                 setActiveMat(null);
                 setAltarCore(null);
@@ -1032,7 +1089,7 @@
 
                     {/* --- TOP HALF: MAIN BOARD & MATS --- */}
                     <div className="w-full flex gap-6 mb-6 min-h-[450px] transition-all">
-                        <div className={`bg-gray-950 border rounded-[2rem] p-6 flex flex-col items-center relative overflow-hidden transition-all ${activeMat ? 'w-4/12' : 'w-full'} ${boardBorder}`}>
+                        <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-hidden transition-all duration-700 ${activeMat ? 'w-4/12' : 'w-full'} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
                                 {bossCards.length > 0 && <div className="text-6xl text-white/10 font-serif">∫</div>}
                                 {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
@@ -1190,14 +1247,29 @@
                         )}
                         
                         {gamePhase === 'integration' && (
-                            <div className="flex flex-col items-center gap-4">
-                                <div className="grid grid-cols-4 gap-4 w-full">
-                                    <button onClick={()=>applyIntegrationRule('action1')} disabled={integrationStep!==0 || integrationPath==='tabular'} className="p-4 bg-gray-900 border-2 border-fuchsia-900 rounded-xl disabled:opacity-20 font-bold hover:border-fuchsia-500 transition-all">{currentLabels[0]}</button>
-                                    <button onClick={()=>applyIntegrationRule('action2')} disabled={integrationStep!==1 || integrationPath==='tabular'} className="p-4 bg-gray-900 border-2 border-fuchsia-900 rounded-xl disabled:opacity-20 font-bold hover:border-fuchsia-500 transition-all">{currentLabels[1]}</button>
-                                    <button onClick={()=>applyIntegrationRule('action3')} disabled={integrationStep!==2 && integrationPath!=='tabular'} className="p-4 bg-gray-900 border-2 border-fuchsia-900 rounded-xl disabled:opacity-20 font-bold hover:border-fuchsia-500 transition-all">{currentLabels[2]}</button>
-                                    <button onClick={()=>applyIntegrationRule('plus_c')} disabled={integrationStep!==3 && (integrationPath==='tabular' && integrationStep!==4)} className="p-4 bg-gray-900 border-2 border-amber-600 rounded-xl disabled:opacity-20 font-bold hover:border-amber-400 transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)]">Constant (+C)</button>
+                            <div className="w-full flex flex-col items-center animate-slide-up mt-8">
+                                <div className="w-full border-t-2 border-red-900/30 pt-8 pb-4">
+                                    <h3 className="text-center text-red-500/60 font-black uppercase text-[10px] tracking-[0.4em] mb-6 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                                        The Eldritch Forge
+                                    </h3>
+                                    
+                                    <div className="flex justify-center gap-4">
+                                        {CATALYSTS.map(cat => (
+                                            <button 
+                                                key={cat.id} 
+                                                onClick={() => { setActiveCatalyst(cat.id); addLog(`${cat.name} equipped. Strike the Unresolved Integral.`); }}
+                                                disabled={integrationStep === 4}
+                                                className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all w-36 h-32 disabled:opacity-20 disabled:pointer-events-none 
+                                                    ${activeCatalyst === cat.id ? `scale-110 shadow-[0_0_25px_currentColor] z-50 ${cat.color} ${cat.border} ${cat.bg}` : `border-gray-800 bg-gray-950 hover:bg-gray-900 hover:scale-105 ${cat.color}`}`}
+                                            >
+                                                <span className="text-4xl mb-3 drop-shadow-lg">{cat.icon}</span>
+                                                <span className="text-[10px] font-black uppercase text-center leading-tight tracking-widest">{cat.name}</span>
+                                                <span className="text-[8px] text-gray-500 uppercase mt-2 border-t border-white/10 pt-1 w-full text-center">{cat.lore}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                                {integrationStep === 4 && <button onClick={generateSpell} className="bg-blue-600 px-12 py-4 rounded-full font-black uppercase tracking-widest animate-pulse mt-8 shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:bg-blue-500 hover:scale-105 transition-all">Summon Next Spell</button>}
+                                {integrationStep === 4 && <button onClick={generateSpell} className="bg-blue-600 px-12 py-4 rounded-full font-black uppercase tracking-widest animate-pulse mt-4 shadow-[0_0_30px_rgba(59,130,246,0.6)] hover:bg-blue-500 hover:scale-105 transition-all">Summon Next Spell</button>}
                              </div>
                          )}
                      </div>
