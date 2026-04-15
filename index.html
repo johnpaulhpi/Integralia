@@ -394,7 +394,21 @@
                     return;
                 }
 
-                // 2. Expona Rolodex (e^{2x} <-> (e^x)^2)
+                // 2. NEW: Algebraic '1' Shatter Logic (Pythagorean)
+                if (card.type === 'Algebraic' && card.baseTex === '1') {
+                    if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                    setMana(m => m - 10);
+                    const newCards = bossCards.filter(c => c.id !== cardId);
+                    newCards.push(
+                        buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding),
+                        buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding)
+                    );
+                    setBossCards(newCards);
+                    addLog(`Identity Cycled: Shattered The Monad into Sine squared and Cosine squared!`);
+                    return;
+                }
+
+                // 3. Expona Rolodex (e^{2x} <-> (e^x)^2)
                 if (card.name === 'Expona') {
                     if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
@@ -411,7 +425,7 @@
                     return;
                 }
 
-                // 3. Mana Accounting for standard cycles
+                // 4. Mana Accounting for standard cycles
                 if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell.`);
                 } else if (card.name === 'Residue') {
@@ -419,7 +433,7 @@
                     setMana(m => m - 10); addLog(`Identity Cycled: Hardening Residue back into a Core.`);
                 }
 
-                // 4. The Core / Residue / Algebraic Rolodex
+                // 5. The Core / Residue / Algebraic Rolodex
                 setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
                         // Core -> Residue
@@ -427,15 +441,6 @@
                         else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', canCycle: true, ability: "Transmuted into Sine." };
                         else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', canCycle: true, ability: "Transmuted into Secant." };
                         else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', canCycle: true, ability: "Transmuted into Tangent." };
-                        
-                        // Algebraic Rolodex
-                        else if (c.type === 'Algebraic') {
-                            if (c.baseTex === '1') {
-                                return buildCard('Compound', '\\sin^2(x)+\\cos^2(x)', 'sin(x)^2+cos(x)^2', 1, 'Algebraic', true, "Pythagorean Form.");
-                            } else if (c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
-                                return buildCard('Algebraica', '1', '1', 1, 'Algebraic', true, "The Monad.");
-                            }
-                        } 
                         
                         // Residue -> Core
                         else if (c.name === 'Residue') {
@@ -445,7 +450,6 @@
                             else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', c.power, 'Core', true, "Restored Armor.", c.isBleeding);
                         }
                     }
-                    // This fallback guarantees we never return undefined and crash React!
                     return c; 
                 }));
             };
