@@ -945,9 +945,45 @@
                 addLog("Time reverses. The spell state has been reset to the initial draw.");
             };
 
-            const selectMat = (matName) => {
+           const selectMat = (matName) => {
                 setActiveMat(matName);
                 setActiveMode(null); // Clear any active needle/slice tools when switching mats
+            };
+
+            // ==========================================
+            // NEW: The Great Refund Function
+            // ==========================================
+            const cancelMat = () => {
+                let refundedCards = [];
+                
+                // Check every single mat slot for trapped cards
+                if (altarCore) refundedCards.push(altarCore);
+                if (altarSacrifice) refundedCards.push(altarSacrifice);
+                if (altarExpanded.length > 0) refundedCards.push(...altarExpanded);
+                if (ibpU) refundedCards.push(ibpU);
+                if (ibpDv) refundedCards.push(ibpDv);
+                if (trigSubCard) refundedCards.push(trigSubCard);
+                if (tabularU.length > 0) refundedCards.push(tabularU[0]); // Only refund the original, generated coils vanish!
+                if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
+                if (leechMatTarget) refundedCards.push(leechMatTarget);
+                if (leechMatBlood) refundedCards.push(leechMatBlood);
+
+                // Return them to the board
+                if (refundedCards.length > 0) {
+                    setBossCards(prev => [...prev, ...refundedCards]);
+                    addLog("Stepped away from the mat. Spirits returned to the weave.");
+                } else {
+                    addLog("Stepped away from the mat.");
+                }
+
+                // Wipe the mat states clean
+                setAltarCore(null); setAltarSacrifice(null); setAltarExpanded([]);
+                setIbpU(null); setIbpDv(null); setIbpDerived(null);
+                setTrigSubCard(null); 
+                setTabularU([]); setTabularDv([]); setTabularComplete(false);
+                setLeechMatTarget(null); setLeechMatBlood(null);
+                
+                setActiveMat(null); // Finally, close the mat UI
             };
 
             // ==========================================
@@ -1097,7 +1133,7 @@
                             <button onClick={resetSpell} className="absolute top-4 right-4 px-3 py-1 bg-red-950/30 border border-red-900/50 text-red-500 hover:bg-red-900/80 hover:text-red-300 text-[9px] font-black uppercase tracking-widest rounded transition-all z-10">⟲ Reset Spell</button>
                         </div>
 
-                        {gamePhase === 'setup' && (
+                        {gamePhase === 'setup' && !activeMat && (
                             <div className="grid grid-cols-4 gap-4 w-full">
                                 <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Machine</span><br/><span className="font-bold">Slice</span></button>
                                 <button onClick={() => { setActiveMode('bleed'); setActiveMat(null); addLog("Blood Needle equipped. Select a spirit to pierce."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='bleed'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Blood Needle</span></button>
@@ -1115,6 +1151,14 @@
                             </div>
                         )}
 
+                        {gamePhase === 'setup' && activeMat && (
+                            <div className="w-full">
+                                <button onClick={cancelMat} className="w-full p-4 rounded-xl border-2 border-gray-700 bg-gray-900 text-gray-400 hover:text-white font-black uppercase tracking-[0.2em] hover:bg-gray-800 hover:border-gray-500 transition-all shadow-lg flex items-center justify-center gap-3">
+                                    <span className="text-xl">⟵</span> Step Away from Mat (Refund Cards)
+                                </button>
+                            </div>
+                        )}
+                        
                         {gamePhase === 'integration' && (
                             <div className="flex flex-col items-center gap-4">
                                 <div className="grid grid-cols-4 gap-4 w-full">
