@@ -196,7 +196,7 @@
             let isOrange = tex.includes('tan') || name === 'Tana';
             let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Algebraica') && !isYellow && !isBlue && !isGreen && !isOrange;
 
-            // NEW: Define Fragility Constraints
+            // Define Fragility Constraints
             const isFragile = (name === 'Tana' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
 
             let themeName = 'gray';
@@ -241,9 +241,9 @@
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
                     <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass} ${isFragile ? 'fragile-tremble' : ''}`}>
                         
-                        {/* NEW: Shattered Glass Overlay */}
+                        {/* Shattered Glass Overlay */}
                         {isFragile && (
-                            <div className="absolute inset-0 pointer-events-none z-40 overflow-hidden rounded-2xl opacity-70 mix-blend-overlay">
+                            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-2xl opacity-70 mix-blend-overlay">
                                 <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full drop-shadow-md">
                                     <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
                                     <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#000000" strokeWidth="2" opacity="0.4" />
@@ -253,8 +253,8 @@
                             </div>
                         )}
 
-                        {isSlashing && <div className="animate-slash"></div>}
-                        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-500 uppercase z-50">{card.type}</div>
+                        {isSlashing && <div className="animate-slash z-50"></div>}
+                        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-400 uppercase z-50 drop-shadow-md">{card.type}</div>
 
                         {(card.canCycle || (card.type === 'Algebraic' && !card.baseTex?.includes('\\sqrt'))) && onCycle && (
                             <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
@@ -276,18 +276,19 @@
                             <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">{card.power}</div>
                         )}
 
-                        <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3">
+                        <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3 z-20">
                             {isShattering && <ParticleBurst theme={theme} />}
                             <div className={`w-full h-full scale-50 ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>{renderVisual()}</div>
                         </div>
 
-                        <div className="flex-1 flex flex-col items-center justify-center px-2">
-                            <span className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">{card.name}</span>
-                            <div className="pointer-events-none scale-90"><MathEquation equation={card.baseTex} size="text-2xl" /></div>
+                        {/* FIXED: Z-Index explicitly set to 50 to render text over the backgrounds */}
+                        <div className="flex-1 flex flex-col items-center justify-center px-2 relative z-50 w-full">
+                            <span className="text-gray-300 text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-md">{card.name}</span>
+                            <div className="pointer-events-none scale-90 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"><MathEquation equation={card.baseTex} size="text-2xl" color="text-white" /></div>
                         </div>
 
-                        <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative">
-                            <p className="text-[10px] text-gray-400 text-center leading-tight italic px-1 z-10">"{displayAbility}"</p>
+                        <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative z-20">
+                            <p className="text-[10px] text-gray-300 text-center leading-tight italic px-1 z-10 drop-shadow-md">"{displayAbility}"</p>
                             {(card.isBleeding && !isLeech) && (
                                 <>
                                     <div className="blood-drop drop-1"></div><div className="blood-drop drop-2"></div><div className="blood-drop drop-3"></div>
