@@ -405,7 +405,7 @@
                 }
 
                 // Exactly ONE Leech!
-                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', false, "The Differential Leech.", false, true));
+                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', true, "The Differential Leech.", false, true));
                 
                 setBossCards(newCards);
                 setInitialCards([...newCards]); // Take the snapshot!
@@ -428,6 +428,16 @@
             const handleCycle = (cardId) => {
                 const card = bossCards.find(c => c.id === cardId);
                 if (!card) return;
+
+                // NEW: Leech Variable Shifting
+                if (card.isLeech) {
+                    const nextVar = card.baseTex === 'dx' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'dx');
+                    setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
+                    addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
+                    return;
+                }
+
+                // 1. Tana Shatter Logic (The one physical break in the game!)
 
                 // 1. Tana Shatter Logic (The one physical break in the game!)
                 if (card.name === 'Tana' && card.power === 1) {
@@ -756,6 +766,16 @@
                 }
                 
                 if (activeMat === 'trigsub') { setTrigSubCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+
+                if (activeMat === 'shrine') {
+                    if (!shrineCard) {
+                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
+                            setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Placed ${card.name} upon the Primal Shrine.`);
+                        } else { addLog("The Shrine requires a True Differential (a spirit stitched with a Leech)."); }
+                    }
+                    return;
+                }
             };
 //==========================================
 // END OF BOSSCARDS
@@ -851,6 +871,40 @@
                 setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
                 setTrigSubCard(null); setActiveMat(null);
                 addLog("Transmutation complete! The Rune Circle fades.");
+            };
+
+           const transmuteRune = () => {
+                if (!trigSubCard) return;
+                setMana(m => m + 30);
+                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
+                setTrigSubCard(null); setActiveMat(null);
+                addLog("Transmutation complete! The Rune Circle fades.");
+            };
+
+            // ==========================================
+            // NEW: Shrine Ascension
+            // ==========================================
+            const ascendSpell = () => {
+                if (bossCards.length > 0) {
+                    addLog("The Weave is incomplete! The main board must be empty to ascend the spell.");
+                    return;
+                }
+                addLog("The Primal Shrine hums with power... The spell enters the Eldritch Forge!");
+                setConsumeAll(true);
+                setMana(m => m + 50);
+
+                setTimeout(() => {
+                    let initialEq = `\\int ${shrineCard.baseTex}`;
+                    setBossCards([{ 
+                        id: 'direct-state', name: 'Direct-State', type: 'Unresolved', 
+                        baseTex: initialEq, power: 1, canCycle: false, 
+                        ability: "Needs Direct Evaluation.", isBleeding: false,
+                        meta: { originalTex: shrineCard.baseTex } 
+                    }]);
+                    setConsumeAll(false); setActiveMat(null); setShrineCard(null);
+                    setIntegrationPath('direct'); setIntegrationStep(2); setGamePhase('integration');
+                }, 1000);
             };
 
            const collapseWeave = () => {
@@ -1164,6 +1218,19 @@
                             </div>
                         )}
 
+                        {/* NEW: Shrine UI */}
+                        {activeMat === 'shrine' && (
+                            <div className="w-8/12 bg-indigo-950/10 border-2 border-indigo-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
+                                <h2 className="text-indigo-500/50 text-xs font-black uppercase mb-8">Primal Shrine</h2>
+                                <div className="w-[200px] h-[200px] rounded-full border-4 border-dashed border-indigo-900/40 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(79,70,229,0.2)]">
+                                    {shrineCard ? <BattleCard card={shrineCard} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, shrineCard]); setShrineCard(null); }} /> : <span className="text-indigo-900/40 text-[10px] uppercase font-bold text-center">True Differential<br/>(Compound du/dx)</span>}
+                                </div>
+                                {shrineCard && (
+                                    <button onClick={ascendSpell} className="mt-8 bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
+                                )}
+                            </div>
+                        )}
+
                         {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
                                 <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Abyssal Stair</h2>
@@ -1240,6 +1307,7 @@
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
                                 <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Abyssal Stair</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
+                                <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Primal Shrine</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
                             </div>
                         )}
