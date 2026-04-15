@@ -908,10 +908,10 @@
                     else if (t === 'action3') { setIntegrationStep(3); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} ${meta.vTex==='\\sin(x)'?'+ \\cos(x)':(meta.vTex==='-\\cos(x)'?'+ \\sin(x)':'- \\ln|\\sec(x)|')}`}]); }
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
                 }
-            }; // <--- THIS IS THE END OF applyIntegrationRule
+            }; 
 
             // ==========================================
-            // NEW UI HELPERS (Paste these right here)
+            // NEW UI HELPERS
             // ==========================================
 
             const resetSpell = () => {
@@ -1118,7 +1118,7 @@
                              </div>
                          )}
                      </div>
-                 </div> {/* <--- KEEP THIS CLOSING DIV */}
+                 </div>
              );
          };
 
