@@ -261,6 +261,13 @@
                         {isSlashing && <div className="animate-slash z-50"></div>}
                         <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-400 uppercase z-50 drop-shadow-md">{card.type}</div>
 
+                        {/* NEW: The Negative Sigil (Upper Middle) */}
+                        {card.isNegative && (
+                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-950 border-[3px] border-white flex items-center justify-center text-white text-3xl font-black shadow-[0_0_15px_rgba(255,255,255,0.9)] z-50 animate-pulse">
+                                <span className="mb-1 drop-shadow-[0_0_8px_rgba(255,255,255,1)]">-</span>
+                            </div>
+                        )}
+
                         {(card.canCycle || (card.type === 'Algebraic' && !card.baseTex?.includes('\\sqrt'))) && onCycle && (
                             <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
                                 className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">⟳</div>
@@ -842,14 +849,31 @@
                 let newCards = [];
                 
                 if (trigSubCard.baseTex.includes('\\sqrt')) {
-                    // Radical -> Trig Sub (1 card out)
+                    // Radical -> Trig Sub 
                     let newName, newTex, newMath;
-                    if (trigSubCard.baseTex.includes('1-x^2')) { newName = 'Cosa'; newTex = '\\cos(\\theta)'; newMath = 'cos(x)'; }
+                    let hasNegativeSigil = false;
+
+                    if (trigSubCard.baseTex.includes('1-x^2')) { 
+                        if (trigSubCard.ability.includes('Sine')) { 
+                            // Bake the negative directly into the math strings!
+                            newName = 'Sina'; newTex = '-\\sin(\\theta)'; newMath = '-sin(x)'; hasNegativeSigil = true; 
+                        } else { 
+                            newName = 'Cosa'; newTex = '\\cos(\\theta)'; newMath = 'cos(x)'; 
+                        }
+                    }
                     else if (trigSubCard.baseTex.includes('x^2+1')) { newName = 'Seca'; newTex = '\\sec(\\theta)'; newMath = 'sec(x)'; }
                     else if (trigSubCard.baseTex.includes('x^2-1')) { newName = 'Tana'; newTex = '\\tan(\\theta)'; newMath = 'tan(x)'; }
                     
-                    newCards.push(buildCard(newName, newTex, newMath, 1, 'Core', true, "Awakened Trig Sub.", false));
-                    addLog("The Radical transforms into its Trig Substitution!");
+                    let awakenedSpirit = buildCard(newName, newTex, newMath, 1, 'Core', true, "Awakened Trig Sub.", false);
+                    awakenedSpirit.isNegative = hasNegativeSigil; // Attach the trait!
+
+                    newCards.push(awakenedSpirit);
+                    
+                    if (hasNegativeSigil) {
+                        addLog("The Radical transforms... and the Spirit bears the Negative Sigil!");
+                    } else {
+                        addLog("The Radical transforms into its Trig Substitution!");
+                    }
                 } else {
                     // Trig Sub -> Radical (1 card out)
                     let radTex;
