@@ -401,7 +401,7 @@
                     const radType = Math.floor(Math.random() * 3); 
                     
                     if (radType === 0) {
-                        newCards.push(buildCard('Algebraica', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', false, "The Bound Root.", false));
+                        newCards.push(buildCard('Algebraica', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', true, "The Bound Root. Resonates with Cosine.", false));
                     } else if (radType === 1) {
                         newCards.push(buildCard('Algebraica', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "The Unbound Root.", false));
                     } else {
@@ -441,6 +441,19 @@
                     const nextVar = card.baseTex === 'dx' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'dx');
                     setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
                     addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
+                    return;
+                }
+
+                // NEW: Radical Resonance Shifting
+                if (card.baseTex?.includes('\\sqrt')) {
+                    if (card.baseTex.includes('1-x^2')) {
+                        const isCos = card.ability.includes('Cosine');
+                        const newAbility = isCos ? "The Bound Root. Resonates with Sine." : "The Bound Root. Resonates with Cosine.";
+                        setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, ability: newAbility } : c));
+                        addLog(`You tune the bones. The resonance shifts to ${isCos ? 'Sine' : 'Cosine'}.`);
+                    } else {
+                        addLog("These bones are stable. Their resonance cannot be shifted.");
+                    }
                     return;
                 }
 
@@ -878,8 +891,8 @@
                     // Trig Sub -> Radical (1 card out)
                     let radTex;
                     if (trigSubCard.name === 'Sina' || trigSubCard.name === 'Cosa') radTex = '\\sqrt{1-x^2}';
-                    else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2+1}';
-                    else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2-1}';
+                    else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2+1}'; // FIXED: Secant maps to x^2+1
+                    else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2-1}'; // FIXED: Tangent maps to x^2-1
                     
                     newCards.push(buildCard('Algebraica', radTex, 'x', 1, 'Algebraic', false, "Extracted Radical.", false));
                     addLog("The Trig Spirit transforms into a Radical!");
