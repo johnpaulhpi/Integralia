@@ -1277,7 +1277,7 @@
                                 <h2 className="text-amber-500/50 text-xs font-black uppercase mb-8">Rune Circle</h2>
                                 <div className="flex items-center gap-12">
                                     <div className="w-[200px] h-[200px] rounded-full border-4 border-dashed border-amber-900/40 flex items-center justify-center">
-                                        {trigSubCard ? <BattleCard card={trigSubCard} scale="scale-75" onClick={handleTrigSubClick} /> : <span className="text-amber-900/40 text-[10px] uppercase font-bold text-center">Trig Spirit<br/>or Radical</span>}
+                                        {trigSubCard ? <BattleCard card={trigSubCard} scale="scale-75" onClick={handleTrigSubClick} onCycle={handleCycle} /> : <span className="text-amber-900/40 text-[10px] uppercase font-bold text-center">Trig Spirit<br/>or Radical</span>}
                                     </div>
                                     
                                     {trigSubCard && (
