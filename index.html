@@ -433,7 +433,15 @@
 // HANDLE CYCLE
 //==========================================
             const handleCycle = (cardId) => {
-                const card = bossCards.find(c => c.id === cardId);
+                let isTrigSubMat = false;
+                let card = bossCards.find(c => c.id === cardId);
+                
+                // If it's not on the main board, check the Rune Circle!
+                if (!card && trigSubCard && trigSubCard.id === cardId) {
+                    card = trigSubCard;
+                    isTrigSubMat = true;
+                }
+                
                 if (!card) return;
 
                 // NEW: Leech Variable Shifting
@@ -449,15 +457,20 @@
                     if (card.baseTex.includes('1-x^2')) {
                         const isCos = card.ability.includes('Cosine');
                         const newAbility = isCos ? "The Bound Root. Resonates with Sine." : "The Bound Root. Resonates with Cosine.";
-                        setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, ability: newAbility } : c));
+                        
+                        // Update the card wherever it currently lives
+                        if (isTrigSubMat) {
+                            setTrigSubCard({ ...card, ability: newAbility });
+                        } else {
+                            setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, ability: newAbility } : c));
+                        }
+                        
                         addLog(`You tune the bones. The resonance shifts to ${isCos ? 'Sine' : 'Cosine'}.`);
                     } else {
                         addLog("These bones are stable. Their resonance cannot be shifted.");
                     }
                     return;
                 }
-
-                // 1. Tana Shatter Logic (The one physical break in the game!)
 
                 // 1. Tana Shatter Logic (The one physical break in the game!)
                 if (card.name === 'Tana' && card.power === 1) {
@@ -890,11 +903,18 @@
                 } else {
                     // Trig Sub -> Radical (1 card out)
                     let radTex;
-                    if (trigSubCard.name === 'Sina' || trigSubCard.name === 'Cosa') radTex = '\\sqrt{1-x^2}';
-                    else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2+1}'; // FIXED: Secant maps to x^2+1
-                    else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2-1}'; // FIXED: Tangent maps to x^2-1
+                    let canCycleRad = false;
+                    let radAbility = "Extracted Radical.";
+
+                    if (trigSubCard.name === 'Sina' || trigSubCard.name === 'Cosa') {
+                        radTex = '\\sqrt{1-x^2}';
+                        canCycleRad = true;
+                        radAbility = "The Bound Root. Resonates with Cosine.";
+                    }
+                    else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2+1}'; 
+                    else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2-1}'; 
                     
-                    newCards.push(buildCard('Algebraica', radTex, 'x', 1, 'Algebraic', false, "Extracted Radical.", false));
+                    newCards.push(buildCard('Algebraica', radTex, 'x', 1, 'Algebraic', canCycleRad, radAbility, false));
                     addLog("The Trig Spirit transforms into a Radical!");
                 }
 
