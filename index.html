@@ -732,17 +732,21 @@
                         } else { addLog("The Altar only accepts Trigonometric Cores."); }
                         return;
                     }
-                    if (altarCore && !altarSacrifice) {
+                   if (altarCore && !altarSacrifice) {
                         let isValid = false;
-                        if (altarCore.family === 'sin' && card.name === 'Compound' && card.baseTex.includes('\\cos')) isValid = true;
-                        if (altarCore.family === 'cos' && card.name === 'Compound' && card.baseTex.includes('\\sin')) isValid = true;
-                        if (altarCore.family === 'tan' && card.name === 'Compound' && card.baseTex.includes('\\sec^2')) isValid = true;
-                        if (altarCore.family === 'sec' && card.name === 'Compound' && card.baseTex.includes('\\sec') && card.baseTex.includes('\\tan')) isValid = true;
+                        const sacTex = card.baseTex || '';
+                        
+                        if (card.name === 'Compound') {
+                            if (altarCore.family === 'sin' && sacTex.includes('\\cos') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'cos' && sacTex.includes('\\sin') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'tan' && sacTex.includes('\\sec^2')) isValid = true;
+                            if (altarCore.family === 'sec' && sacTex.includes('\\sec') && sacTex.includes('\\tan') && !sacTex.includes('^')) isValid = true;
+                        }
 
                         if (isValid) {
                             setAltarSacrifice(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog("True Sacrifice accepted! Now move all remaining equation cards into the Expanded Weave.");
-                        } else { addLog(`Invalid sacrifice! This Core demands a specific Compound True Differential as tribute.`); }
+                        } else { addLog(`Invalid sacrifice! This Core demands a strict, linear derivative as tribute.`); }
                         return;
                     }
                     if (altarCore && altarSacrifice) {
