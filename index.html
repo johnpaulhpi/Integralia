@@ -1133,9 +1133,16 @@
                 } else if (integrationPath === 'direct') {
                     if (t === 'action3') {
                         setIntegrationStep(3);
-                        let tex = bossCards[0].meta.originalTex || '';
+                        // Optional chaining (?.) added to prevent undefined crashes
+                        let tex = bossCards[0]?.meta?.originalTex || bossCards[0]?.baseTex || '';
                         let result = 'F(x)';
-                        if (tex.includes('\\cos')) result = '\\sin(x)';
+                        
+                        // NEW: Teach the Wheel to process Resonant Cores (Half-Angles) FIRST!
+                        if (tex.includes('1 - \\cos(2x)')) result = '\\frac{x}{2} - \\frac{\\sin(2x)}{4}';
+                        else if (tex.includes('1 + \\cos(2x)')) result = '\\frac{x}{2} + \\frac{\\sin(2x)}{4}';
+                        
+                        // Standard Base Evaluations
+                        else if (tex.includes('\\cos')) result = '\\sin(x)';
                         else if (tex.includes('\\sin')) result = '-\\cos(x)';
                         else if (tex.includes('\\sec^2')) result = '\\tan(x)';
                         else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
