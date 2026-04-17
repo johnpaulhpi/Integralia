@@ -878,28 +878,42 @@
                     // Radical -> Trig Sub 
                     let newName, newTex, newMath;
                     let hasNegativeSigil = false;
+                    let diffCard = null; // NEW: The differential multiplier
 
                     if (trigSubCard.baseTex.includes('1-x^2')) { 
                         if (trigSubCard.ability.includes('Sine')) { 
-                            // Bake the negative directly into the math strings!
+                            // Substituting x = cos(θ). Radical resolves to -sin(θ)
                             newName = 'Sina'; newTex = '-\\sin(\\theta)'; newMath = '-sin(x)'; hasNegativeSigil = true; 
+                            // dx = -sin(θ) dθ (Bleeding = true)
+                            diffCard = buildCard('Sina', '-\\sin(\\theta)', '-sin(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
+                            diffCard.isNegative = true;
                         } else { 
+                            // Substituting x = sin(θ). Radical resolves to cos(θ)
                             newName = 'Cosa'; newTex = '\\cos(\\theta)'; newMath = 'cos(x)'; 
+                            // dx = cos(θ) dθ (Bleeding = true)
+                            diffCard = buildCard('Cosa', '\\cos(\\theta)', 'cos(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
                         }
                     }
-                    else if (trigSubCard.baseTex.includes('x^2+1')) { newName = 'Seca'; newTex = '\\sec(\\theta)'; newMath = 'sec(x)'; }
-                    else if (trigSubCard.baseTex.includes('x^2-1')) { newName = 'Tana'; newTex = '\\tan(\\theta)'; newMath = 'tan(x)'; }
+                    else if (trigSubCard.baseTex.includes('x^2+1')) { 
+                        // Substituting x = tan(θ). Radical resolves to sec(θ)
+                        newName = 'Seca'; newTex = '\\sec(\\theta)'; newMath = 'sec(x)'; 
+                        // dx = sec^2(θ) dθ (Bleeding = true)
+                        diffCard = buildCard('Seca', '\\sec^2(\\theta)', 'sec(x)^2', 2, 'Core', true, "Geometric Differential (dx).", true);
+                    }
+                    else if (trigSubCard.baseTex.includes('x^2-1')) { 
+                        // Substituting x = sec(θ). Radical resolves to tan(θ)
+                        newName = 'Tana'; newTex = '\\tan(\\theta)'; newMath = 'tan(x)'; 
+                        // dx = sec(θ)tan(θ) dθ (Bleeding = true)
+                        diffCard = buildCard('Fragment', '\\sec(\\theta)\\tan(\\theta)', 'sec(x)*tan(x)', 1, 'Fragment', false, "Geometric Differential Ghost (dx).", true);
+                    }
                     
                     let awakenedSpirit = buildCard(newName, newTex, newMath, 1, 'Core', true, "Awakened Trig Sub.", false);
                     awakenedSpirit.isNegative = hasNegativeSigil; // Attach the trait!
 
                     newCards.push(awakenedSpirit);
+                    if (diffCard) newCards.push(diffCard); // Spawn the differential!
                     
-                    if (hasNegativeSigil) {
-                        addLog("The Radical transforms... and the Spirit bears the Negative Sigil!");
-                    } else {
-                        addLog("The Radical transforms into its Trig Substitution!");
-                    }
+                    addLog("The Radical awakens! A Geometric Differential drops onto the board. Cycle your Leech to dθ!");
                 } else {
                     // Trig Sub -> Radical (1 card out)
                     let radTex;
