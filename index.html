@@ -456,7 +456,7 @@
                 if (card.baseTex?.includes('\\sqrt')) {
                     if (card.baseTex.includes('1-x^2')) {
                         const isCos = card.ability.includes('Cosine');
-                        const newAbility = isCos ? "The Bound Root. Resonates with Sine." : "The Bound Root. Resonates with Cosine.";
+                        const newAbility = isCos ? "These old bones repair their cracks when exposed to sunlight." : "These old bones grow warm when exposed to moonlight.";
                         
                         // Update the card wherever it currently lives
                         if (isTrigSubMat) {
@@ -467,7 +467,7 @@
                         
                         addLog(`You tune the bones. The resonance shifts to ${isCos ? 'Sine' : 'Cosine'}.`);
                     } else {
-                        addLog("These bones are stable. Their resonance cannot be shifted.");
+                        addLog("These bones are stable. We can't change their form.");
                     }
                     return;
                 }
@@ -482,7 +482,7 @@
                         buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", card.isBleeding)
                     );
                     setBossCards(newCards);
-                    addLog(`Identity Cycled: Shattered Tangent into Sine and Secant!`);
+                    addLog(`Identity Cycled: Shattered Tangent into Clor and Exro!`);
                     return;
                 }
 
@@ -539,10 +539,10 @@
                             
                             const newPower = c.power / 2; // e.g. sin^4(x) becomes (1-cos^2(x))^2
                             
-                            if (c.name === 'Fragment of Clor') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Cosine." };
-                            else if (c.name === 'Fragment of Orxe') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Sine." };
-                            else if (c.name === 'Unstable Fragment of Clorexro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', power: newPower, canCycle: true, ability: "Transmuted into Secant." };
-                            else if (c.name === 'Fragment of Exro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Tangent." };
+                            if (c.name === 'Fragment of Clor') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the spirit of moonlight." };
+                            else if (c.name === 'Fragment of Orxe') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the spirit of moonlight." };
+                            else if (c.name === 'Unstable Fragment of Clorexro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', power: newPower, canCycle: true, ability: "Transmuted into the hunter of ." };
+                            else if (c.name === 'Fragment of Exro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the spirit amalgamate Clorexro." };
                         }
                         
                         // Algebraic Rolodex
