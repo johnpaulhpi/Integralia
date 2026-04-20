@@ -109,7 +109,7 @@
                     <line x1="10" y1="50" x2="90" y2="50" stroke="#86efac" strokeWidth="2" strokeDasharray="4 4" />
                 </svg>
             ),
-            'Algebraica': () => (
+            'Old Bones': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
                     <path d="M 20 50 L 35 50 L 45 80 L 80 20" fill="none" stroke="#10b981" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -199,7 +199,7 @@
             let isBlue = tex.includes('sin') || name === 'Sina';
             let isGreen = tex.includes('sec') || name === 'Seca';
             let isOrange = tex.includes('tan') || name === 'Tana';
-            let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Algebraica') && !isYellow && !isBlue && !isGreen && !isOrange;
+            let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Old Bones') && !isYellow && !isBlue && !isGreen && !isOrange;
 
             // Define Fragility Constraints
             const isFragile = (name === 'Tana' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
@@ -223,7 +223,7 @@
                 if (name === 'Cosa' || (isYellow && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Cosa']();
                 if (name === 'Tana' || (isOrange && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Tana']();
                 if (name === 'Seca' || (isGreen && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Seca']();
-                if (isEmerald && name !== 'Residue' && name !== 'Compound') return CARD_REGISTRY['Algebraica']();
+                if (isEmerald && name !== 'Residue' && name !== 'Compound') return CARD_REGISTRY['Old Bones']();
                 if (name === 'Residue' || name === 'Compound') return CARD_REGISTRY['Residue'](theme.svg);
                 if (name === 'Expona') return CARD_REGISTRY['Expona']();
                 if (name === 'Dust') return CARD_REGISTRY['Dust']();
@@ -390,7 +390,7 @@
                     logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
                 } else if (spellType === 2) {
                     const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push(buildCard('Algebraica', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread.", false));
+                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread.", false));
 
                     const ibpType = Math.floor(Math.random() * 3);
                     const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Cosa', t:'\\cos(x)', m:'cos(x)'} : {n:'Sina', t:'\\sin(x)', m:'sin(x)'});
@@ -401,11 +401,11 @@
                     const radType = Math.floor(Math.random() * 3); 
                     
                     if (radType === 0) {
-                        newCards.push(buildCard('Algebraica', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', true, "The Bound Root. Resonates with Cosine.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', true, "The Bound Root. Resonates with Cosine.", false));
                     } else if (radType === 1) {
-                        newCards.push(buildCard('Algebraica', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "The Unbound Root.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "The Unbound Root.", false));
                     } else {
-                        newCards.push(buildCard('Algebraica', '\\sqrt{x^2-1}', 'sqrt(x^2-1)', 1, 'Algebraic', false, "The Fractured Root.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2-1}', 'sqrt(x^2-1)', 1, 'Algebraic', false, "The Fractured Root.", false));
                     }
                     
                     logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
@@ -548,7 +548,7 @@
                         // Algebraic Rolodex
                         else if (c.type === 'Algebraic') {
                             if (c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
-                                return buildCard('Algebraica', '1', '1', 1, 'Algebraic', true, "The Monad.");
+                                return buildCard('Old Bones', '1', '1', 1, 'Algebraic', true, "The Monad.");
                             }
                         } 
                         
@@ -712,7 +712,7 @@
                         if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
                         setMana(m => m - 10);
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push(buildCard('Algebraica', '1', '1', 1, 'Algebraic', true, "Forged The Monad.", false));
+                        newCards.push(buildCard('Old Bones', '1', '1', 1, 'Algebraic', true, "Forged The Monad.", false));
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                         addLog("Stitched Sine squared and Cosine squared... The Monad is forged!");
                         return;
@@ -727,7 +727,7 @@
                         let resolvedType = target1.type;
                         if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name)) resolvedType = 'Core';
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Algebraica' ? `x^${newPower}` : target1.baseMath, canCycle: (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
+                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseMath, canCycle: (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                     } else {
                         addLog("Incompatible spirits. Stitching requires matching identities or compatible derivative parts.");
@@ -928,7 +928,7 @@
                     else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2+1}'; 
                     else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2-1}'; 
                     
-                    newCards.push(buildCard('Algebraica', radTex, 'x', 1, 'Algebraic', canCycleRad, radAbility, false));
+                    newCards.push(buildCard('Old Bones', radTex, 'x', 1, 'Algebraic', canCycleRad, radAbility, false));
                     addLog("The Trig Spirit transforms into a Radical!");
                 }
 
