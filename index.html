@@ -446,7 +446,7 @@
 
                 // NEW: Leech Variable Shifting
                 if (card.isLeech) {
-                    const nextVar = card.baseTex === 'strange leech' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
+                    const nextVar = card.baseTex === 'strange leech test' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
                     setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
                     addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
                     return;
