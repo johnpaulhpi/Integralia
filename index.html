@@ -194,7 +194,7 @@
             const name = card.name || '';
             
             // 1. Identify Logic & Theme
-            let isLeech = card.isLeech || name === 'strange leech' || name === 'stranger leech';
+            let isLeech = card.isLeech || name === 'dx' || name === 'dθ';
             let isYellow = tex.includes('cos') || name === 'Fragment of Orxe';
             let isBlue = tex.includes('sin') || name === 'Fragment of Clor';
             let isGreen = tex.includes('sec') || name === 'Fragment of Exro';
@@ -412,7 +412,7 @@
                 }
 
                 // Exactly ONE Leech!
-                newCards.push(buildCard('strange leech', 'strange leech', 'strange leech', 1, 'Fragment', true, "A jet-black leech. It writhes around hungrily.", false, true));
+                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', true, "A jet-black leech. It writhes around hungrily.", false, true));
                 
                 setBossCards(newCards);
                 setInitialCards([...newCards]); // Take the snapshot!
@@ -446,7 +446,7 @@
 
                 // NEW: Leech Variable Shifting
                 if (card.isLeech) {
-                    const nextVar = card.baseTex === 'strange leech' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
+                    const nextVar = card.baseTex === 'dx' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'dx');
                     setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
                     addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
                     return;
@@ -652,8 +652,8 @@
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
 
-                    const isLeech1 = target1.isLeech || target1.name === 'strange leech' || target1.name === 'stranger leech';
-                    const isLeech2 = target2.isLeech || target2.name === 'strange leech' || target2.name === 'stranger leech';
+                    const isLeech1 = target1.isLeech || target1.name === 'dx' || target1.name === 'dθ';
+                    const isLeech2 = target2.isLeech || target2.name === 'dx' || target2.name === 'dθ';
 
                     // 1. Stitching to a Leech
                     if ((isLeech1 && target2.isBleeding) || (isLeech2 && target1.isBleeding)) {
@@ -806,7 +806,7 @@
 
                 if (activeMat === 'shrine') {
                     if (!shrineCard) {
-                        if (card.name === 'Compound' || card.baseTex?.includes('strange leech') || card.baseTex?.includes('d\\theta')) {
+                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Fastened ${card.name} tightly into the mana extractor 9000.`);
                         } else { addLog("The extrator requires a True Differential (a spirit stitched with a Leech)."); }
