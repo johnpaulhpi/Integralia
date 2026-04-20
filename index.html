@@ -83,27 +83,27 @@
         ];
 
         const CARD_REGISTRY = {
-            'Sina': () => (
+            'Fragment of Clor': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(59,130,246,0.6)] svg-pulse">
                     <circle cx="50" cy="50" r="45" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="2" opacity="0.9" />
                     <circle cx="50" cy="50" r="32" fill="#3b82f6" opacity="0.5" />
                     <polygon points="50,25 70,60 30,60" fill="#eab308" />
                 </svg>
             ),
-            'Cosa': () => (
+            'Fragment of Orxe': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]">
                     <polygon points="50,15 85,50 50,85 15,50" fill="#eab308" stroke="#ca8a04" strokeWidth="3" />
                     <polyline points="50,15 46,35 55,55 48,70 50,85" fill="none" stroke="#422006" strokeWidth="2" opacity="0.7" />
                     <circle cx="50" cy="50" r="2.5" fill="#3b82f6" />
                 </svg>
             ),
-            'Tana': () => (
+            'Unstable Fragment of Clorexro': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(249,115,22,0.6)] svg-pulse">
                     <circle cx="50" cy="50" r="35" fill="none" stroke="#ea580c" strokeWidth="4" />
                     <line x1="10" y1="85" x2="90" y2="15" stroke="#fdba74" strokeWidth="4" strokeLinecap="round" />
                 </svg>
             ),
-            'Seca': () => (
+            'Fragment of Exro': () => (
                 <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.6)]">
                     <path d="M 20 80 Q 50 10 80 80" fill="none" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" />
                     <line x1="10" y1="50" x2="90" y2="50" stroke="#86efac" strokeWidth="2" strokeDasharray="4 4" />
@@ -194,15 +194,15 @@
             const name = card.name || '';
             
             // 1. Identify Logic & Theme
-            let isLeech = card.isLeech || name === 'dx' || name === 'dθ';
-            let isYellow = tex.includes('cos') || name === 'Cosa';
-            let isBlue = tex.includes('sin') || name === 'Sina';
-            let isGreen = tex.includes('sec') || name === 'Seca';
-            let isOrange = tex.includes('tan') || name === 'Tana';
+            let isLeech = card.isLeech || name === 'strange leech' || name === 'stranger leech';
+            let isYellow = tex.includes('cos') || name === 'Fragment of Orxe';
+            let isBlue = tex.includes('sin') || name === 'Fragment of Clor';
+            let isGreen = tex.includes('sec') || name === 'Fragment of Exro';
+            let isOrange = tex.includes('tan') || name === 'Unstable Fragment of Clorexro';
             let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Old Bones') && !isYellow && !isBlue && !isGreen && !isOrange;
 
             // Define Fragility Constraints
-            const isFragile = (name === 'Tana' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
+            const isFragile = (name === 'Unstable Fragment of Clorexro' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
 
             let themeName = 'gray';
             if (isLeech) themeName = 'black';
@@ -219,10 +219,10 @@
             // 2. Fetch Rendering Function from Registry
             const renderVisual = () => {
                 if (isLeech) return CARD_REGISTRY['Leech']();
-                if (name === 'Sina' || (isBlue && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Sina']();
-                if (name === 'Cosa' || (isYellow && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Cosa']();
-                if (name === 'Tana' || (isOrange && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Tana']();
-                if (name === 'Seca' || (isGreen && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Seca']();
+                if (name === 'Fragment of Clor' || (isBlue && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Fragment of Clor']();
+                if (name === 'Fragment of Orxe' || (isYellow && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Fragment of Orxe']();
+                if (name === 'Unstable Fragment of Clorexro' || (isOrange && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Unstable Fragment of Clorexro']();
+                if (name === 'Fragment of Exro' || (isGreen && card.type !== 'Derived' && !name.includes('State') && name !== 'Residue' && name !== 'Compound')) return CARD_REGISTRY['Fragment of Exro']();
                 if (isEmerald && name !== 'Residue' && name !== 'Compound') return CARD_REGISTRY['Old Bones']();
                 if (name === 'Residue' || name === 'Compound') return CARD_REGISTRY['Residue'](theme.svg);
                 if (name === 'Expona') return CARD_REGISTRY['Expona']();
@@ -379,21 +379,21 @@
                 if (spellType === 0) {
                     const sinPower = Math.floor(Math.random() * 3) + 1; 
                     const cosPower = Math.floor(Math.random() * 3) + 1; 
-                    if (sinPower > 0) newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
-                    if (cosPower > 0) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
+                    if (sinPower > 0) newCards.push(buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
+                    if (cosPower > 0) newCards.push(buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
                     logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x).`;
                 } else if (spellType === 1) {
                     const secPower = Math.floor(Math.random() * 3) + 1; 
                     const tanPower = Math.floor(Math.random() * 3) + 1; 
-                    if (secPower > 0) newCards.push(buildCard('Seca', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
-                    if (tanPower > 0) newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
+                    if (secPower > 0) newCards.push(buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
+                    if (tanPower > 0) newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
                     logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
                 } else if (spellType === 2) {
                     const xPower = Math.floor(Math.random() * 3) + 1; 
                     newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
 
                     const ibpType = Math.floor(Math.random() * 3);
-                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Cosa', t:'\\cos(x)', m:'cos(x)'} : {n:'Sina', t:'\\sin(x)', m:'sin(x)'});
+                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Fragment of Orxe', t:'\\cos(x)', m:'cos(x)'} : {n:'Fragment of Clor', t:'\\sin(x)', m:'sin(x)'});
                     newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, "Undying Spirit.", false));
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
@@ -412,7 +412,7 @@
                 }
 
                 // Exactly ONE Leech!
-                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', true, "A jet-black leech. It writhes around hungrily.", false, true));
+                newCards.push(buildCard('strange leech', 'strange leech', 'strange leech', 1, 'Fragment', true, "A jet-black leech. It writhes around hungrily.", false, true));
                 
                 setBossCards(newCards);
                 setInitialCards([...newCards]); // Take the snapshot!
@@ -446,7 +446,7 @@
 
                 // NEW: Leech Variable Shifting
                 if (card.isLeech) {
-                    const nextVar = card.baseTex === 'dx' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'dx');
+                    const nextVar = card.baseTex === 'strange leech' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
                     setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
                     addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
                     return;
@@ -473,13 +473,13 @@
                 }
 
                 // 1. Tana Shatter Logic (The one physical break in the game!)
-                if (card.name === 'Tana' && card.power === 1) {
+                if (card.name === 'Unstable Fragment of Clorexro' && card.power === 1) {
                     if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
-                        buildCard('Sina', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", card.isBleeding),
-                        buildCard('Seca', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", card.isBleeding)
+                        buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", card.isBleeding),
+                        buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", card.isBleeding)
                     );
                     setBossCards(newCards);
                     addLog(`Identity Cycled: Shattered Tangent into Sine and Secant!`);
@@ -492,8 +492,8 @@
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     newCards.push(
-                        buildCard('Sina', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding),
-                        buildCard('Cosa', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding)
+                        buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding),
+                        buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', 2, 'Core', true, "Shattered Pythagorean.", card.isBleeding)
                     );
                     setBossCards(newCards);
                     addLog(`Identity Cycled: Shattered The Monad into Sine squared and Cosine squared!`);
@@ -518,7 +518,7 @@
                 }
 
                 // 4. Mana Accounting for standard cycles
-                if (card.name === 'Sina' || card.name === 'Cosa' || card.name === 'Tana' || card.name === 'Seca' || card.type === 'Algebraic') {
+                if (card.name === 'Fragment of Clor' || card.name === 'Fragment of Orxe' || card.name === 'Unstable Fragment of Clorexro' || card.name === 'Fragment of Exro' || card.type === 'Algebraic') {
                     setMana(m => m + 10); addLog(`Identity Cycled: Extracting mana from the shell.`);
                 } else if (card.name === 'Residue') {
                     if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana! Hardening a Residue costs 10 Mana."); return; }
@@ -530,7 +530,7 @@
                     if (c.id === cardId) {
                         
                         // Core -> Residue (Mathematically Strict!)
-                        if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(c.name)) {
+                        if (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(c.name)) {
                             // The Gatekeeper: You cannot transmute an odd power!
                             if (c.power % 2 !== 0) {
                                 addLog("Requires an even power to transmute into a Residue!");
@@ -539,10 +539,10 @@
                             
                             const newPower = c.power / 2; // e.g. sin^4(x) becomes (1-cos^2(x))^2
                             
-                            if (c.name === 'Sina') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Cosine." };
-                            else if (c.name === 'Cosa') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Sine." };
-                            else if (c.name === 'Tana') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', power: newPower, canCycle: true, ability: "Transmuted into Secant." };
-                            else if (c.name === 'Seca') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Tangent." };
+                            if (c.name === 'Fragment of Clor') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Cosine." };
+                            else if (c.name === 'Fragment of Orxe') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Sine." };
+                            else if (c.name === 'Unstable Fragment of Clorexro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', power: newPower, canCycle: true, ability: "Transmuted into Secant." };
+                            else if (c.name === 'Fragment of Exro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into Tangent." };
                         }
                         
                         // Algebraic Rolodex
@@ -556,10 +556,10 @@
                         else if (c.name === 'Residue') {
                             const restoredPower = c.power * 2; // e.g. (1-cos^2(x))^2 becomes sin^4(x)
                             
-                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', restoredPower, 'Core', true, "Restored to the spirit of sunlight.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', restoredPower, 'Core', true, "Restored to the spirit of moonlight.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', restoredPower, 'Core', true, "Restored to its natural level of madness.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', restoredPower, 'Core', true, "Restored to prepare for the hunt...", c.isBleeding);
+                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', restoredPower, 'Core', true, "Restored to the spirit of sunlight.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', restoredPower, 'Core', true, "Restored to the spirit of moonlight.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', restoredPower, 'Core', true, "Restored to its natural level of madness.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', restoredPower, 'Core', true, "Restored to prepare for the hunt...", c.isBleeding);
                         }
                     }
                     return c; 
@@ -627,8 +627,8 @@
                             setTimeout(() => {
                                 const newCards = [...bossCards];
                                 const idx = newCards.findIndex(c => c.id === card.id);
-                                newCards[idx] = { ...card, power: card.power - 1, canCycle: (['Sina','Cosa','Tana','Seca'].includes(card.name) && (card.power-1)%2===0) || (card.name === 'Tana' && (card.power-1) === 1) };
-                                newCards.splice(idx+1, 0, buildCard(card.name, card.baseTex, card.baseMath, 1, 'Fragment', card.name === 'Tana', "Cleaved Fragment.", true));
+                                newCards[idx] = { ...card, power: card.power - 1, canCycle: (['Fragment of Clor','Fragment of Orxe','Unstable Fragment of Clorexro','Fragment of Exro'].includes(card.name) && (card.power-1)%2===0) || (card.name === 'Unstable Fragment of Clorexro' && (card.power-1) === 1) };
+                                newCards.splice(idx+1, 0, buildCard(card.name, card.baseTex, card.baseMath, 1, 'Fragment', card.name === 'Unstable Fragment of Clorexro', "Cleaved Fragment.", true));
                                 setBossCards(newCards); setShatteringId(null); setActiveMode(null);
                             }, 500);
                         }, 300);
@@ -652,8 +652,8 @@
                     const target1 = bossCards.find(c => c.id === stitchTargetId);
                     const target2 = card;
 
-                    const isLeech1 = target1.isLeech || target1.name === 'dx' || target1.name === 'dθ';
-                    const isLeech2 = target2.isLeech || target2.name === 'dx' || target2.name === 'dθ';
+                    const isLeech1 = target1.isLeech || target1.name === 'strange leech' || target1.name === 'stranger leech';
+                    const isLeech2 = target2.isLeech || target2.name === 'strange leech' || target2.name === 'stranger leech';
 
                     // 1. Stitching to a Leech
                     if ((isLeech1 && target2.isBleeding) || (isLeech2 && target1.isBleeding)) {
@@ -663,10 +663,10 @@
                         
                         let ghostTex = ghost.baseTex;
                         if (ghost.power > 1) {
-                            if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
-                            else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
-                            else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
-                            else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
+                            if (ghost.name === 'Fragment of Exro') ghostTex = `\\sec^${ghost.power}(x)`;
+                            else if (ghost.name === 'Unstable Fragment of Clorexro') ghostTex = `\\tan^${ghost.power}(x)`;
+                            else if (ghost.name === 'Fragment of Clor') ghostTex = `\\sin^${ghost.power}(x)`;
+                            else if (ghost.name === 'Fragment of Orxe') ghostTex = `\\cos^${ghost.power}(x)`;
                             else ghostTex = `${ghost.baseTex}^${ghost.power}`;
                         }
 
@@ -697,7 +697,7 @@
                             if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
                             setMana(m => m - 10);
                             const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                            newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', 1, 'Core', true, "Stitched Quotient Spirit.", false));
+                            newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', 1, 'Core', true, "Stitched Quotient Spirit.", false));
                             setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                             addLog("Stitched Sine and Secant... A Tangent Core is forged!");
                             return;
@@ -705,8 +705,8 @@
                     }
 
                     // 4. NEW: Special Logic for Sin^2(x) + Cos^2(x) -> 1 fusion
-                    const isSin2 = (target1.name === 'Sina' && target1.power === 2) || (target2.name === 'Sina' && target2.power === 2);
-                    const isCos2 = (target1.name === 'Cosa' && target1.power === 2) || (target2.name === 'Cosa' && target2.power === 2);
+                    const isSin2 = (target1.name === 'Fragment of Clor' && target1.power === 2) || (target2.name === 'Fragment of Clor' && target2.power === 2);
+                    const isCos2 = (target1.name === 'Fragment of Orxe' && target1.power === 2) || (target2.name === 'Fragment of Orxe' && target2.power === 2);
                     
                     if (isSin2 && isCos2 && target1.name !== target2.name) {
                         if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
@@ -725,9 +725,9 @@
                         setMana(m => m - 10);
                         const newPower = target1.power + target2.power;
                         let resolvedType = target1.type;
-                        if (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name)) resolvedType = 'Core';
+                        if (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(target1.name)) resolvedType = 'Core';
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseMath, canCycle: (['Sina', 'Cosa', 'Tana', 'Seca'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
+                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseMath, canCycle: (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                     } else {
                         addLog("Incompatible spirits. Stitching requires matching identities or compatible derivative parts.");
@@ -806,7 +806,7 @@
 
                 if (activeMat === 'shrine') {
                     if (!shrineCard) {
-                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
+                        if (card.name === 'Compound' || card.baseTex?.includes('strange leech') || card.baseTex?.includes('d\\theta')) {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`fastened ${card.name} tightly into the mana extractor 9000.`);
                         } else { addLog("The extrator requires a True Differential (a spirit stitched with a Leech)."); }
@@ -826,10 +826,10 @@
                 const leech = leechMatTarget; const ghost = leechMatBlood;
                 let ghostTex = ghost.baseTex;
                 if (ghost.power > 1) {
-                    if (ghost.name === 'Seca') ghostTex = `\\sec^${ghost.power}(x)`;
-                    else if (ghost.name === 'Tana') ghostTex = `\\tan^${ghost.power}(x)`;
-                    else if (ghost.name === 'Sina') ghostTex = `\\sin^${ghost.power}(x)`;
-                    else if (ghost.name === 'Cosa') ghostTex = `\\cos^${ghost.power}(x)`;
+                    if (ghost.name === 'Fragment of Exro') ghostTex = `\\sec^${ghost.power}(x)`;
+                    else if (ghost.name === 'Unstable Fragment of Clorexro') ghostTex = `\\tan^${ghost.power}(x)`;
+                    else if (ghost.name === 'Fragment of Clor') ghostTex = `\\sin^${ghost.power}(x)`;
+                    else if (ghost.name === 'Fragment of Orxe') ghostTex = `\\cos^${ghost.power}(x)`;
                     else ghostTex = `${ghost.baseTex}^${ghost.power}`;
                 }
                 const newCards = [...bossCards];
@@ -883,26 +883,26 @@
                     if (trigSubCard.baseTex.includes('1-x^2')) { 
                         if (trigSubCard.ability.includes('Sine')) { 
                             // Substituting x = cos(θ). Radical resolves to -sin(θ)
-                            newName = 'Sina'; newTex = '-\\sin(\\theta)'; newMath = '-sin(x)'; hasNegativeSigil = true; 
+                            newName = 'Fragment of Clor'; newTex = '-\\sin(\\theta)'; newMath = '-sin(x)'; hasNegativeSigil = true; 
                             // dx = -sin(θ) dθ (Bleeding = true)
-                            diffCard = buildCard('Sina', '-\\sin(\\theta)', '-sin(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
+                            diffCard = buildCard('Fragment of Clor', '-\\sin(\\theta)', '-sin(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
                             diffCard.isNegative = true;
                         } else { 
                             // Substituting x = sin(θ). Radical resolves to cos(θ)
-                            newName = 'Cosa'; newTex = '\\cos(\\theta)'; newMath = 'cos(x)'; 
+                            newName = 'Fragment of Orxe'; newTex = '\\cos(\\theta)'; newMath = 'cos(x)'; 
                             // dx = cos(θ) dθ (Bleeding = true)
-                            diffCard = buildCard('Cosa', '\\cos(\\theta)', 'cos(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
+                            diffCard = buildCard('Fragment of Orxe', '\\cos(\\theta)', 'cos(x)', 1, 'Core', true, "Geometric Differential (dx).", true);
                         }
                     }
                     else if (trigSubCard.baseTex.includes('x^2+1')) { 
                         // Substituting x = tan(θ). Radical resolves to sec(θ)
-                        newName = 'Seca'; newTex = '\\sec(\\theta)'; newMath = 'sec(x)'; 
+                        newName = 'Fragment of Exro'; newTex = '\\sec(\\theta)'; newMath = 'sec(x)'; 
                         // dx = sec^2(θ) dθ (Bleeding = true)
-                        diffCard = buildCard('Seca', '\\sec^2(\\theta)', 'sec(x)^2', 2, 'Core', true, "Geometric Differential (dx).", true);
+                        diffCard = buildCard('Fragment of Exro', '\\sec^2(\\theta)', 'sec(x)^2', 2, 'Core', true, "Geometric Differential (dx).", true);
                     }
                     else if (trigSubCard.baseTex.includes('x^2-1')) { 
                         // Substituting x = sec(θ). Radical resolves to tan(θ)
-                        newName = 'Tana'; newTex = '\\tan(\\theta)'; newMath = 'tan(x)'; 
+                        newName = 'Unstable Fragment of Clorexro'; newTex = '\\tan(\\theta)'; newMath = 'tan(x)'; 
                         // dx = sec(θ)tan(θ) dθ (Bleeding = true)
                         diffCard = buildCard('Fragment', '\\sec(\\theta)\\tan(\\theta)', 'sec(x)*tan(x)', 1, 'Fragment', false, "Geometric Differential Ghost (dx).", true);
                     }
@@ -920,13 +920,13 @@
                     let canCycleRad = false;
                     let radAbility = "Extracted Radical.";
 
-                    if (trigSubCard.name === 'Sina' || trigSubCard.name === 'Cosa') {
+                    if (trigSubCard.name === 'Fragment of Clor' || trigSubCard.name === 'Fragment of Orxe') {
                         radTex = '\\sqrt{1-x^2}';
                         canCycleRad = true;
                         radAbility = "The Bound Root. Resonates with Cosine.";
                     }
-                    else if (trigSubCard.name === 'Seca') radTex = '\\sqrt{x^2+1}'; 
-                    else if (trigSubCard.name === 'Tana') radTex = '\\sqrt{x^2-1}'; 
+                    else if (trigSubCard.name === 'Fragment of Exro') radTex = '\\sqrt{x^2+1}'; 
+                    else if (trigSubCard.name === 'Unstable Fragment of Clorexro') radTex = '\\sqrt{x^2-1}'; 
                     
                     newCards.push(buildCard('Old Bones', radTex, 'x', 1, 'Algebraic', canCycleRad, radAbility, false));
                     addLog("The Trig Spirit transforms into a Radical!");
@@ -942,7 +942,7 @@
             const transmuteRune = () => {
                 if (!trigSubCard) return;
                 setMana(m => m + 30);
-                const newKaTeX = trigSubCard.name === 'Sina' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                const newKaTeX = trigSubCard.name === 'Fragment of Clor' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
                 setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
                 setTrigSubCard(null); setActiveMat(null);
                 addLog("Transmutation complete! The Rune Circle fades.");
@@ -984,10 +984,10 @@
                 let expectedResidueTex = '';
                 let coreFamily = altarCore.family;
 
-                if (coreFamily === 'sin') { expectedExpandedName = 'Sina'; expectedResidueTex = '(1-\\sin^2(x))'; }
-                else if (coreFamily === 'cos') { expectedExpandedName = 'Cosa'; expectedResidueTex = '(1-\\cos^2(x))'; }
-                else if (coreFamily === 'tan') { expectedExpandedName = 'Tana'; expectedResidueTex = '(\\sec^2(x)-1)'; }
-                else if (coreFamily === 'sec') { expectedExpandedName = 'Seca'; expectedResidueTex = '(1+\\tan^2(x))'; }
+                if (coreFamily === 'sin') { expectedExpandedName = 'Fragment of Clor'; expectedResidueTex = '(1-\\sin^2(x))'; }
+                else if (coreFamily === 'cos') { expectedExpandedName = 'Fragment of Orxe'; expectedResidueTex = '(1-\\cos^2(x))'; }
+                else if (coreFamily === 'tan') { expectedExpandedName = 'Unstable Fragment of Clorexro'; expectedResidueTex = '(\\sec^2(x)-1)'; }
+                else if (coreFamily === 'sec') { expectedExpandedName = 'Fragment of Exro'; expectedResidueTex = '(1+\\tan^2(x))'; }
 
                 if (altarSacrifice.name !== 'Compound') { 
                     addLog("The Sacrifice is invalid! You must stitch a Ghost to a Leech to create a True Differential Compound."); 
