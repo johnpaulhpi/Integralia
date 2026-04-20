@@ -379,40 +379,40 @@
                 if (spellType === 0) {
                     const sinPower = Math.floor(Math.random() * 3) + 1; 
                     const cosPower = Math.floor(Math.random() * 3) + 1; 
-                    if (sinPower > 0) newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Primal Spirit."));
-                    if (cosPower > 0) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Armored Core."));
+                    if (sinPower > 0) newCards.push(buildCard('Sina', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
+                    if (cosPower > 0) newCards.push(buildCard('Cosa', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
                     logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x).`;
                 } else if (spellType === 1) {
                     const secPower = Math.floor(Math.random() * 3) + 1; 
                     const tanPower = Math.floor(Math.random() * 3) + 1; 
-                    if (secPower > 0) newCards.push(buildCard('Seca', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "Piercing Spirit."));
-                    if (tanPower > 0) newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Shifting Core."));
+                    if (secPower > 0) newCards.push(buildCard('Seca', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
+                    if (tanPower > 0) newCards.push(buildCard('Tana', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
                     logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
                 } else if (spellType === 2) {
                     const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Algebraic Thread.", false));
+                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
 
                     const ibpType = Math.floor(Math.random() * 3);
                     const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Cosa', t:'\\cos(x)', m:'cos(x)'} : {n:'Sina', t:'\\sin(x)', m:'sin(x)'});
-                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, "Eternal Spirit.", false));
+                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, "Undying Spirit.", false));
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
                 } else {
                     const radType = Math.floor(Math.random() * 3); 
                     
                     if (radType === 0) {
-                        newCards.push(buildCard('Old Bones', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', true, "The Bound Root. Resonates with Cosine.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{1-x^2}', 'sqrt(1-x^2)', 1, 'Algebraic', true, "Grows warm under moonlight.", false));
                     } else if (radType === 1) {
-                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "The Unbound Root.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2+1}', 'sqrt(x^2+1)', 1, 'Algebraic', false, "Marrow shows signs of internal strain, as though the bones were resisting some internal force.", false));
                     } else {
-                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2-1}', 'sqrt(x^2-1)', 1, 'Algebraic', false, "The Fractured Root.", false));
+                        newCards.push(buildCard('Old Bones', '\\sqrt{x^2-1}', 'sqrt(x^2-1)', 1, 'Algebraic', false, "Grows ice cold under moonlight.", false));
                     }
                     
                     logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
                 }
 
                 // Exactly ONE Leech!
-                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', true, "The Differential Leech.", false, true));
+                newCards.push(buildCard('dx', 'dx', 'dx', 1, 'Fragment', true, "A jet-black leech. It writhes around hungrily.", false, true));
                 
                 setBossCards(newCards);
                 setInitialCards([...newCards]); // Take the snapshot!
