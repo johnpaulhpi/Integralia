@@ -556,10 +556,10 @@
                         else if (c.name === 'Residue') {
                             const restoredPower = c.power * 2; // e.g. (1-cos^2(x))^2 becomes sin^4(x)
                             
-                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', restoredPower, 'Core', true, "Restored Armor.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', restoredPower, 'Core', true, "Restored Armor.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', restoredPower, 'Core', true, "Restored Armor.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', restoredPower, 'Core', true, "Restored Armor.", c.isBleeding);
+                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Sina', '\\sin(x)', 'sin(x)', restoredPower, 'Core', true, "Restored to the spirit of sunlight.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Cosa', '\\cos(x)', 'cos(x)', restoredPower, 'Core', true, "Restored to the spirit of moonlight.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Tana', '\\tan(x)', 'tan(x)', restoredPower, 'Core', true, "Restored to its natural level of madness.", c.isBleeding);
+                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Seca', '\\sec(x)', 'sec(x)', restoredPower, 'Core', true, "Restored to prepare for the hunt...", c.isBleeding);
                         }
                     }
                     return c; 
@@ -1329,10 +1329,10 @@
                         {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
                                 <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Bone Grinder</h2>
-                                {tabularU.length === 0 && <div className="text-teal-900/50 font-bold text-xs uppercase tracking-widest text-center m-auto">The Abyss awaits a Mortal Coil<br/>and an Eternal Echo.</div>}
+                                {tabularU.length === 0 && <div className="text-teal-900/50 font-bold text-xs uppercase tracking-widest text-center m-auto">There is a slot for old bones, and a strange metal assembly acting as a focus for an eternal spirit...<br/> The spirit swirls hungrily around the bones. Feeding them might work out in your favor.</div>}
                                 {tabularU.map((u, i) => (
                                     <div key={i} className="flex justify-center gap-12 mb-4 items-center">
-                                        <div className="w-[140px]">{i===0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block">Mortal Coil (u)</span>}<BattleCard card={u} scale="scale-75" /></div>
+                                        <div className="w-[140px]">{i===0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block">Bone Slot (u)</span>}<BattleCard card={u} scale="scale-75" /></div>
                                         <div className="w-[80px] flex flex-col items-center justify-center relative h-[200px]">
                                             {i < tabularDv.length - 1 && (
                                                 <div className="absolute top-[60%] left-1/2 w-full h-full border-l-4 border-b-4 border-dashed border-teal-500/30 rounded-bl-3xl -translate-x-1/2 pointer-events-none">
@@ -1341,13 +1341,13 @@
                                             )}
                                         </div>
                                         <div className="w-[140px]">
-                                            {i===0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block">Eternal Echo (dv)</span>}
+                                            {i===0 && <span className="text-teal-400 font-bold uppercase tracking-widest text-[9px] mb-2 text-center block"> Starving Spirit (dv)</span>}
                                             {tabularDv[i] ? <BattleCard card={tabularDv[i]} scale="scale-75" /> : <div className="w-[190px] h-[270px] scale-75 border-2 border-dashed border-teal-900/50 rounded-2xl flex items-center justify-center bg-black/40"><span className="text-teal-800 text-[10px] uppercase font-bold text-center">Waiting for<br/>Echo</span></div>}
                                         </div>
                                     </div>
                                 ))}
                                 <div className="flex justify-center gap-4 mt-4">
-                                    {tabularU.length > 0 && tabularDv.length > 0 && (!tabularComplete ? <button onClick={stepIntoAbyss} className="bg-teal-900/50 border border-teal-500 hover:bg-teal-800 text-teal-300 px-6 py-2 rounded-full text-[10px] font-bold uppercase">Step into Abyss</button> : <button onClick={reapEchoes} className="bg-teal-600 px-8 py-3 rounded-full font-black uppercase text-xs hover:bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]">Reap Echoes</button>)}
+                                    {tabularU.length > 0 && tabularDv.length > 0 && (!tabularComplete ? <button onClick={stepIntoAbyss} className="bg-teal-900/50 border border-teal-500 hover:bg-teal-800 text-teal-300 px-6 py-2 rounded-full text-[10px] font-bold uppercase">Crank the bone grinder</button> : <button onClick={reapEchoes} className="bg-teal-600 px-8 py-3 rounded-full font-black uppercase text-xs hover:bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.5)]">Free the fed spirit</button>)}
                                 </div>
                             </div>
                         )}
