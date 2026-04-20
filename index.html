@@ -1328,7 +1328,7 @@
 
                         {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
-                                <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Abyssal Stair</h2>
+                                <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Bone Grinder</h2>
                                 {tabularU.length === 0 && <div className="text-teal-900/50 font-bold text-xs uppercase tracking-widest text-center m-auto">The Abyss awaits a Mortal Coil<br/>and an Eternal Echo.</div>}
                                 {tabularU.map((u, i) => (
                                     <div key={i} className="flex justify-center gap-12 mb-4 items-center">
@@ -1400,7 +1400,7 @@
                                 )}
 
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
-                                <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Abyssal Stair</span></button>
+                                <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Bone Grinder</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
                                 <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Primal Shrine</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
