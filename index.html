@@ -446,7 +446,7 @@
 
                 // NEW: Leech Variable Shifting
                 if (card.isLeech) {
-                    const nextVar = card.baseTex === 'strange leech test' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
+                    const nextVar = card.baseTex === 'strange leech' ? 'd\\theta' : (card.baseTex === 'd\\theta' ? 'du' : 'strange leech');
                     setBossCards(prev => prev.map(c => c.id === cardId ? { ...c, name: nextVar, baseTex: nextVar, baseMath: nextVar } : c));
                     addLog(`The Leech shifts its form. It now thirsts for ${nextVar}.`);
                     return;
@@ -808,7 +808,7 @@
                     if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('strange leech') || card.baseTex?.includes('d\\theta')) {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`fastened ${card.name} tightly into the mana extractor 9000.`);
+                            addLog(`Fastened ${card.name} tightly into the mana extractor 9000.`);
                         } else { addLog("The extrator requires a True Differential (a spirit stitched with a Leech)."); }
                     }
                     return;
