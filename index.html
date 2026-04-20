@@ -75,11 +75,11 @@
         };
 
         const CATALYSTS = [
-            { id: 'prism', name: 'Chop Into Pieces', lore: 'Linearity & Distribute', icon: '🔪', color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/30' },
-            { id: 'sieve', name: 'Separate Spirits from bones', lore: 'Extract Constants', icon: '👻', color: 'text-yellow-500', border: 'border-yellow-500/50', bg: 'bg-yellow-950/30' },
+            { id: 'prism', name: 'Chop Into Managable Pieces', lore: 'Linearity & Distribute', icon: '🔪', color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/30' },
+            { id: 'sieve', name: 'Separate Spirits from Bones', lore: 'Extract Constants', icon: '👻', color: 'text-yellow-500', border: 'border-yellow-500/50', bg: 'bg-yellow-950/30' },
             { id: 'wheel', name: 'Stabilize Spirits', lore: 'Direct Trig Eval', icon: '⛓️', color: 'text-indigo-400', border: 'border-indigo-500/50', bg: 'bg-indigo-950/30' },
             { id: 'flame', name: 'Burn Away Sigils', lore: 'The Power Rule', icon: '🔥', color: 'text-orange-500', border: 'border-orange-500/50', bg: 'bg-orange-950/30' },
-            { id: 'anchor', name: 'Attach Mana Extractor', lore: 'Finalize (+C)', icon: '💉', color: 'text-gray-300', border: 'border-gray-500/50', bg: 'bg-gray-900/50' }
+            { id: 'anchor', name: 'Attach Mana Extractor Needle', lore: 'Finalize (+C)', icon: '💉', color: 'text-gray-300', border: 'border-gray-500/50', bg: 'bg-gray-900/50' }
         ];
 
         const CARD_REGISTRY = {
@@ -808,8 +808,8 @@
                     if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`Placed ${card.name} upon the Primal Shrine.`);
-                        } else { addLog("The Shrine requires a True Differential (a spirit stitched with a Leech)."); }
+                            addLog(`fastened ${card.name} tightly into the mana extractor 9000.`);
+                        } else { addLog("The extrator requires a True Differential (a spirit stitched with a Leech)."); }
                     }
                     return;
                 }
@@ -956,7 +956,7 @@
                     addLog("The Weave is incomplete! The main board must be empty to ascend the spell.");
                     return;
                 }
-                addLog("The Primal Shrine hums with power... The spell enters the Eldritch Forge!");
+                addLog("The Mana Extractor 9000 hums with power... The spell enters the Eldritch Forge!");
                 setConsumeAll(true);
                 setMana(m => m + 50);
 
@@ -1316,7 +1316,7 @@
                         {/* NEW: Shrine UI */}
                         {activeMat === 'shrine' && (
                             <div className="w-8/12 bg-indigo-950/10 border-2 border-indigo-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
-                                <h2 className="text-indigo-500/50 text-xs font-black uppercase mb-8">Primal Shrine</h2>
+                                <h2 className="text-indigo-500/50 text-xs font-black uppercase mb-8">Mana Extractor 9000</h2>
                                 <div className="w-[200px] h-[200px] rounded-full border-4 border-dashed border-indigo-900/40 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(79,70,229,0.2)]">
                                     {shrineCard ? <BattleCard card={shrineCard} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, shrineCard]); setShrineCard(null); }} /> : <span className="text-indigo-900/40 text-[10px] uppercase font-bold text-center">True Differential<br/>(Compound du/dx)</span>}
                                 </div>
@@ -1402,7 +1402,7 @@
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
                                 <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Bone Grinder</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
-                                <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Primal Shrine</span></button>
+                                <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
                             </div>
                         )}
