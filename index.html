@@ -907,7 +907,7 @@
                         diffCard = buildCard('Fragment', '\\sec(\\theta)\\tan(\\theta)', 'sec(x)*tan(x)', 1, 'Fragment', false, "Geometric Differential Ghost (dx).", true);
                     }
                     
-                    let awakenedSpirit = buildCard(newName, newTex, newMath, 1, 'Core', true, "Awakened Trig Sub.", false);
+                    let awakenedSpirit = buildCard(newName, newTex, newMath, 1, 'Core', true, "An undying spirit roused from the old bones.", false);
                     awakenedSpirit.isNegative = hasNegativeSigil; // Attach the trait!
 
                     newCards.push(awakenedSpirit);
@@ -1013,11 +1013,11 @@
                 });
 
                 if (residueCount > 1) { 
-                    addLog("The Altar can only process one Residue at a time right now. The spell is too complex!"); 
+                    addLog("The Altar of the Leech Goddess can only process one Residue at a time right now. The spell is too complex!"); 
                     return; 
                 }
 
-                addLog("Altar rituals complete! The Weave collapses into a U-State.");
+                addLog("The Leech Goddess thanks you for your rad contribution! The Weave collapses into a U-State.");
                 setConsumeAll(true); 
                 
                 // Note: Add `ENABLE_MANA &&` before this if you have the mana toggle active!
@@ -1253,15 +1253,15 @@
 
                         {activeMat === 'altar' && (
                             <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left">
-                                <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Sacrificial Altar</h2>
+                                <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Altar of the Leech Goddess</h2>
                                 <div className="flex justify-center gap-6">
-                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarCore ? <BattleCard card={altarCore} scale="scale-75" onClick={() => handleAltarClick('core')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold">Core (u)</span>}</div>
-                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75" onClick={() => handleAltarClick('sacrifice')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold text-center">True Differential<br/>(Compound du)</span>}</div>
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarCore ? <BattleCard card={altarCore} scale="scale-75" onClick={() => handleAltarClick('core')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold">Undying Spirit (u)</span>}</div>
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75" onClick={() => handleAltarClick('sacrifice')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold text-center">Blood-gorged leech<br/>(Compound du)</span>}</div>
                                 </div>
                                 <div className="mt-4 flex-1 border-t border-red-900/20 pt-4 flex flex-wrap justify-center gap-2">
                                     {altarExpanded.map(c => <BattleCard key={c.id} card={c} scale="scale-[0.5]" onClick={() => handleAltarClick('expanded', c.id)} />)}
                                 </div>
-                                {altarCore && altarSacrifice && <button onClick={collapseWeave} className="mt-4 bg-red-600 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.5)]">Collapse Weave</button>}
+                                {altarCore && altarSacrifice && <button onClick={collapseWeave} className="mt-4 bg-red-600 py-3 rounded-full font-black uppercase text-xs tracking-widest hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.5)]">Offer spirit-fed Leech </button>}
                             </div>
                         )}
 
@@ -1356,8 +1356,8 @@
                             <div className="w-8/12 bg-fuchsia-950/10 border-2 border-fuchsia-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
                                 <h2 className="text-fuchsia-500/50 text-xs font-black uppercase mb-4">Dual-Weave Mat</h2>
                                 <div className="flex justify-center gap-6 w-full">
-                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center">{ibpU ? <BattleCard card={ibpU} scale="scale-75" onClick={() => handleIbpClick('u')} /> : <span className="text-fuchsia-900/40 text-[10px] uppercase font-bold">Bind (u)</span>}</div>
-                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center">{ibpDv ? <BattleCard card={ibpDv} scale="scale-75" onClick={() => handleIbpClick('dv')} /> : <span className="text-fuchsia-900/40 text-[10px] uppercase font-bold">Poison (dv)</span>}</div>
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center">{ibpU ? <BattleCard card={ibpU} scale="scale-75" onClick={() => handleIbpClick('u')} /> : <span className="text-fuchsia-900/40 text-[10px] uppercase font-bold"> Old bones (u)</span>}</div>
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-fuchsia-900/50 rounded-2xl flex items-center justify-center">{ibpDv ? <BattleCard card={ibpDv} scale="scale-75" onClick={() => handleIbpClick('dv')} /> : <span className="text-fuchsia-900/40 text-[10px] uppercase font-bold"> Undying Spirit (dv)</span>}</div>
                                 </div>
                                 <div className="w-full border-t border-fuchsia-900/30 pt-4 mt-4 flex flex-col items-center flex-1">
                                     <span className="text-fuchsia-400 font-bold uppercase tracking-widest text-[9px] mb-2">3. Expanded Form [ u v - ∫ v du ]</span>
