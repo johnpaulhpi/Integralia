@@ -672,7 +672,7 @@
 
                         setMana(m => m - 10);
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push(buildCard('Compound', `${ghostTex} \\, ${leech.baseTex}`, `${ghost.baseMath}*${leech.baseMath}`, 1, 'Sacrifice', false, "True Differential. Ready for Altar.", true));
+                        newCards.push(buildCard('Compound', `${ghostTex} \\, ${leech.baseTex}`, `${ghost.baseMath}*${leech.baseMath}`, 1, 'Sacrifice', false, "The leech wriggles happily as it drinks the blood of the undying spirit.", true));
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                         addLog(`Stitched the Differential! The Leech is full.`);
                         return;
@@ -833,7 +833,7 @@
                     else ghostTex = `${ghost.baseTex}^${ghost.power}`;
                 }
                 const newCards = [...bossCards];
-                newCards.push(buildCard('Compound', `${ghostTex} \\, ${leech.baseTex}`, `${ghost.baseMath}*${leech.baseMath}`, 1, 'Sacrifice', false, "True Differential. Ready for Altar.", true));
+                newCards.push(buildCard('Compound', `${ghostTex} \\, ${leech.baseTex}`, `${ghost.baseMath}*${leech.baseMath}`, 1, 'Sacrifice', false, "The leech wriggles happily as it drinks the blood of the undying spirit.", true));
                 setBossCards(newCards); 
                 setLeechMatTarget(null); setLeechMatBlood(null); setActiveMat(null);
                 addLog(`The Leech gorges on the blood. A True Differential Compound is born!`);
