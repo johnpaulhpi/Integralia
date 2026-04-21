@@ -240,7 +240,7 @@
 
             let displayAbility = card.ability;
             if (isFragile) displayAbility = "Fragile, and ready to shatter.";
-            if (card.isBleeding && !isLeech) displayAbility = "Pierced and Bleeding.";
+            if (card.isBleeding && !isLeech && card.name !== 'Compound') displayAbility = "Pierced and Bleeding.";
 
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
