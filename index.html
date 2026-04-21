@@ -338,8 +338,11 @@
             const [leechMatTarget, setLeechMatTarget] = useState(null);
             const [leechMatBlood, setLeechMatBlood] = useState(null);
 
-            const [shrineCard, setShrineCard] = useState(null); 
-            const [activeCatalyst, setActiveCatalyst] = useState(null);
+            const [shrineCard, setShrineCard] = useState(null); 
+            // --- NEW: FOIL MAT STATES ---
+            const [foilLeft, setFoilLeft] = useState(null);
+            const [foilRight, setFoilRight] = useState(null);
+            const [activeCatalyst, setActiveCatalyst] = useState(null);
             
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
@@ -377,20 +380,30 @@
                 let logMsg = "";
 
                 if (spellType === 0) {
-                    const sinPower = Math.floor(Math.random() * 3) + 1; 
-                    const cosPower = Math.floor(Math.random() * 3) + 1; 
-                    if (sinPower > 0) newCards.push(buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
-                    if (cosPower > 0) newCards.push(buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
-                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x).`;
-                } else if (spellType === 1) {
-                    const secPower = Math.floor(Math.random() * 3) + 1; 
-                    const tanPower = Math.floor(Math.random() * 3) + 1; 
-                    if (secPower > 0) newCards.push(buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
-                    if (tanPower > 0) newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
-                    logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
-                } else if (spellType === 2) {
-                    const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
+                    let sinPower = Math.floor(Math.random() * 3) + 1; 
+                    let cosPower = Math.floor(Math.random() * 3) + 1; 
+
+                    // NEW: Prevent Even/Even Wall
+                    if (sinPower % 2 === 0 && cosPower % 2 === 0) {
+                        if (Math.random() > 0.5) sinPower += 1; else cosPower += 1;
+                    }
+
+                    if (sinPower > 0) newCards.push(buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
+                    if (cosPower > 0) newCards.push(buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
+                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x).`;
+                } else if (spellType === 1) {
+                    let secPower = Math.floor(Math.random() * 3) + 1; 
+                    let tanPower = Math.floor(Math.random() * 3) + 1; 
+
+                    // NEW: Prevent Looping Phantom
+                    if (secPower % 2 !== 0 && tanPower % 2 === 0) secPower += 1;
+
+                    if (secPower > 0) newCards.push(buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
+                    if (tanPower > 0) newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
+                    logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
+                } else if (spellType === 2) {
+                    const xPower = Math.floor(Math.random() * 3) + 1; 
+                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
 
                     const ibpType = Math.floor(Math.random() * 3);
                     const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Fragment of Orxe', t:'\\cos(x)', m:'cos(x)'} : {n:'Fragment of Clor', t:'\\sin(x)', m:'sin(x)'});
