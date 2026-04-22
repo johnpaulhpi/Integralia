@@ -815,12 +815,25 @@
                 }
                 
                 if (activeMat === 'ibp') {
-                    if (!ibpU) { setIbpU(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
-                    setIbpDv(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
-                    let du = 'du'; try { du = math.derivative(card.baseMath, 'x').toTex(); } catch(e){}
-                    setIbpDerived({ duTex: du, vTex: '\\int dv' });
-                    return;
-                }
+                    if (!ibpU) { setIbpU(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    setIbpDv(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
+                    
+                    // FIX 1: Ensure derivative applies to U, not dv!
+                    let du = 'du'; 
+                    try { du = math.derivative(ibpU.baseMath, 'x').toTex().replace(/~/g, ''); } catch(e){}
+                    
+                    // FIX 2: Actually integrate dv to find v!
+                    let vTex = '\\int dv';
+                    if (card.baseTex === 'e^x') vTex = 'e^x';
+                    else if (card.baseTex === '\\cos(x)') vTex = '\\sin(x)';
+                    else if (card.baseTex === '\\sin(x)') vTex = '-\\cos(x)';
+                    else if (card.baseTex === 'x') vTex = '\\frac{x^2}{2}';
+                    else if (card.baseTex === '1') vTex = 'x';
+                    else if (card.power > 1) vTex = `\\frac{x^{${card.power+1}}}{${card.power+1}}`;
+
+                    setIbpDerived({ duTex: du, vTex: vTex });
+                    return;
+                }
                 
                 if (activeMat === 'trigsub') { setTrigSubCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
 
@@ -1079,14 +1092,22 @@
             };
 
             const confirmIbpWeave = () => {
-                addLog("Dual-Weave executed! The equation collapses into the Final Form.");
-                setConsumeAll(true); setMana(m => m + 50);
-                setTimeout(() => {
-                    const uTex = ibpU.baseTex; let vTex = ibpDerived.vTex; const duTex = ibpDerived.duTex;
-                    let uvTex = `${uTex}${vTex}`;
-                    if (vTex === '-\\cos(x)') uvTex = `-${uTex}\\cos(x)`;
-                    setBossCards([{ id: 'ibp-state', name: 'IBP-State', type: 'Unresolved', baseTex: `${uvTex} - \\int ${vTex} \\cdot ${duTex} \\, dx`, power: 1, canCycle: false, ability: "Needs Inner Integral Simplification.", isBleeding: false, meta: { uTex, vTex, duTex, uvTex } }]);
-                    setConsumeAll(false); setActiveMat(null); setIbpU(null); setIbpDv(null); setIbpDerived(null);
+                addLog("Dual-Weave executed! The equation collapses into the Final Form.");
+                setConsumeAll(true); setMana(m => m + 50);
+                setTimeout(() => {
+                    const uTex = ibpU.baseTex; let vTex = ibpDerived.vTex; const duTex = ibpDerived.duTex;
+                    let uvTex = `${uTex}${vTex}`;
+                    if (vTex === '-\\cos(x)') uvTex = `-${uTex}\\cos(x)`;
+                    
+                    // Clean up mathematical formatting for polynomials and roots
+                    if (uTex === '\\ln(x)') {
+                        if (vTex === 'x') uvTex = `x\\ln(x)`;
+                        if (vTex === '\\frac{x^2}{2}') uvTex = `\\frac{x^2}{2}\\ln(x)`;
+                    }
+
+                    // Dropped the extra '\cdot' to make the inner integral read cleaner
+                    setBossCards([{ id: 'ibp-state', name: 'IBP-State', type: 'Unresolved', baseTex: `${uvTex} - \\int ${vTex} (${duTex}) \\, dx`, power: 1, canCycle: false, ability: "Needs Inner Integral Simplification.", isBleeding: false, meta: { uTex, vTex, duTex, uvTex } }]);
+                    setConsumeAll(false); setActiveMat(null); setIbpU(null); setIbpDv(null); setIbpDerived(null);
                     setIntegrationPath('ibp'); setIntegrationStep(0); setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a Dual-Weave State. Refine the remaining integral.");
                 }, 1000);
@@ -1172,10 +1193,10 @@
                     const meta = bossCards[0].meta;
                     if (t === 'action1') { 
                         setIntegrationStep(1); 
-                        // NEW: Detect the x * (1/x) annihilation for the Cave Root!
                         let simplifiedInner = meta.vTex;
-                        if (meta.uTex === '\\ln(x)' && meta.vTex === 'x' && meta.duTex.includes('\\frac{1}{x}')) {
-                            simplifiedInner = '1';
+                        if (meta.uTex === '\\ln(x)' && meta.duTex.includes('\\frac{1}{x}')) {
+                            if (meta.vTex === 'x') simplifiedInner = '1';
+                            if (meta.vTex === '\\frac{x^2}{2}') simplifiedInner = '\\frac{x}{2}';
                         } else if (meta.vTex === '-\\cos(x)') {
                             simplifiedInner = '-\\cos(x)';
                         }
@@ -1185,6 +1206,7 @@
                         setIntegrationStep(2); 
                         let integratedInner = '';
                         if (bossCards[0].baseTex.includes('\\int 1 dx')) integratedInner = 'x';
+                        else if (bossCards[0].baseTex.includes('\\int \\frac{x}{2} dx')) integratedInner = '\\frac{x^2}{4}';
                         else if (meta.vTex === '\\sin(x)') integratedInner = '-\\cos(x)';
                         else if (meta.vTex === '-\\cos(x)') integratedInner = '-\\sin(x)';
                         else integratedInner = '\\ln|\\sec(x)|';
@@ -1194,6 +1216,7 @@
                         setIntegrationStep(3); 
                         let finalSigns = '';
                         if (bossCards[0].baseTex.includes('(x)')) finalSigns = '- x';
+                        else if (bossCards[0].baseTex.includes('\\frac{x^2}{4}')) finalSigns = '- \\frac{x^2}{4}';
                         else if (meta.vTex === '\\sin(x)') finalSigns = '+ \\cos(x)';
                         else if (meta.vTex === '-\\cos(x)') finalSigns = '+ \\sin(x)';
                         else finalSigns = '- \\ln|\\sec(x)|';
