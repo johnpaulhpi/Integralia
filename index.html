@@ -1195,12 +1195,12 @@
                     if (t === 'action1') { 
                         setIntegrationStep(1); 
                         let simplifiedInner = meta.vTex;
-                        if (meta.uTex === '\\ln(x)' && meta.duTex.includes('\\frac{1}{x}')) {
+                        if (meta.uTex.includes('\\ln') && meta.duTex.includes('frac')) {
                             if (meta.vTex === 'x') simplifiedInner = '1';
-                            else if (meta.vTex === '\\frac{x^2}{2}') simplifiedInner = '\\frac{x}{2}';
-                            else if (meta.vTex === '\\frac{x^3}{3}') simplifiedInner = '\\frac{x^2}{3}'; // Handles x^2
-                            else if (meta.vTex === '\\frac{x^4}{4}') simplifiedInner = '\\frac{x^3}{4}'; // Handles x^3
-                        } else if (meta.vTex === '-\\cos(x)') {
+                            else if (meta.vTex.includes('\\frac{x^2}{2}')) simplifiedInner = '\\frac{x}{2}';
+                            else if (meta.vTex.includes('\\frac{x^3}{3}')) simplifiedInner = '\\frac{x^2}{3}';
+                            else if (meta.vTex.includes('\\frac{x^4}{4}')) simplifiedInner = '\\frac{x^3}{4}';
+                        } else if (meta.vTex.includes('-\\cos(x)')) {
                             simplifiedInner = '-\\cos(x)';
                         }
                         setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - \\int ${simplifiedInner} dx`}]); 
@@ -1208,25 +1208,34 @@
                     else if (t === 'action2') { 
                         setIntegrationStep(2); 
                         let integratedInner = '';
-                        if (bossCards[0].baseTex.includes('\\int 1 dx')) integratedInner = 'x';
-                        else if (bossCards[0].baseTex.includes('\\int \\frac{x}{2} dx')) integratedInner = '\\frac{x^2}{4}';
-                        else if (bossCards[0].baseTex.includes('\\int \\frac{x^2}{3} dx')) integratedInner = '\\frac{x^3}{9}';
-                        else if (bossCards[0].baseTex.includes('\\int \\frac{x^3}{4} dx')) integratedInner = '\\frac{x^4}{16}';
-                        else if (meta.vTex === '\\sin(x)') integratedInner = '-\\cos(x)';
-                        else if (meta.vTex === '-\\cos(x)') integratedInner = '-\\sin(x)';
+                        // SPLIT the string so we only check inside the integral, ignoring the uv prefix!
+                        const innerInt = bossCards[0].baseTex.split('\\int ')[1] || '';
+                        
+                        if (innerInt.includes('1 dx') || innerInt.includes('1 \\, dx') || innerInt === '1') integratedInner = 'x';
+                        else if (innerInt.includes('\\frac{x}{2}')) integratedInner = '\\frac{x^2}{4}';
+                        else if (innerInt.includes('\\frac{x^2}{3}')) integratedInner = '\\frac{x^3}{9}';
+                        else if (innerInt.includes('\\frac{x^3}{4}')) integratedInner = '\\frac{x^4}{16}';
+                        else if (innerInt.includes('\\frac{x^2}{2}')) integratedInner = '\\frac{x^3}{6}'; // Saftey net
+                        else if (meta.vTex.includes('\\sin(x)')) integratedInner = '-\\cos(x)';
+                        else if (meta.vTex.includes('-\\cos(x)')) integratedInner = '-\\sin(x)';
                         else integratedInner = '\\ln|\\sec(x)|';
+                        
                         setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - (${integratedInner})`}]); 
                     }
                     else if (t === 'action3') { 
                         setIntegrationStep(3); 
                         let finalSigns = '';
-                        if (bossCards[0].baseTex.includes('(x)')) finalSigns = '- x';
-                        else if (bossCards[0].baseTex.includes('\\frac{x^2}{4}')) finalSigns = '- \\frac{x^2}{4}';
-                        else if (bossCards[0].baseTex.includes('\\frac{x^3}{9}')) finalSigns = '- \\frac{x^3}{9}';
-                        else if (bossCards[0].baseTex.includes('\\frac{x^4}{16}')) finalSigns = '- \\frac{x^4}{16}';
-                        else if (meta.vTex === '\\sin(x)') finalSigns = '+ \\cos(x)';
-                        else if (meta.vTex === '-\\cos(x)') finalSigns = '+ \\sin(x)';
+                        const eq = bossCards[0].baseTex;
+                        
+                        if (eq.includes('- (x)')) finalSigns = '- x';
+                        else if (eq.includes('- (\\frac{x^2}{4})')) finalSigns = '- \\frac{x^2}{4}';
+                        else if (eq.includes('- (\\frac{x^3}{6})')) finalSigns = '- \\frac{x^3}{6}';
+                        else if (eq.includes('- (\\frac{x^3}{9})')) finalSigns = '- \\frac{x^3}{9}';
+                        else if (eq.includes('- (\\frac{x^4}{16})')) finalSigns = '- \\frac{x^4}{16}';
+                        else if (meta.vTex.includes('\\sin(x)')) finalSigns = '+ \\cos(x)';
+                        else if (meta.vTex.includes('-\\cos(x)')) finalSigns = '+ \\sin(x)';
                         else finalSigns = '- \\ln|\\sec(x)|';
+                        
                         setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} ${finalSigns}`}]); 
                     }
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
