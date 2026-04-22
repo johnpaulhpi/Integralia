@@ -339,13 +339,9 @@
             const [leechMatBlood, setLeechMatBlood] = useState(null);
 
             const [shrineCard, setShrineCard] = useState(null); 
-            // --- NEW: FOIL MAT STATES ---
-            const [foilLeft, setFoilLeft] = useState(null);
-            const [foilRight, setFoilRight] = useState(null);
-            const [shrineCard, setShrineCard] = useState(null); 
-            // --- NEW: FOIL MAT STATES ---
-            const [foilLeft, setFoilLeft] = useState(null);
-            const [foilRight, setFoilRight] = useState(null);
+            // --- NEW: FOIL MAT STATES ---
+            const [foilLeft, setFoilLeft] = useState(null);
+            const [foilRight, setFoilRight] = useState(null);
             const [activeCatalyst, setActiveCatalyst] = useState(null);
             
             const [activeMode, setActiveMode] = useState(null); 
@@ -1154,7 +1150,8 @@
                             }).join(' ')
                         }]); 
                     }
-                    else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }} else if (integrationPath === 'ibp') {
+                    else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }}
+                else if (integrationPath === 'ibp') {
                  
                     setMana(m => m - 0);
                     const meta = bossCards[0].meta;
@@ -1178,8 +1175,6 @@
                         // Standard Base Evaluations
                         else if (tex.includes('\\cos')) result = '\\sin(x)';
                         else if (tex.includes('\\sin')) result = '-\\cos(x)';
-                        else if (tex.includes('\\sec^2')) result = '\\tan(x)';
-                        else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
                         else if (tex.includes('\\sec^2')) result = '\\tan(x)';
                         else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
                         else if (tex.includes('e^x')) result = 'e^x';
