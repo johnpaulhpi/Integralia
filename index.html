@@ -1096,9 +1096,9 @@
                 const lastU = tabularU[tabularU.length - 1];
                 const lastDv = tabularDv[tabularDv.length - 1];
 
-                // NEW: The Tabular Trap!
-                if (lastU.baseMath.includes('log(x)')) {
-                    addLog("CRITICAL ERROR: The grinder jams! The Cave Root tangles in the bone gears. It infinitely loops and will never turn to dust. Step away and use the Dual-Weave (IBP) instead.");
+                // UPDATED: The Tabular Trap catches the Root in either column!
+                if (lastU.baseMath.includes('log(x)') || lastDv.baseMath.includes('log(x)')) {
+                    addLog("CRITICAL ERROR: The grinder jams! The Cave Root tangles in the bone gears. Maybe use the boiling water (IBP) instead.");
                     return;
                 }
 
