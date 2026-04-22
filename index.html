@@ -612,12 +612,13 @@
                         else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
                     }
                     // The Dual-Weave (IBP) Path
-                    else if (integrationPath === 'ibp') {
-                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Sieve simplifies
-                        else if (integrationStep === 1 && catId === 'wheel') action = 'action2'; 
-                        else if (integrationStep === 2 && (catId === 'wheel' || catId === 'flame')) action = 'action3';
-                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
-                    } 
+                    else if (integrationPath === 'ibp') {
+                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Sieve simplifies
+                        // NEW: Opened up Step 1 to accept the Flame (Power Rule) for Algebraic integrals!
+                        else if (integrationStep === 1 && (catId === 'wheel' || catId === 'flame')) action = 'action2'; 
+                        else if (integrationStep === 2 && (catId === 'wheel' || catId === 'flame' || catId === 'sieve')) action = 'action3';
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    }
                     // The Tabular Path
                     else if (integrationPath === 'tabular') {
                         if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
