@@ -1395,9 +1395,9 @@
                             </div>
                         </div>
 
-                        {activeMat === 'altar' && (
-                            <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left">
-                                <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Altar of the Leech Goddess</h2>
+                       {activeMat === 'altar' && (
+                            <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left">
+                                <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Jalena's Leech Altar</h2>
                                 <div className="flex justify-center gap-6">
                                     <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarCore ? <BattleCard card={altarCore} scale="scale-75" onClick={() => handleAltarClick('core')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold">Undying Spirit (u)</span>}</div>
                                     <div className="w-[160px] h-[220px] border-2 border-dashed border-red-900/50 rounded-2xl flex items-center justify-center">{altarSacrifice ? <BattleCard card={altarSacrifice} scale="scale-75" onClick={() => handleAltarClick('sacrifice')} /> : <span className="text-red-900/40 text-[10px] uppercase font-bold text-center">Blood-gorged leech<br/>(Compound du)</span>}</div>
@@ -1561,7 +1561,7 @@
                                     <button onClick={() => selectMat('leech')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='leech'?'border-gray-500 bg-gray-800/80':'border-gray-800 bg-black hover:border-gray-600 hover:bg-gray-900'}`}><span className="text-gray-400 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold text-gray-300">Leech Pit</span></button>
                                 )}
 
-                                <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
+                                <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Jalena's Leech Altar</span></button>
                                 <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Bone Grinder</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
                                 <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
