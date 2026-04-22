@@ -342,6 +342,10 @@
             // --- NEW: FOIL MAT STATES ---
             const [foilLeft, setFoilLeft] = useState(null);
             const [foilRight, setFoilRight] = useState(null);
+            const [shrineCard, setShrineCard] = useState(null); 
+            // --- NEW: FOIL MAT STATES ---
+            const [foilLeft, setFoilLeft] = useState(null);
+            const [foilRight, setFoilRight] = useState(null);
             const [activeCatalyst, setActiveCatalyst] = useState(null);
             
             const [activeMode, setActiveMode] = useState(null); 
@@ -817,8 +821,14 @@
                 
                 if (activeMat === 'trigsub') { setTrigSubCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
 
-                if (activeMat === 'shrine') {
-                    if (!shrineCard) {
+                if (activeMat === 'foil') {
+                    if (!foilLeft) { setFoilLeft(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("First term slotted into The Loom."); return; }
+                    if (!foilRight) { setFoilRight(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Second term slotted. Ready to Expand."); return; }
+                    return;
+                }
+
+                if (activeMat === 'shrine') {
+                    if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Fastened ${card.name} tightly into the mana extractor 9000.`);
@@ -1131,10 +1141,21 @@
                 } else if (integrationPath === 'altar') {
                     setMana(m => m - 0);
                     if (t === 'action1') { setIntegrationStep(1); setBossCards([{...bossCards[0], baseTex: `\\int (${bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+(x.p===1?'u':`u^${x.p}`)).join(' ')}) du`}]); }
-                    else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+`\\int ${x.p===1?'u':`u^${x.p}`} du`).join(' ')}]); }
-                    else if (t === 'action3') { setIntegrationStep(3); setBossCards([{...bossCards[0], baseTex: bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+`\\frac{u^{${x.p+1}}}{${x.p+1}}`).join(' ')}]); }
-                    else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
-                } else if (integrationPath === 'ibp') {
+                   else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: bossCards[0].meta.terms.map((x,i)=>(x.c<0?'-':(i>0?'+':''))+`\\int ${x.p===1?'u':`u^${x.p}`} du`).join(' ')}]); }
+                    else if (t === 'action3') { 
+                        setIntegrationStep(3); 
+                        setBossCards([{
+                            ...bossCards[0], 
+                            baseTex: bossCards[0].meta.terms.map((x,i) => {
+                                const sign = (x.c < 0 ? '-' : (i > 0 ? '+' : ''));
+                                // The Void Catch: If power is -1, invoke the Natural Log
+                                if (x.p === -1) return `${sign}\\ln|u|`;
+                                return `${sign}\\frac{u^{${x.p+1}}}{${x.p+1}}`;
+                            }).join(' ')
+                        }]); 
+                    }
+                    else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }} else if (integrationPath === 'ibp') {
+                 
                     setMana(m => m - 0);
                     const meta = bossCards[0].meta;
                     if (t === 'action1') { setIntegrationStep(1); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - \\int ${meta.vTex==='-\\cos(x)'?'-\\cos(x)':meta.vTex} dx`}]); }
@@ -1159,9 +1180,14 @@
                         else if (tex.includes('\\sin')) result = '-\\cos(x)';
                         else if (tex.includes('\\sec^2')) result = '\\tan(x)';
                         else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
-                        else if (tex.includes('e^x')) result = 'e^x';
-                        
-                        setBossCards([{...bossCards[0], baseTex: result, ability: "Needs Constant of Integration."}]);
+                        else if (tex.includes('\\sec^2')) result = '\\tan(x)';
+                        else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
+                        else if (tex.includes('e^x')) result = 'e^x';
+                        else if (tex.includes('\\tan(x)') && !tex.includes('^') && !tex.includes('\\sec')) result = '\\ln|\\sec(x)|';
+                        else if (tex.includes('\\sec(x)') && !tex.includes('^') && !tex.includes('\\tan')) result = '\\ln|\\sec(x) + \\tan(x)|';
+                        else if (tex === 'x^{-1}' || tex === '\\frac{1}{x}') result = '\\ln|x|';
+                        
+                        setBossCards([{...bossCards[0], baseTex: result, ability: "Needs Constant of Integration."}]);
                         addLog("Integral evaluated! Finalize the refinement.");
                     } else if (t === 'plus_c') {
                         setMana(m=>m+200); setIntegrationStep(4); 
@@ -1173,11 +1199,34 @@
 
             };
 
-            // ==========================================
-            // NEW UI HELPERS
-            // ==========================================
+            const expandFoil = () => {
+                if (!foilLeft || !foilRight) return;
+                setMana(m => m - 10);
+                
+                let newTex = `${foilLeft.baseTex} \\cdot ${foilRight.baseTex}`; 
+                let newAbility = "Expanded Polynomial.";
+                
+                // Specific logic for Half-Angle Resonance expansion!
+                if (foilLeft.baseTex.includes('cos(2x)') && foilRight.baseTex.includes('cos(2x)')) {
+                    const lSign = foilLeft.baseTex.includes('1 -') ? '-' : '+';
+                    const rSign = foilRight.baseTex.includes('1 -') ? '-' : '+';
+                    
+                    if (lSign !== rSign) newTex = '\\frac{1 - \\cos^2(2x)}{4}'; // Difference of squares
+                    else if (lSign === '-') newTex = '\\frac{1 - 2\\cos(2x) + \\cos^2(2x)}{4}';
+                    else newTex = '\\frac{1 + 2\\cos(2x) + \\cos^2(2x)}{4}';
+                    newAbility = "Expanded Half-Angle Core.";
+                }
 
-            const resetSpell = () => {
+                setBossCards(prev => [...prev, buildCard('Expanded Core', newTex, '', 1, 'Algebraic', false, newAbility, false)]);
+                setFoilLeft(null); setFoilRight(null); setActiveMat(null);
+                addLog("The Loom spins the threads together into an Expanded Core!");
+            };
+
+            // ==========================================
+            // NEW UI HELPERS
+            // ==========================================
+
+            const resetSpell = () => {
                 setBossCards([...initialCards]);
                 setGamePhase('setup');
                 setIntegrationStep(0);
@@ -1219,9 +1268,11 @@
                 if (ibpDv) refundedCards.push(ibpDv);
                 if (trigSubCard) refundedCards.push(trigSubCard);
                 if (tabularU.length > 0) refundedCards.push(tabularU[0]); // Only refund the original, generated coils vanish!
-                if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
-                if (leechMatTarget) refundedCards.push(leechMatTarget);
-                if (leechMatBlood) refundedCards.push(leechMatBlood);
+                if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
+                if (leechMatTarget) refundedCards.push(leechMatTarget);
+                if (leechMatBlood) refundedCards.push(leechMatBlood);
+                if (foilLeft) refundedCards.push(foilLeft);
+                if (foilRight) refundedCards.push(foilRight);
 
                 // Return them to the board
                 if (refundedCards.length > 0) {
@@ -1336,10 +1387,28 @@
                                 {shrineCard && (
                                     <button onClick={ascendSpell} className="mt-8 bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
                                 )}
+                         </div>
+                        )}
+
+                        {activeMat === 'foil' && (
+                            <div className="w-8/12 bg-pink-950/10 border-2 border-pink-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
+                                <h2 className="text-pink-500/50 text-xs font-black uppercase mb-8">The Loom (Expansion Forge)</h2>
+                                <div className="flex justify-center gap-6 w-full">
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-pink-900/50 rounded-2xl flex items-center justify-center relative">
+                                        {foilLeft ? <BattleCard card={foilLeft} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, foilLeft]); setFoilLeft(null); }} /> : <span className="text-pink-900/40 text-[10px] uppercase font-bold text-center">First Term<br/>(a + b)</span>}
+                                    </div>
+                                    <div className="text-pink-500 font-bold text-3xl self-center">×</div>
+                                    <div className="w-[160px] h-[220px] border-2 border-dashed border-pink-900/50 rounded-2xl flex items-center justify-center relative">
+                                        {foilRight ? <BattleCard card={foilRight} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, foilRight]); setFoilRight(null); }} /> : <span className="text-pink-900/40 text-[10px] uppercase font-bold text-center">Second Term<br/>(c + d)</span>}
+                                    </div>
+                                </div>
+                                {foilLeft && foilRight && (
+                                    <button onClick={expandFoil} className="mt-8 bg-pink-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(219,39,119,0.5)] hover:bg-pink-500 hover:scale-105 transition-all animate-pulse">Expand Polynomial</button>
+                                )}
                             </div>
                         )}
 
-                        {activeMat === 'tabular' && (
+                        {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
                                 <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Bone Grinder</h2>
                                 {tabularU.length === 0 && <div className="text-teal-900/50 font-bold text-xs uppercase tracking-widest text-center m-auto">There is a slot for old bones, and a strange metal assembly acting as a focus for an eternal spirit...<br/> The spirit swirls hungrily around the bones. Feeding them might work out in your favor.</div>}
@@ -1415,8 +1484,9 @@
                                 <button onClick={() => selectMat('altar')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='altar'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Altar</span></button>
                                 <button onClick={() => selectMat('tabular')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='tabular'?'border-teal-400 bg-teal-900/30':'border-teal-900 bg-gray-900 hover:border-teal-500 hover:bg-gray-800'}`}><span className="text-teal-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Bone Grinder</span></button>
                                 <button onClick={() => selectMat('trigsub')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='trigsub'?'border-amber-400 bg-amber-900/30':'border-amber-900 bg-gray-900 hover:border-amber-500 hover:bg-gray-800'}`}><span className="text-amber-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Rune Circle</span></button>
-                                <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
-                                <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
+                                <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
+                                <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Dual-Weave</span></button>
+                                <button onClick={() => selectMat('foil')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='foil'?'border-pink-400 bg-pink-900/30':'border-pink-900 bg-gray-900 hover:border-pink-500 hover:bg-gray-800'}`}><span className="text-pink-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Loom (FOIL)</span></button>
                             </div>
                         )}
 
