@@ -144,15 +144,23 @@
                 </svg>
             ),
             'Dust': () => (
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.3)]">
-                    <circle cx="50" cy="50" r="2" fill="#9ca3af" />
-                    <circle cx="40" cy="40" r="1" fill="#6b7280" />
-                    <circle cx="60" cy="60" r="1.5" fill="#4b5563" />
-                    <circle cx="30" cy="60" r="1" fill="#9ca3af" />
-                    <circle cx="70" cy="30" r="2" fill="#4b5563" />
-                </svg>
-            )
-        };
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(156,163,175,0.3)]">
+                    <circle cx="50" cy="50" r="2" fill="#9ca3af" />
+                    <circle cx="40" cy="40" r="1" fill="#6b7280" />
+                    <circle cx="60" cy="60" r="1.5" fill="#4b5563" />
+                    <circle cx="30" cy="60" r="1" fill="#9ca3af" />
+                    <circle cx="70" cy="30" r="2" fill="#4b5563" />
+                </svg>
+            ),
+            'Cave Root': () => (
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_15px_rgba(168,85,247,0.6)]">
+                    <path d="M 50 15 Q 35 40 45 60 T 25 90 M 50 15 Q 65 30 55 60 T 80 85 M 42 45 Q 20 50 15 70 M 55 45 Q 80 50 85 65" fill="none" stroke="#a855f7" strokeWidth="4" strokeLinecap="round" />
+                    <circle cx="50" cy="15" r="5" fill="#d8b4fe" />
+                    <circle cx="45" cy="60" r="2" fill="#a855f7" />
+                    <circle cx="55" cy="60" r="2.5" fill="#a855f7" />
+                </svg>
+            )
+        };
 
         // ==========================================
         // GAME COMPONENTS
@@ -212,7 +220,7 @@
             else if (isOrange) themeName = 'orange';
             else if (isEmerald) themeName = 'emerald';
             else if (name === 'Expona') themeName = 'red';
-            else if (card.type === 'Derived' || card.type === 'Resonant' || name === 'Bleeding Coil' || name.includes('State') || name === 'Refined Solution') themeName = 'fuchsia';
+            else if (name === 'Cave Root' || card.type === 'Derived' || card.type === 'Resonant' || name === 'Bleeding Coil' || name.includes('State') || name === 'Refined Solution') themeName = 'fuchsia';
 
             const theme = THEMES[themeName] || THEMES.gray;
 
@@ -227,7 +235,8 @@
                 if (name === 'Residue' || name === 'Compound') return CARD_REGISTRY['Residue'](theme.svg);
                 if (name === 'Expona') return CARD_REGISTRY['Expona']();
                 if (name === 'Dust') return CARD_REGISTRY['Dust']();
-                if (name.includes('State') || name === 'Refined Solution') return CARD_REGISTRY['State']();
+                if (name === 'Cave Root' || card.baseTex?.includes('\\ln')) return CARD_REGISTRY['Cave Root']();
+                if (name.includes('State') || name === 'Refined Solution') return CARD_REGISTRY['State']();
                 if (card.type === 'Derived' || card.type === 'Resonant' || card.type === 'Void') return CARD_REGISTRY['Derived']();
                 return <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="50" r="20" fill="none" stroke="gray" strokeWidth="2" /></svg>;
             };
@@ -398,10 +407,13 @@
                     const xPower = Math.floor(Math.random() * 3) + 1; 
                     newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
 
-                    const ibpType = Math.floor(Math.random() * 3);
-                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : (ibpType === 1 ? {n:'Fragment of Orxe', t:'\\cos(x)', m:'cos(x)'} : {n:'Fragment of Clor', t:'\\sin(x)', m:'sin(x)'});
-                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, "Undying Spirit.", false));
-                    logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
+                    const ibpType = Math.floor(Math.random() * 4);
+                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : 
+                                 (ibpType === 1 ? {n:'Fragment of Orxe', t:'\\cos(x)', m:'cos(x)'} : 
+                                 (ibpType === 2 ? {n:'Fragment of Clor', t:'\\sin(x)', m:'sin(x)'} : 
+                                 {n:'Cave Root', t:'\\ln(x)', m:'log(x)'}));
+                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, trig.n === 'Cave Root' ? "A tangled, subterranean mathematical structure." : "Undying Spirit.", false));
+                    logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
                 } else {
                     const radType = Math.floor(Math.random() * 3); 
