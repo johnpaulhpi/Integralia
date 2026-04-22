@@ -769,30 +769,32 @@
                 }
 
                 if (activeMat === 'altar') {
-                    if (!altarCore) {
-                        if (card.baseTex?.includes('sin') || card.baseTex?.includes('cos') || card.baseTex?.includes('tan') || card.baseTex?.includes('sec')) {
-                            let coreFamily = '';
-                            if (card.baseTex.includes('sin')) coreFamily = 'sin';
-                            else if (card.baseTex.includes('cos')) coreFamily = 'cos';
-                            else if (card.baseTex.includes('tan')) coreFamily = 'tan';
-                            else if (card.baseTex.includes('sec')) coreFamily = 'sec';
-                            
-                            setAltarCore({ ...card, family: coreFamily });
-                            setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`Slotted ${card.name} into the Core. Now provide an appropriate sacrifice.`);
-                        } else { addLog("The Altar only accepts Trigonometric Cores."); }
-                        return;
-                    }
+                    if (!altarCore) {
+                        if (card.baseTex?.includes('sin') || card.baseTex?.includes('cos') || card.baseTex?.includes('tan') || card.baseTex?.includes('sec') || card.baseTex?.includes('\\ln')) {
+                            let coreFamily = '';
+                            if (card.baseTex.includes('sin')) coreFamily = 'sin';
+                            else if (card.baseTex.includes('cos')) coreFamily = 'cos';
+                            else if (card.baseTex.includes('tan')) coreFamily = 'tan';
+                            else if (card.baseTex.includes('sec')) coreFamily = 'sec';
+                            else if (card.baseTex.includes('\\ln')) coreFamily = 'ln';
+                            
+                            setAltarCore({ ...card, family: coreFamily });
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Slotted ${card.name} into the Core. Now provide an appropriate sacrifice.`);
+                        } else { addLog("The Altar only accepts Trigonometric or Logarithmic Cores."); }
+                        return;
+                    }
                    if (altarCore && !altarSacrifice) {
                         let isValid = false;
                         const sacTex = card.baseTex || '';
                         
                         if (card.name === 'Compound') {
-                            if (altarCore.family === 'sin' && sacTex.includes('\\cos') && !sacTex.includes('^')) isValid = true;
-                            if (altarCore.family === 'cos' && sacTex.includes('\\sin') && !sacTex.includes('^')) isValid = true;
-                            if (altarCore.family === 'tan' && sacTex.includes('\\sec^2')) isValid = true;
-                            if (altarCore.family === 'sec' && sacTex.includes('\\sec') && sacTex.includes('\\tan') && !sacTex.includes('^')) isValid = true;
-                        }
+                            if (altarCore.family === 'sin' && sacTex.includes('\\cos') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'cos' && sacTex.includes('\\sin') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'tan' && sacTex.includes('\\sec^2')) isValid = true;
+                            if (altarCore.family === 'sec' && sacTex.includes('\\sec') && sacTex.includes('\\tan') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'ln' && (sacTex.includes('x^{-1}') || sacTex.includes('\\frac{1}{x}'))) isValid = true;
+                        }
 
                         if (isValid) {
                             setAltarSacrifice(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
@@ -1009,12 +1011,13 @@
                 let coreFamily = altarCore.family;
 
                 if (coreFamily === 'sin') { expectedExpandedName = 'Fragment of Clor'; expectedResidueTex = '(1-\\sin^2(x))'; }
-                else if (coreFamily === 'cos') { expectedExpandedName = 'Fragment of Orxe'; expectedResidueTex = '(1-\\cos^2(x))'; }
-                else if (coreFamily === 'tan') { expectedExpandedName = 'Unstable Fragment of Clorexro'; expectedResidueTex = '(\\sec^2(x)-1)'; }
-                else if (coreFamily === 'sec') { expectedExpandedName = 'Fragment of Exro'; expectedResidueTex = '(1+\\tan^2(x))'; }
+                else if (coreFamily === 'cos') { expectedExpandedName = 'Fragment of Orxe'; expectedResidueTex = '(1-\\cos^2(x))'; }
+                else if (coreFamily === 'tan') { expectedExpandedName = 'Unstable Fragment of Clorexro'; expectedResidueTex = '(\\sec^2(x)-1)'; }
+                else if (coreFamily === 'sec') { expectedExpandedName = 'Fragment of Exro'; expectedResidueTex = '(1+\\tan^2(x))'; }
+                else if (coreFamily === 'ln') { expectedExpandedName = 'Cave Root'; expectedResidueTex = 'N/A'; } // No residues for ln(x)
 
-                if (altarSacrifice.name !== 'Compound') { 
-                    addLog("The Sacrifice is invalid! You must stitch a Ghost to a Leech to create a True Differential Compound."); 
+                if (altarSacrifice.name !== 'Compound') {
+                    addLog("The Sacrifice is invalid! You must have a blood-gorged Leech to create a True Differential Compound."); 
                     return; 
                 }
 
@@ -1090,9 +1093,16 @@
             };
 
             const stepIntoAbyss = () => {
-                const lastU = tabularU[tabularU.length - 1];
-                const lastDv = tabularDv[tabularDv.length - 1];
-                let nU = { ...lastU, id: `u-${Date.now()}` };
+                const lastU = tabularU[tabularU.length - 1];
+                const lastDv = tabularDv[tabularDv.length - 1];
+
+                // NEW: The Tabular Trap!
+                if (lastU.baseMath.includes('log(x)')) {
+                    addLog("CRITICAL ERROR: The grinder jams! The Cave Root tangles in the bone gears. It infinitely loops and will never turn to dust. Step away and use the Dual-Weave (IBP) instead.");
+                    return;
+                }
+
+                let nU = { ...lastU, id: `u-${Date.now()}` };
                 try {
                     const node = math.derivative(lastU.baseMath, 'x');
                     nU.baseMath = node.toString(); nU.baseTex = node.toTex().replace(/~/g, '');
@@ -1160,9 +1170,35 @@
                  
                     setMana(m => m - 0);
                     const meta = bossCards[0].meta;
-                    if (t === 'action1') { setIntegrationStep(1); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - \\int ${meta.vTex==='-\\cos(x)'?'-\\cos(x)':meta.vTex} dx`}]); }
-                    else if (t === 'action2') { setIntegrationStep(2); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - (${meta.vTex==='\\sin(x)'?'-\\cos(x)':(meta.vTex==='-\\cos(x)'?'-\\sin(x)':'\\ln|\\sec(x)|')})`}]); }
-                    else if (t === 'action3') { setIntegrationStep(3); setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} ${meta.vTex==='\\sin(x)'?'+ \\cos(x)':(meta.vTex==='-\\cos(x)'?'+ \\sin(x)':'- \\ln|\\sec(x)|')}`}]); }
+                    if (t === 'action1') { 
+                        setIntegrationStep(1); 
+                        // NEW: Detect the x * (1/x) annihilation for the Cave Root!
+                        let simplifiedInner = meta.vTex;
+                        if (meta.uTex === '\\ln(x)' && meta.vTex === 'x' && meta.duTex.includes('\\frac{1}{x}')) {
+                            simplifiedInner = '1';
+                        } else if (meta.vTex === '-\\cos(x)') {
+                            simplifiedInner = '-\\cos(x)';
+                        }
+                        setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - \\int ${simplifiedInner} dx`}]); 
+                    }
+                    else if (t === 'action2') { 
+                        setIntegrationStep(2); 
+                        let integratedInner = '';
+                        if (bossCards[0].baseTex.includes('\\int 1 dx')) integratedInner = 'x';
+                        else if (meta.vTex === '\\sin(x)') integratedInner = '-\\cos(x)';
+                        else if (meta.vTex === '-\\cos(x)') integratedInner = '-\\sin(x)';
+                        else integratedInner = '\\ln|\\sec(x)|';
+                        setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} - (${integratedInner})`}]); 
+                    }
+                    else if (t === 'action3') { 
+                        setIntegrationStep(3); 
+                        let finalSigns = '';
+                        if (bossCards[0].baseTex.includes('(x)')) finalSigns = '- x';
+                        else if (meta.vTex === '\\sin(x)') finalSigns = '+ \\cos(x)';
+                        else if (meta.vTex === '-\\cos(x)') finalSigns = '+ \\sin(x)';
+                        else finalSigns = '- \\ln|\\sec(x)|';
+                        setBossCards([{...bossCards[0], baseTex: `${meta.uvTex} ${finalSigns}`}]); 
+                    }
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
                 
                 // --- NEW: Add this block right here ---
