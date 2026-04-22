@@ -1102,7 +1102,7 @@
                     // Clean up mathematical formatting for polynomials and roots
                     if (uTex === '\\ln(x)') {
                         if (vTex === 'x') uvTex = `x\\ln(x)`;
-                        if (vTex === '\\frac{x^2}{2}') uvTex = `\\frac{x^2}{2}\\ln(x)`;
+                        else if (vTex.includes('\\frac')) uvTex = `${vTex}\\ln(x)`;
                     }
 
                     // Dropped the extra '\cdot' to make the inner integral read cleaner
@@ -1196,7 +1196,9 @@
                         let simplifiedInner = meta.vTex;
                         if (meta.uTex === '\\ln(x)' && meta.duTex.includes('\\frac{1}{x}')) {
                             if (meta.vTex === 'x') simplifiedInner = '1';
-                            if (meta.vTex === '\\frac{x^2}{2}') simplifiedInner = '\\frac{x}{2}';
+                            else if (meta.vTex === '\\frac{x^2}{2}') simplifiedInner = '\\frac{x}{2}';
+                            else if (meta.vTex === '\\frac{x^3}{3}') simplifiedInner = '\\frac{x^2}{3}'; // Handles x^2
+                            else if (meta.vTex === '\\frac{x^4}{4}') simplifiedInner = '\\frac{x^3}{4}'; // Handles x^3
                         } else if (meta.vTex === '-\\cos(x)') {
                             simplifiedInner = '-\\cos(x)';
                         }
@@ -1207,6 +1209,8 @@
                         let integratedInner = '';
                         if (bossCards[0].baseTex.includes('\\int 1 dx')) integratedInner = 'x';
                         else if (bossCards[0].baseTex.includes('\\int \\frac{x}{2} dx')) integratedInner = '\\frac{x^2}{4}';
+                        else if (bossCards[0].baseTex.includes('\\int \\frac{x^2}{3} dx')) integratedInner = '\\frac{x^3}{9}';
+                        else if (bossCards[0].baseTex.includes('\\int \\frac{x^3}{4} dx')) integratedInner = '\\frac{x^4}{16}';
                         else if (meta.vTex === '\\sin(x)') integratedInner = '-\\cos(x)';
                         else if (meta.vTex === '-\\cos(x)') integratedInner = '-\\sin(x)';
                         else integratedInner = '\\ln|\\sec(x)|';
@@ -1217,6 +1221,8 @@
                         let finalSigns = '';
                         if (bossCards[0].baseTex.includes('(x)')) finalSigns = '- x';
                         else if (bossCards[0].baseTex.includes('\\frac{x^2}{4}')) finalSigns = '- \\frac{x^2}{4}';
+                        else if (bossCards[0].baseTex.includes('\\frac{x^3}{9}')) finalSigns = '- \\frac{x^3}{9}';
+                        else if (bossCards[0].baseTex.includes('\\frac{x^4}{16}')) finalSigns = '- \\frac{x^4}{16}';
                         else if (meta.vTex === '\\sin(x)') finalSigns = '+ \\cos(x)';
                         else if (meta.vTex === '-\\cos(x)') finalSigns = '+ \\sin(x)';
                         else finalSigns = '- \\ln|\\sec(x)|';
