@@ -357,6 +357,11 @@
             const [fractionNum, setFractionNum] = useState([]);
             const [fractionDen, setFractionDen] = useState([]);
             const [fractionDecomp, setFractionDecomp] = useState([]);
+            // --- NEW: BONE CARVING MINIGAME STATES ---
+            const [isCarving, setIsCarving] = useState(false);
+            const [carvingStep, setCarvingStep] = useState(0); 
+            const [activeRemainder, setActiveRemainder] = useState('');
+            const [activeQuotient, setActiveQuotient] = useState('');
             
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
@@ -1338,15 +1343,50 @@
             };
 
         const executeDivision = () => {
-                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 20) { addLog("Not enough Mana!"); return; }
-                setMana(m => m - 20);
-                setBossCards(prev => [
-                    ...prev,
-                    buildCard('Expanded Core', 'x+2', 'x+2', 1, 'Algebraic', false, "Quotient.", false),
-                    buildCard('Expanded Core', '\\frac{2x+1}{x^2-1}', '(2x+1)/(x^2-1)', 1, 'Algebraic', false, "Remainder.", false)
-                ]);
-                setFractionNum([]); setFractionDen([]); setActiveMat(null);
-                addLog("The Guillotine falls! The improper fraction has been divided.");
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana to start carving!"); return; }
+                setMana(m => m - 10);
+                
+                // Set the initial board for the specific spell: (x^3 + 2x^2 + x) / (x^2 - 1)
+                setActiveRemainder('x^3 + 2x^2 + x');
+                setActiveQuotient('');
+                setCarvingStep(0);
+                setIsCarving(true);
+                addLog("The Guillotine locks into place. Select the correct chisel to match the leading term.");
+            };
+
+            const handleChiselStrike = (term) => {
+                if (carvingStep === 0) {
+                    if (term === 'x') {
+                        setActiveQuotient('x');
+                        setActiveRemainder('2x^2 + 2x'); // The result of subtracting x(x^2 - 1)
+                        setCarvingStep(1);
+                        addLog("A clean cut! x³ is severed. The dust settles into a new remainder.");
+                    } else {
+                        addLog("The chisel glances off! That term doesn't match the leading bone.");
+                        setMana(m => Math.max(0, m - 5)); // Penalty for wrong guess
+                    }
+                } else if (carvingStep === 1) {
+                    if (term === '2') {
+                        setActiveQuotient('x + 2');
+                        setActiveRemainder('2x + 2'); // The result of subtracting 2(x^2 - 1)
+                        setCarvingStep(2);
+                        addLog("The final cut! The bones are split.");
+                        
+                        // Wait a moment, then push the final cards to the main board
+                        setTimeout(() => {
+                            setBossCards(prev => [
+                                ...prev,
+                                buildCard('Expanded Core', 'x+2', 'x+2', 1, 'Algebraic', false, "Quotient.", false),
+                                buildCard('Expanded Core', '\\frac{2x+2}{x^2-1}', '(2x+2)/(x^2-1)', 1, 'Algebraic', false, "Remainder.", false)
+                            ]);
+                            setFractionNum([]); setFractionDen([]); setActiveMat(null); setIsCarving(false);
+                            addLog("Polynomial Division complete! Prepare for Partial Fractions.");
+                        }, 2000);
+                    } else {
+                        addLog("The chisel glances off! Look at the new leading term.");
+                        setMana(m => Math.max(0, m - 5));
+                    }
+                }
             };
 
             const executePFD = () => {
