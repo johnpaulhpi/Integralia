@@ -891,23 +891,6 @@
                     }
                     return;
                 }
-                        }
-                    } else {
-                        if (fractionNum.length === 0) {
-                            setFractionNum([card]);
-                            setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog("Bones hoisted to the Numerator position.");
-                            return;
-                        }
-                        if (fractionDen.length === 0) {
-                            setFractionDen([card]);
-                            setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog("Bones locked into the Denominator position.");
-                            return;
-                        }
-                    }
-                    return;
-                }
                 if (activeMat === 'shrine') {
                     if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.name === 'Assembled Skeleton') {
@@ -1550,7 +1533,7 @@
                 setShrineCard(null);
                 setFractionNum([]);
                 setFractionDen([]);
-                setFractionDecomp
+                setFractionDecomp([]);
                 setSkeletonQuotient(null);
                 setSkeletonEssence(null);
                 setSkeletonLeech(null);
