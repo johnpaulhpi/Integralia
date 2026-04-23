@@ -362,6 +362,8 @@
             const [carvingStep, setCarvingStep] = useState(0); 
             const [activeRemainder, setActiveRemainder] = useState('');
             const [activeQuotient, setActiveQuotient] = useState('');
+            const [isDecomposing, setIsDecomposing] = useState(false);
+            const [decompStep, setDecompStep] = useState(0);
             
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
@@ -885,11 +887,11 @@
                     return;
                 }
                 if (activeMat === 'shrine') {
-                    if (!shrineCard) {
-                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta')) {
+                    if (!shrineCard) {
+                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.type === 'Algebraic') {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`Fastened ${card.name} tightly into the mana extractor 9000.`);
-                        } else { addLog("The extrator requires a True Differential (a spirit stitched with a Leech)."); }
+                            addLog(`Fastened ${card.name} tightly into the Mana Extractor 9000.`);
+                        } else { addLog("The extractor requires a True Differential or a pure Algebraic Fragment."); }
                     }
                     return;
                 }
@@ -1130,6 +1132,39 @@
                     setIntegrationPath('altar'); setIntegrationStep(residueCount === 1 ? 0 : 2); setGamePhase('integration');
                     addLog("PHASE 2: The spell is now a U-State. Use Rule Tokens to refine it.");
                 }, 1000);
+            };
+
+            const readTheBones = () => {
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                setMana(m => m - 10);
+
+                let tex = shrineCard.baseTex || '';
+                let resultTex = '';
+
+                // Extract the constant and format the Natural Log
+                if (tex.includes('\\frac{2}{x-1}')) {
+                    resultTex = '2\\ln|x-1|';
+                } else if (tex.includes('\\frac{1}{x-1}')) {
+                    resultTex = '\\ln|x-1|';
+                } else {
+                    // Dynamic fallback just in case
+                    resultTex = '\\ln|' + tex + '|'; 
+                }
+
+                setBossCards([{ 
+                    id: `refined-${Date.now()}`, 
+                    name: 'Refined Solution', 
+                    type: 'Refined', 
+                    baseTex: resultTex, 
+                    power: 1, 
+                    canCycle: false, 
+                    ability: "Bones read. The Root thrives.", 
+                    isBleeding: false 
+                }]);
+                
+                setShrineCard(null);
+                setActiveMat(null);
+                addLog("You read the bones! The constant separates and the natural log takes root.");
             };
 
             const confirmIbpWeave = () => {
@@ -1390,15 +1425,42 @@
             };
 
             const executePFD = () => {
-                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 20) { addLog("Not enough Mana!"); return; }
-                setMana(m => m - 20);
-                setBossCards(prev => [
-                    ...prev,
-                    buildCard('Expanded Core', '\\frac{A}{x-1}', 'A/(x-1)', 1, 'Algebraic', false, "Decomposed Fragment.", false),
-                    buildCard('Expanded Core', '\\frac{B}{x+1}', 'B/(x+1)', 1, 'Algebraic', false, "Decomposed Fragment.", false)
-                ]);
-                setFractionDecomp([]); setActiveMat(null);
-                addLog("The bones are shattered! Partial fractions declared. Solve for A and B.");
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana to decompose!"); return; }
+                setMana(m => m - 10);
+                setIsDecomposing(true);
+                setDecompStep(0);
+                addLog("The Shattering Anvil hums. To find A, select the root that zeroes its denominator (x-1).");
+            };
+
+            const handleDecompStrike = (rootVal) => {
+                if (decompStep === 0) {
+                    if (rootVal === '1') {
+                        setDecompStep(1);
+                        addLog("Correct! Heaviside Cover-up: Plug x=1 into (2x+2)/(x+1) -> A = 2.");
+                        addLog("Now, select the root to zero out B's denominator (x+1).");
+                    } else {
+                        addLog("The anvil sparks dangerously! That is not the correct root.");
+                        setMana(m => Math.max(0, m - 5));
+                    }
+                } else if (decompStep === 1) {
+                    if (rootVal === '-1') {
+                        setDecompStep(2);
+                        addLog("Correct! Plug x=-1 into (2x+2)/(x-1) -> B = 0.");
+                        
+                        setTimeout(() => {
+                            setBossCards(prev => [
+                                ...prev,
+                                buildCard('Expanded Core', '\\frac{2}{x-1}', '2/(x-1)', 1, 'Algebraic', false, "Resolved Fragment (A=2).", false),
+                                buildCard('Dust', '0', '0', 1, 'Void', false, "Resolved Fragment (B=0). Turns to dust.", false)
+                            ]);
+                            setFractionDecomp([]); setIsDecomposing(false); setActiveMat(null);
+                            addLog("Decomposition complete! The fragments return to the main board.");
+                        }, 2500);
+                    } else {
+                        addLog("The anvil sparks dangerously! That is not the correct root.");
+                        setMana(m => Math.max(0, m - 5));
+                    }
+                }
             };
         
 
@@ -1426,9 +1488,12 @@
                 setTabularComplete(false);
                 setLeechMatTarget(null);
                 setLeechMatBlood(null);
+                setShrineCard(null);
                 setFractionNum([]);
                 setFractionDen([]);
                 setFractionDecomp([]);
+                setIsDecomposing(false);
+                setDecompStep(0);
                 addLog("Time reverses. The spell state has been reset to the initial draw.");
             };
 
@@ -1454,6 +1519,7 @@
                 if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
                 if (leechMatTarget) refundedCards.push(leechMatTarget);
                 if (leechMatBlood) refundedCards.push(leechMatBlood);
+                if (shrineCard) refundedCards.push(shrineCard);
                 if (foilLeft) refundedCards.push(foilLeft);
                 if (foilRight) refundedCards.push(foilRight);
                 if (fractionNum.length > 0) refundedCards.push(...fractionNum);
@@ -1474,8 +1540,11 @@
                 setTrigSubCard(null); 
                 setTabularU([]); setTabularDv([]); setTabularComplete(false);
                 setLeechMatTarget(null); setLeechMatBlood(null);
+                setShrineCard(null);
                 setFractionNum([]); setFractionDen([]);
                 setFractionDecomp([]);
+                setIsDecomposing(false);
+                setDecompStep(0);
 
                 
                 setActiveMat(null); // Finally, close the mat UI
@@ -1574,7 +1643,17 @@
                                     {shrineCard ? <BattleCard card={shrineCard} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, shrineCard]); setShrineCard(null); }} /> : <span className="text-indigo-900/40 text-[10px] uppercase font-bold text-center">True Differential<br/>(Compound du/dx)</span>}
                                 </div>
                                 {shrineCard && (
-                                    <button onClick={ascendSpell} className="mt-8 bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
+                                    <div className="flex gap-4 mt-8">
+                                        {/* Standard Integration */}
+                                        {!shrineCard.baseTex.includes('\\frac') && (
+                                            <button onClick={ascendSpell} className="bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
+                                        )}
+                                        
+                                        {/* Pure Bone Reading */}
+                                        {shrineCard.type === 'Algebraic' && shrineCard.baseTex.includes('\\frac') && (
+                                            <button onClick={readTheBones} className="bg-emerald-600 border-2 border-emerald-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all text-white">Read the Bones</button>
+                                        )}
+                                    </div>
                                 )}
                          </div>
                         )}
@@ -1601,7 +1680,7 @@
                             <div className="w-8/12 bg-emerald-950/10 border-2 border-emerald-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left relative overflow-hidden">
                                 <h2 className="text-emerald-500/50 text-xs font-black uppercase mb-4">The Guillotine (Rational Scale)</h2>
                                 
-                                {!isCarving ? (
+                                {!isCarving && !isDecomposing && (
                                     <>
                                         {/* TOP ROW: The Chopping Block (Division) */}
                                         <div className="w-full flex justify-center items-center gap-6 border-b border-emerald-900/30 pb-6 mb-6">
@@ -1631,7 +1710,9 @@
                                             )}
                                         </div>
                                     </>
-                                ) : (
+                                )}
+                                
+                                {isCarving && (
                                     /* --- THE CARVING MINIGAME UI --- */
                                     <div className="w-full flex flex-col items-center animate-slide-up bg-gray-950/80 border border-emerald-900/50 p-6 rounded-2xl shadow-[inset_0_0_50px_rgba(4,120,87,0.1)]">
                                         <div className="flex items-start justify-center gap-8 w-full font-mono text-2xl text-emerald-100 mb-8">
@@ -1673,9 +1754,39 @@
                                         )}
                                     </div>
                                 )}
+
+                                {isDecomposing && (
+                                    /* --- THE NEW DECOMPOSITION MINIGAME UI --- */
+                                    <div className="w-full flex flex-col items-center animate-slide-up bg-gray-950/80 border border-emerald-900/50 p-6 rounded-2xl shadow-[inset_0_0_50px_rgba(4,120,87,0.1)]">
+                                        <div className="text-emerald-100 font-mono text-xl mb-6 text-center drop-shadow-md">
+                                            <MathEquation equation="\frac{2x+2}{(x-1)(x+1)} = \frac{A}{x-1} + \frac{B}{x+1}" inline={false} />
+                                        </div>
+                                        
+                                        <div className="flex flex-col items-center mb-6 h-8">
+                                            {decompStep === 0 && <span className="text-emerald-400 font-bold animate-pulse text-sm">Solving for A (denominator: x-1)</span>}
+                                            {decompStep === 1 && <span className="text-blue-400 font-bold animate-pulse text-sm">A = 2. Now solving for B (denominator: x+1)</span>}
+                                            {decompStep === 2 && <span className="text-fuchsia-400 font-bold tracking-widest uppercase animate-pulse">A = 2, B = 0. Fragments Forged!</span>}
+                                        </div>
+
+                                        {decompStep < 2 && (
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-4">Select the Heaviside Root (x = ?):</span>
+                                                <div className="flex gap-4">
+                                                    {['1', '-1', '0', '2'].map(val => (
+                                                        <button 
+                                                            key={val} onClick={() => handleDecompStrike(val)}
+                                                            className="w-16 h-16 rounded-lg border-2 border-gray-700 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800 flex items-center justify-center transition-all shadow-md hover:-translate-y-1 font-mono text-2xl text-gray-300"
+                                                        >
+                                                            {val}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
-
                         {activeMat === 'tabular' && (
                             <div className="w-8/12 bg-teal-950/10 border-2 border-teal-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left overflow-y-auto log-scroll">
                                 <h2 className="text-teal-500/50 text-xs font-black uppercase text-center mb-4">Bone Grinder</h2>
