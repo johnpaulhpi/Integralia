@@ -1,4 +1,4 @@
-//pre-alpha v. 5.1 copyright JP Hansen 4-23-2026
+//pre-alpha v. 5.2 copyright JP Hansen 4-23-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -671,7 +671,6 @@
                         else if (integrationStep === 1 && catId === 'flame') action = 'action2'; // Power rule
                         else if (integrationStep === 2 && catId === 'roots') action = 'action3'; // Bind bones
                         else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c'; // +C
-                    }
                     }
 
                     if (action) {
@@ -1414,6 +1413,7 @@
                         setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Roots provide muscular structure for the sculpture!"}]);
                         addLog("Token Applied: Added +C. SPELL COMPLETE!");
                     }
+                }
                 
                 // --------------------------------------
 
