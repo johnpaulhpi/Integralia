@@ -357,6 +357,9 @@
             const [fractionNum, setFractionNum] = useState([]);
             const [fractionDen, setFractionDen] = useState([]);
             const [fractionDecomp, setFractionDecomp] = useState([]);
+            const [skeletonQuotient, setSkeletonQuotient] = useState(null);
+            const [skeletonEssence, setSkeletonEssence] = useState(null);
+            const [skeletonLeech, setSkeletonLeech] = useState(null);
             // --- NEW: BONE CARVING MINIGAME STATES ---
             const [isCarving, setIsCarving] = useState(false);
             const [carvingStep, setCarvingStep] = useState(0); 
@@ -862,13 +865,32 @@
                 }
 
               if (activeMat === 'rational') {
-                    // Smart Sorting: Fractions go to the Anvil, simple polynomials go to the Chopping Block
+                    // 1. Skeleton Assembly Sorters
+                    if (card.isLeech) {
+                        setSkeletonLeech(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Leech bound to the skeleton."); return;
+                    }
+                    if (card.ability.includes('Resolved Fragment')) {
+                        setSkeletonEssence(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Essence bound to the skeleton."); return;
+                    }
+                    if (card.ability.includes('Quotient')) {
+                        setSkeletonQuotient(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Quotient skull bound to the skeleton."); return;
+                    }
+                    
+                    // 2. Guillotine / Anvil Sorters
                     if (card.baseTex?.includes('\\frac')) {
                         if (fractionDecomp.length === 0) {
-                            setFractionDecomp([card]);
-                            setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog("Proper fraction secured on the Shattering Anvil.");
-                            return;
+                            setFractionDecomp([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Proper fraction secured on the Shattering Anvil."); return;
+                        }
+                    } else {
+                        if (fractionNum.length === 0) {
+                            setFractionNum([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Bones hoisted to the Numerator position."); return;
+                        }
+                        if (fractionDen.length === 0) {
+                            setFractionDen([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Bones locked into the Denominator position."); return;
+                        }
+                    }
+                    return;
+                }
                         }
                     } else {
                         if (fractionNum.length === 0) {
@@ -888,10 +910,10 @@
                 }
                 if (activeMat === 'shrine') {
                     if (!shrineCard) {
-                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.type === 'Algebraic') {
+                        if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.name === 'Assembled Skeleton') {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
                             addLog(`Fastened ${card.name} tightly into the Mana Extractor 9000.`);
-                        } else { addLog("The extractor requires a True Differential or a pure Algebraic Fragment."); }
+                        } else { addLog("The extractor requires a True Differential or an Assembled Skeleton."); }
                     }
                     return;
                 }
@@ -1462,6 +1484,43 @@
                     }
                 }
             };
+
+        const assembleSkeleton = () => {
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 20) { addLog("Not enough Mana!"); return; }
+                setMana(m => m - 20);
+                
+                const combinedTex = `\\int \\left(${skeletonQuotient.baseTex} + ${skeletonEssence.baseTex}\\right) \\, ${skeletonLeech.baseTex}`;
+                
+                setBossCards(prev => [
+                    ...prev,
+                    buildCard('Assembled Skeleton', combinedTex, '', 1, 'Unresolved', false, "A complete framework, awaiting the spark of life.", false)
+                ]);
+                
+                setSkeletonQuotient(null); setSkeletonEssence(null); setSkeletonLeech(null); setActiveMat(null);
+                addLog("The bones, the essence, and the blood are bound! Take this complete skeleton to the Mana Extractor 9000.");
+            };
+
+            const awakenTheBones = () => {
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 50) { addLog("Not enough Mana!"); return; }
+                setMana(m => m - 50);
+
+                // The final integration math
+                let resultTex = '\\frac{x^2}{2} + 2x + 2\\ln|x-1|';
+                
+                setBossCards([{ 
+                    id: `refined-${Date.now()}`, 
+                    name: 'Refined Solution', 
+                    type: 'Refined', 
+                    baseTex: resultTex + ' + C', 
+                    power: 1, 
+                    canCycle: false, 
+                    ability: "Roots begin providing muscular structure for the strange sculpture...", 
+                    isBleeding: false 
+                }]);
+                
+                setShrineCard(null); setActiveMat(null);
+                addLog("You awaken the bones! The sculpture lives.");
+            };
         
 
             // ==========================================
@@ -1491,7 +1550,11 @@
                 setShrineCard(null);
                 setFractionNum([]);
                 setFractionDen([]);
-                setFractionDecomp([]);
+                setFractionDecomp
+                setSkeletonQuotient(null);
+                setSkeletonEssence(null);
+                setSkeletonLeech(null);
+                setShrineCard(null);
                 setIsDecomposing(false);
                 setDecompStep(0);
                 addLog("Time reverses. The spell state has been reset to the initial draw.");
@@ -1525,6 +1588,10 @@
                 if (fractionNum.length > 0) refundedCards.push(...fractionNum);
                 if (fractionDen.length > 0) refundedCards.push(...fractionDen);
                 if (fractionDecomp.length > 0) refundedCards.push(...fractionDecomp);
+                if (skeletonQuotient) refundedCards.push(skeletonQuotient);
+                if (skeletonEssence) refundedCards.push(skeletonEssence);
+                if (skeletonLeech) refundedCards.push(skeletonLeech);
+                if (shrineCard) refundedCards.push(shrineCard);
 
                 // Return them to the board
                 if (refundedCards.length > 0) {
@@ -1642,16 +1709,21 @@
                                 <div className="w-[200px] h-[200px] rounded-full border-4 border-dashed border-indigo-900/40 flex items-center justify-center relative shadow-[inset_0_0_30px_rgba(79,70,229,0.2)]">
                                     {shrineCard ? <BattleCard card={shrineCard} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, shrineCard]); setShrineCard(null); }} /> : <span className="text-indigo-900/40 text-[10px] uppercase font-bold text-center">True Differential<br/>(Compound du/dx)</span>}
                                 </div>
-                                {shrineCard && (
+                               {shrineCard && (
                                     <div className="flex gap-4 mt-8">
-                                        {/* Standard Integration */}
-                                        {!shrineCard.baseTex.includes('\\frac') && (
+                                        {/* 1. Standard Integration */}
+                                        {shrineCard.name !== 'Assembled Skeleton' && !shrineCard.baseTex.includes('\\frac') && (
                                             <button onClick={ascendSpell} className="bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
                                         )}
                                         
-                                        {/* Pure Bone Reading */}
+                                        {/* 2. Pure Bone Reading (Partial Fractions) */}
                                         {shrineCard.type === 'Algebraic' && shrineCard.baseTex.includes('\\frac') && (
                                             <button onClick={readTheBones} className="bg-emerald-600 border-2 border-emerald-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all text-white">Read the Bones</button>
+                                        )}
+
+                                        {/* 3. Skeleton Awakening (Final Boss) */}
+                                        {shrineCard.name === 'Assembled Skeleton' && (
+                                            <button onClick={awakenTheBones} className="bg-fuchsia-600 border-2 border-fuchsia-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:bg-fuchsia-500 hover:scale-105 transition-all text-white animate-pulse">Awaken the Bones</button>
                                         )}
                                     </div>
                                 )}
@@ -1700,6 +1772,21 @@
                                             </div>
                                         </div>
 
+                                        {/* TIER 3: Skeleton Assembly */}
+                                        <div className="w-full flex justify-center items-center gap-4 border-t border-emerald-900/30 pt-6 mt-2 mb-4">
+                                            <div className="w-[120px] h-[170px] border-2 border-dashed border-emerald-800 rounded-xl flex items-center justify-center">
+                                                {skeletonQuotient ? <BattleCard card={skeletonQuotient} scale="scale-[0.6]" onClick={() => { setBossCards(prev => [...prev, skeletonQuotient]); setSkeletonQuotient(null); }} /> : <span className="text-emerald-800/60 text-[8px] uppercase font-bold text-center px-1">Quotient<br/>(Skull)</span>}
+                                            </div>
+                                            <span className="text-emerald-700 font-bold text-xl">+</span>
+                                            <div className="w-[120px] h-[170px] border-2 border-dashed border-emerald-800 rounded-xl flex items-center justify-center">
+                                                {skeletonEssence ? <BattleCard card={skeletonEssence} scale="scale-[0.6]" onClick={() => { setBossCards(prev => [...prev, skeletonEssence]); setSkeletonEssence(null); }} /> : <span className="text-emerald-800/60 text-[8px] uppercase font-bold text-center px-1">Essence<br/>(Fragment)</span>}
+                                            </div>
+                                            <span className="text-emerald-700 font-bold text-xl">·</span>
+                                            <div className="w-[120px] h-[170px] border-2 border-dashed border-red-900/50 bg-red-950/20 rounded-xl flex items-center justify-center">
+                                                {skeletonLeech ? <BattleCard card={skeletonLeech} scale="scale-[0.6]" onClick={() => { setBossCards(prev => [...prev, skeletonLeech]); setSkeletonLeech(null); }} /> : <span className="text-red-900/60 text-[8px] uppercase font-bold text-center px-1">Blood<br/>(dx)</span>}
+                                            </div>
+                                        </div>
+
                                         {/* Contextual Action Buttons */}
                                         <div className="flex gap-4 mt-2">
                                             {fractionNum.length > 0 && fractionDen.length > 0 && (
@@ -1707,6 +1794,9 @@
                                             )}
                                             {fractionDecomp.length > 0 && (
                                                 <button onClick={executePFD} className="bg-gray-900 border-2 border-emerald-700 text-emerald-400 px-6 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(4,120,87,0.3)] hover:bg-emerald-900 hover:scale-105 transition-all">Decompose Fractions</button>
+                                            )}
+                                            {skeletonQuotient && skeletonEssence && skeletonLeech && (
+                                                <button onClick={assembleSkeleton} className="bg-fuchsia-900 border-2 border-fuchsia-500 text-fuchsia-300 px-8 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_25px_rgba(217,70,239,0.4)] hover:bg-fuchsia-800 hover:scale-105 transition-all animate-pulse">Assemble Skeleton</button>
                                             )}
                                         </div>
                                     </>
