@@ -80,6 +80,7 @@
         };
 
         const CATALYSTS = [
+            { id: 'roots', name: 'Bind the Bones', lore: 'Logarithmic Integration', icon: '🌿', color: 'text-emerald-400', border: 'border-emerald-500/50', bg: 'bg-emerald-950/30' },
             { id: 'prism', name: 'Chop Into Managable Pieces', lore: 'Linearity & Distribute', icon: '🔪', color: 'text-cyan-400', border: 'border-cyan-500/50', bg: 'bg-cyan-950/30' },
             { id: 'sieve', name: 'Separate Spirits from Bones', lore: 'Extract Constants', icon: '👻', color: 'text-yellow-500', border: 'border-yellow-500/50', bg: 'bg-yellow-950/30' },
             { id: 'wheel', name: 'Stabilize Spirits', lore: 'Direct Trig Eval', icon: '⛓️', color: 'text-indigo-400', border: 'border-indigo-500/50', bg: 'bg-indigo-950/30' },
@@ -390,7 +391,7 @@
             
             const blowAwayDust = (cardId) => {
                 setBlowingDustId(cardId);
-                addLog("The void spirit dissipates into the ether.");
+                addLog("The dust pile puffs into a thin cloud and vanishes.");
                 setTimeout(() => {
                     setBossCards(prev => prev.filter(c => c.id !== cardId));
                     setBlowingDustId(null);
@@ -664,11 +665,11 @@
                     else if (integrationPath === 'tabular') {
                         if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
                         // The Skeleton Path (Final Boss)
-                    else if (integrationPath === 'skeleton') {
-                        if (integrationStep === 0 && catId === 'prism') action = 'action1'; // Prism splits integral
-                        else if (integrationStep === 1 && catId === 'sieve') action = 'action2'; // Sieve extracts constants
-                        else if (integrationStep === 2 && catId === 'flame') action = 'action3'; // Flame evaluates
-                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c'; // Anchor +C
+                   else if (integrationPath === 'skeleton') {
+                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Extract constants
+                        else if (integrationStep === 1 && catId === 'flame') action = 'action2'; // Power rule
+                        else if (integrationStep === 2 && catId === 'roots') action = 'action3'; // Bind bones
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c'; // +C
                     }
                     }
 
@@ -1076,15 +1077,28 @@
                 setMana(m => m + 50);
 
                 setTimeout(() => {
-                    let initialEq = `\\int ${shrineCard.baseTex}`;
+                    let initialEq = '';
+                    let iPath = 'direct';
+                    let iStep = 2;
+                    let abilityText = "Needs Direct Evaluation.";
+                    
+                    if (shrineCard.name === 'Assembled Skeleton') {
+                        initialEq = shrineCard.baseTex;
+                        iPath = 'skeleton';
+                        iStep = 0;
+                        abilityText = "Needs Constants Extracted.";
+                    } else {
+                        initialEq = `\\int ${shrineCard.baseTex}`;
+                    }
+
                     setBossCards([{ 
-                        id: 'direct-state', name: 'Direct-State', type: 'Unresolved', 
+                        id: `${iPath}-state`, name: `${iPath.toUpperCase()}-State`, type: 'Unresolved', 
                         baseTex: initialEq, power: 1, canCycle: false, 
-                        ability: "Needs Direct Evaluation.", isBleeding: false,
+                        ability: abilityText, isBleeding: false,
                         meta: { originalTex: shrineCard.baseTex } 
                     }]);
                     setConsumeAll(false); setActiveMat(null); setShrineCard(null);
-                    setIntegrationPath('direct'); setIntegrationStep(2); setGamePhase('integration');
+                    setIntegrationPath(iPath); setIntegrationStep(iStep); setGamePhase('integration');
                 }, 1000);
             };
 
@@ -1384,19 +1398,19 @@
                     }
                 }
 
-                } else if (integrationPath === 'skeleton') {
+               } else if (integrationPath === 'skeleton') {
                     if (t === 'action1') {
                         setIntegrationStep(1);
-                        setBossCards([{...bossCards[0], baseTex: `\\int (x+2) dx + \\int \\frac{2}{x-1} dx`, ability: "Needs Constants Extracted."}]);
+                        setBossCards([{...bossCards[0], baseTex: `\\int (x+2) \\, dx + 2 \\int \\frac{1}{x-1} \\, dx`, ability: "Needs Power Rule on Quotient."}]);
                     } else if (t === 'action2') {
                         setIntegrationStep(2);
-                        setBossCards([{...bossCards[0], baseTex: `\\int (x+2) dx + 2 \\int \\frac{1}{x-1} dx`, ability: "Needs Power Rule & Natural Log."}]);
+                        setBossCards([{...bossCards[0], baseTex: `\\left(\\frac{x^2}{2} + 2x\\right) + 2 \\int \\frac{1}{x-1} \\, dx`, ability: "Needs to Bind the Bones."}]);
                     } else if (t === 'action3') {
                         setIntegrationStep(3);
-                        setBossCards([{...bossCards[0], baseTex: `\\left(\\frac{x^2}{2} + 2x\\right) + 2\\ln|x-1|`, ability: "Needs Constant of Integration."}]);
+                        setBossCards([{...bossCards[0], baseTex: `\\frac{x^2}{2} + 2x + 2\\ln|x-1|`, ability: "Needs Constant of Integration."}]);
                     } else if (t === 'plus_c') {
-                        setMana(m=>m+500); setIntegrationStep(4); 
-                        setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Roots begin providing muscular structure for the strange sculpture..."}]);
+                        setMana(m=>m+200); setIntegrationStep(4); 
+                        setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Roots provide muscular structure for the sculpture!"}]);
                         addLog("Token Applied: Added +C. SPELL COMPLETE!");
                     }
                 
@@ -1739,19 +1753,14 @@
                                 </div>
                                {shrineCard && (
                                     <div className="flex gap-4 mt-8">
-                                        {/* 1. Standard Integration */}
-                                        {shrineCard.name !== 'Assembled Skeleton' && !shrineCard.baseTex.includes('\\frac') && (
+                                        {/* Standard Integration & Skeleton */}
+                                        {(shrineCard.name === 'Assembled Skeleton' || !shrineCard.baseTex.includes('\\frac')) && (
                                             <button onClick={ascendSpell} className="bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
                                         )}
                                         
-                                        {/* 2. Pure Bone Reading (Partial Fractions) */}
-                                        {shrineCard.type === 'Algebraic' && shrineCard.baseTex.includes('\\frac') && (
+                                        {/* Pure Bone Reading (Standalone Partial Fractions) */}
+                                        {shrineCard.type === 'Algebraic' && shrineCard.baseTex.includes('\\frac') && shrineCard.name !== 'Assembled Skeleton' && (
                                             <button onClick={readTheBones} className="bg-emerald-600 border-2 border-emerald-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all text-white">Read the Bones</button>
-                                        )}
-
-                                        {/* 3. Skeleton Awakening (Final Boss) */}
-                                        {shrineCard.name === 'Assembled Skeleton' && (
-                                            <button onClick={awakenTheBones} className="bg-fuchsia-600 border-2 border-fuchsia-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_30px_rgba(217,70,239,0.6)] hover:bg-fuchsia-500 hover:scale-105 transition-all text-white animate-pulse">Awaken the Bones</button>
                                         )}
                                     </div>
                                 )}
