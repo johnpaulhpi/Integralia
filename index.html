@@ -664,6 +664,7 @@
                     // The Tabular Path
                     else if (integrationPath === 'tabular') {
                         if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    }
                         // The Skeleton Path (Final Boss)
                    else if (integrationPath === 'skeleton') {
                         if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Extract constants
@@ -1398,7 +1399,7 @@
                     }
                 }
 
-               } else if (integrationPath === 'skeleton') {
+                else if (integrationPath === 'skeleton') {
                     if (t === 'action1') {
                         setIntegrationStep(1);
                         setBossCards([{...bossCards[0], baseTex: `\\int (x+2) \\, dx + 2 \\int \\frac{1}{x-1} \\, dx`, ability: "Needs Power Rule on Quotient."}]);
