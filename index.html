@@ -28,6 +28,11 @@
         .animate-consume { animation: consume 1s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards; pointer-events: none; }
         @keyframes slash { 0% { clip-path: inset(0 100% 0 0); opacity: 1; } 50% { clip-path: inset(0 0 0 0); opacity: 1; } 100% { clip-path: inset(0 0 0 100%); opacity: 0; } }
         .animate-slash { position: absolute; top: 45%; left: -20%; right: -20%; height: 8px; background: white; box-shadow: 0 0 20px 8px rgba(255,255,255,0.9); transform: rotate(-25deg); animation: slash 0.4s ease-out forwards; z-index: 60; pointer-events: none; }
+        @keyframes blow-away {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-150px) scale(0.5); opacity: 0; filter: blur(5px); }
+        }
+        .animate-blow-away { animation: blow-away 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; pointer-events: none; }
         @keyframes bleed { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(60px) scale(0.3); opacity: 0; } }
         .blood-drop { position: absolute; bottom: 0; width: 6px; height: 12px; border-radius: 50%; background-color: #dc2626; box-shadow: 0 0 8px #dc2626; animation: bleed 1.2s infinite ease-in; z-index: 45; pointer-events: none; }
         .drop-1 { left: 20%; animation-delay: 0.1s; } .drop-2 { left: 50%; animation-delay: 0.5s; width: 8px; height: 14px; } .drop-3 { left: 80%; animation-delay: 0.3s; }
@@ -197,7 +202,7 @@
             return <div className="absolute inset-0 overflow-visible pointer-events-none z-50">{particles}</div>;
         };
 
-        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed, scale = "scale-100" }) => {
+        const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed, isBlowingAway, onBlowDust, scale = "scale-100" }) => {
             const tex = card.baseTex || '';
             const name = card.name || '';
             
@@ -252,7 +257,13 @@
             if (card.isBleeding && !isLeech && card.name !== 'Compound') displayAbility = "Pierced and Bleeding.";
 
             return (
-                <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
+                <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${isBlowingAway ? 'animate-blow-away' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
+                    
+                    {name === 'Dust' && onBlowDust && (
+                        <button onClick={(e) => { e.stopPropagation(); onBlowDust(card.id); }} className="absolute -bottom-12 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[9px] uppercase font-black tracking-widest px-4 py-2 rounded-full border border-gray-600 shadow-[0_0_15px_rgba(156,163,175,0.4)] z-50 transition-all pointer-events-auto animate-pulse">
+                            Blow Away Dust
+                        </button>
+                    )}
                     <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass} ${isFragile ? 'fragile-tremble' : ''}`}>
                         
                         {/* Shattered Glass Overlay */}
@@ -375,6 +386,16 @@
             const [shatteringId, setShatteringId] = useState(null);
             const [stitchTargetId, setStitchTargetId] = useState(null);
             const [consumeAll, setConsumeAll] = useState(false);
+            const [blowingDustId, setBlowingDustId] = useState(null);
+            
+            const blowAwayDust = (cardId) => {
+                setBlowingDustId(cardId);
+                addLog("The void spirit dissipates into the ether.");
+                setTimeout(() => {
+                    setBossCards(prev => prev.filter(c => c.id !== cardId));
+                    setBlowingDustId(null);
+                }, 800); 
+            };
             
             const [logs, setLogs] = useState([]);
             const logEndRef = useRef(null);
@@ -642,6 +663,13 @@
                     // The Tabular Path
                     else if (integrationPath === 'tabular') {
                         if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                        // The Skeleton Path (Final Boss)
+                    else if (integrationPath === 'skeleton') {
+                        if (integrationStep === 0 && catId === 'prism') action = 'action1'; // Prism splits integral
+                        else if (integrationStep === 1 && catId === 'sieve') action = 'action2'; // Sieve extracts constants
+                        else if (integrationStep === 2 && catId === 'flame') action = 'action3'; // Flame evaluates
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c'; // Anchor +C
+                    }
                     }
 
                     if (action) {
@@ -1355,6 +1383,23 @@
                         addLog("Token Applied: Added +C. REFINEMENT COMPLETE!");
                     }
                 }
+
+                } else if (integrationPath === 'skeleton') {
+                    if (t === 'action1') {
+                        setIntegrationStep(1);
+                        setBossCards([{...bossCards[0], baseTex: `\\int (x+2) dx + \\int \\frac{2}{x-1} dx`, ability: "Needs Constants Extracted."}]);
+                    } else if (t === 'action2') {
+                        setIntegrationStep(2);
+                        setBossCards([{...bossCards[0], baseTex: `\\int (x+2) dx + 2 \\int \\frac{1}{x-1} dx`, ability: "Needs Power Rule & Natural Log."}]);
+                    } else if (t === 'action3') {
+                        setIntegrationStep(3);
+                        setBossCards([{...bossCards[0], baseTex: `\\left(\\frac{x^2}{2} + 2x\\right) + 2\\ln|x-1|`, ability: "Needs Constant of Integration."}]);
+                    } else if (t === 'plus_c') {
+                        setMana(m=>m+500); setIntegrationStep(4); 
+                        setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C', ability: "Roots begin providing muscular structure for the strange sculpture..."}]);
+                        addLog("Token Applied: Added +C. SPELL COMPLETE!");
+                    }
+                
                 // --------------------------------------
 
             };
@@ -1485,24 +1530,24 @@
 
             const awakenTheBones = () => {
                 if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 50) { addLog("Not enough Mana!"); return; }
-                setMana(m => m - 50);
-
-                // The final integration math
-                let resultTex = '\\frac{x^2}{2} + 2x + 2\\ln|x-1|';
+                setMana(m => m + 50); // Refund them some mana for reaching the boss
+                setConsumeAll(true);
                 
-                setBossCards([{ 
-                    id: `refined-${Date.now()}`, 
-                    name: 'Refined Solution', 
-                    type: 'Refined', 
-                    baseTex: resultTex + ' + C', 
-                    power: 1, 
-                    canCycle: false, 
-                    ability: "Roots begin providing muscular structure for the strange sculpture...", 
-                    isBleeding: false 
-                }]);
-                
-                setShrineCard(null); setActiveMat(null);
-                addLog("You awaken the bones! The sculpture lives.");
+                setTimeout(() => {
+                    setBossCards([{ 
+                        id: 'skeleton-state', 
+                        name: 'Skeleton-State', 
+                        type: 'Unresolved', 
+                        baseTex: shrineCard.baseTex, 
+                        power: 1, 
+                        canCycle: false, 
+                        ability: "Needs Distribution.", 
+                        isBleeding: false 
+                    }]);
+                    setConsumeAll(false); setShrineCard(null); setActiveMat(null);
+                    setIntegrationPath('skeleton'); setIntegrationStep(0); setGamePhase('integration');
+                    addLog("The Shrine hums! The Assembled Skeleton enters the Eldritch Forge.");
+                }, 1000);
             };
         
 
@@ -1619,7 +1664,7 @@
                         <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-hidden transition-all duration-700 ${activeMat ? 'w-4/12' : 'w-full'} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
                                 {bossCards.length > 0 && gamePhase === 'setup' && <div className="text-6xl text-white/10 font-serif">∫</div>}
-                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} />)}
+                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} isBlowingAway={blowingDustId === c.id} onBlowDust={blowAwayDust} />)}
                             </div>
                         </div>
 
