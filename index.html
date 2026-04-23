@@ -352,6 +352,10 @@
             const [foilLeft, setFoilLeft] = useState(null);
             const [foilRight, setFoilRight] = useState(null);
             const [activeCatalyst, setActiveCatalyst] = useState(null);
+
+            // --- NEW: RATIONAL EXPRESSION MAT STATES ---
+            const [fractionNum, setFractionNum] = useState([]);
+            const [fractionDen, setFractionDen] = useState([]);
             
             const [activeMode, setActiveMode] = useState(null); 
             const [activeMat, setActiveMat] = useState(null); 
@@ -384,7 +388,7 @@
 //GENERATE SPELL
 //=======================
             const generateSpell = () => {
-                const spellType = Math.floor(Math.random() * 4); 
+                const spellType = Math.floor(Math.random() * 5); 
                 const newCards = [];
                 let logMsg = "";
 
@@ -415,7 +419,7 @@
                     newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, trig.n === 'Cave Root' ? "A tangled, subterranean mathematical structure." : "Undying Spirit.", false));
                     logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
-                } else {
+                } else if (spellType === 3) {
                     const radType = Math.floor(Math.random() * 3); 
                     
                     if (radType === 0) {
@@ -427,6 +431,13 @@
                     }
                     
                     logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
+
+                    } else if (spellType === 4) {
+                    newCards.push(buildCard('Old Bones', 'x^3+2x^2+x', 'x^3+2x^2+x', 1, 'Algebraic', false, "A heavy, complex skull. (Numerator)", false));
+                    newCards.push(buildCard('Old Bones', 'x^2-1', 'x^2-1', 1, 'Algebraic', false, "A fractured pelvis. (Denominator)", false));
+                    logMsg = `A wild spell appears! The bones are stacked. Time for Polynomial Division or Partial Fractions.`;
+                }
+
                 }
 
                 // Exactly ONE Leech!
@@ -841,6 +852,22 @@
                 if (activeMat === 'foil') {
                     if (!foilLeft) { setFoilLeft(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("First term slotted into The Loom."); return; }
                     if (!foilRight) { setFoilRight(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Second term slotted. Ready to Expand."); return; }
+                    return;
+                }
+
+                if (activeMat === 'rational') {
+                    if (fractionNum.length === 0) { 
+                        setFractionNum([card]); 
+                        setBossCards(prev => prev.filter(c => c.id !== card.id)); 
+                        addLog("Bones hoisted to the upper scaffold."); 
+                        return; 
+                    }
+                    if (fractionDen.length === 0) { 
+                        setFractionDen([card]); 
+                        setBossCards(prev => prev.filter(c => c.id !== card.id)); 
+                        addLog("Bones placed on the chopping block."); 
+                        return; 
+                    }
                     return;
                 }
 
@@ -1302,6 +1329,31 @@
                 addLog("The Loom spins the threads together into an Expanded Core!");
             };
 
+        const executeDivision = () => {
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 20) { addLog("Not enough Mana!"); return; }
+                setMana(m => m - 20);
+                setBossCards(prev => [
+                    ...prev,
+                    buildCard('Expanded Core', 'x+2', 'x+2', 1, 'Algebraic', false, "Quotient.", false),
+                    buildCard('Expanded Core', '\\frac{2x+1}{x^2-1}', '(2x+1)/(x^2-1)', 1, 'Algebraic', false, "Remainder.", false)
+                ]);
+                setFractionNum([]); setFractionDen([]); setActiveMat(null);
+                addLog("The Guillotine falls! The improper fraction has been divided.");
+            };
+
+            const executePFD = () => {
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 20) { addLog("Not enough Mana!"); return; }
+                setMana(m => m - 20);
+                setBossCards(prev => [
+                    ...prev,
+                    buildCard('Expanded Core', '\\frac{A}{x-1}', 'A/(x-1)', 1, 'Algebraic', false, "Decomposed Fragment.", false),
+                    buildCard('Expanded Core', '\\frac{B}{x+1}', 'B/(x+1)', 1, 'Algebraic', false, "Decomposed Fragment.", false)
+                ]);
+                setFractionNum([]); setFractionDen([]); setActiveMat(null);
+                addLog("The bones are shattered! Partial fractions declared. Solve for A and B.");
+            };
+        
+
             // ==========================================
             // NEW UI HELPERS
             // ==========================================
@@ -1324,9 +1376,11 @@
                 setTabularU([]);
                 setTabularDv([]);
                 setTabularComplete(false);
-                setLeechMatTarget(null);
-                setLeechMatBlood(null);
-                addLog("Time reverses. The spell state has been reset to the initial draw.");
+                setLeechMatTarget(null);
+                setLeechMatBlood(null);
+                setFractionNum([]);
+                setFractionDen([]);
+                addLog("Time reverses. The spell state has been reset to the initial draw.");
             };
 
            const selectMat = (matName) => {
@@ -1351,8 +1405,10 @@
                 if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
                 if (leechMatTarget) refundedCards.push(leechMatTarget);
                 if (leechMatBlood) refundedCards.push(leechMatBlood);
-                if (foilLeft) refundedCards.push(foilLeft);
-                if (foilRight) refundedCards.push(foilRight);
+                if (foilLeft) refundedCards.push(foilLeft);
+                if (foilRight) refundedCards.push(foilRight);
+                if (fractionNum.length > 0) refundedCards.push(...fractionNum);
+                if (fractionDen.length > 0) refundedCards.push(...fractionDen);
 
                 // Return them to the board
                 if (refundedCards.length > 0) {
@@ -1367,9 +1423,10 @@
                 setIbpU(null); setIbpDv(null); setIbpDerived(null);
                 setTrigSubCard(null); 
                 setTabularU([]); setTabularDv([]); setTabularComplete(false);
-                setLeechMatTarget(null); setLeechMatBlood(null);
-                
-                setActiveMat(null); // Finally, close the mat UI
+                setLeechMatTarget(null); setLeechMatBlood(null);
+                setFractionNum([]); setFractionDen([]);
+                
+                setActiveMat(null); // Finally, close the mat UI
             };
 
             // ==========================================
@@ -1483,7 +1540,27 @@
                                     </div>
                                 </div>
                                 {foilLeft && foilRight && (
-                                    <button onClick={expandFoil} className="mt-8 bg-pink-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(219,39,119,0.5)] hover:bg-pink-500 hover:scale-105 transition-all animate-pulse">Expand Polynomial</button>
+                                    <button onClick={expandFoil} className="mt-8 bg-pink-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(219,39,119,0.5)] hover:bg-pink-500 hover:scale-105 transition-all animate-pulse">Expand Polynomial</button>
+                                )}
+                            </div>
+                        )}
+
+                        {activeMat === 'rational' && (
+                            <div className="w-8/12 bg-emerald-950/10 border-2 border-emerald-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left">
+                                <h2 className="text-emerald-500/50 text-xs font-black uppercase mb-4">The Guillotine (Rational Scale)</h2>
+                                <div className="flex flex-col items-center w-full max-w-md">
+                                    <div className="w-full min-h-[220px] border-b-4 border-emerald-500 flex items-center justify-center gap-4 pb-4">
+                                        {fractionNum.length > 0 ? fractionNum.map(c => <BattleCard key={c.id} card={c} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, c]); setFractionNum(prev => prev.filter(x => x.id !== c.id)); }} />) : <span className="text-emerald-900/40 text-[10px] uppercase font-bold tracking-widest">Numerator (Top)</span>}
+                                    </div>
+                                    <div className="w-full min-h-[220px] flex items-center justify-center gap-4 pt-4">
+                                        {fractionDen.length > 0 ? fractionDen.map(c => <BattleCard key={c.id} card={c} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, c]); setFractionDen(prev => prev.filter(x => x.id !== c.id)); }} />) : <span className="text-emerald-900/40 text-[10px] uppercase font-bold tracking-widest">Denominator (Bottom)</span>}
+                                    </div>
+                                </div>
+                                {fractionNum.length > 0 && fractionDen.length > 0 && (
+                                    <div className="flex gap-4 mt-8">
+                                        <button onClick={executeDivision} className="bg-emerald-600 px-6 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all">Divide Polynomials</button>
+                                        <button onClick={executePFD} className="bg-gray-900 border-2 border-emerald-700 text-emerald-400 px-6 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(4,120,87,0.3)] hover:bg-emerald-900 hover:scale-105 transition-all">Decompose Fractions</button>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -1567,6 +1644,7 @@
                                 <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Boiling Pot</span></button>
                                 <button onClick={() => selectMat('foil')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='foil'?'border-pink-400 bg-pink-900/30':'border-pink-900 bg-gray-900 hover:border-pink-500 hover:bg-gray-800'}`}><span className="text-pink-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Loom (FOIL)</span></button>
+                                <button onClick={() => selectMat('rational')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='rational'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Guillotine</span></button>
                             </div>
                         )}
 
