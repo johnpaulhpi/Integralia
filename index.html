@@ -344,18 +344,20 @@
 
                         {/* The Glitch Card (Underneath) */}
                         <div 
-                            className="absolute top-0 left-0 w-[190px] h-[270px] rounded-2xl border-2 border-yellow-500/50 bg-yellow-950/80 flex flex-col items-center justify-center transition-all duration-300 z-10 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                            className="absolute top-0 left-0 w-[190px] h-[270px] rounded-2xl border-2 border-yellow-500/50 bg-yellow-950/80 flex flex-col items-center justify-start pt-6 transition-all duration-300 z-10 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
                             style={{ 
-                                transform: isHovered ? 'translateY(40px) scale(0.95)' : 'translateY(10px) scale(0.98)',
+                                // CHANGED: Pulled the Y value into the negative so it pops out the top!
+                                transform: isHovered ? 'translateY(-70px) scale(0.95)' : 'translateY(-15px) scale(0.98)',
                                 filter: isHovered ? 'brightness(1)' : 'brightness(0.5)'
                             }}
                         >
-                            <span className="absolute top-4 text-yellow-500 font-black uppercase text-[10px] tracking-widest animate-pulse text-center leading-tight">Internal<br/>Frequency</span>
+                            <span className="text-yellow-500 font-black uppercase text-[10px] tracking-widest animate-pulse text-center leading-tight mb-2">Internal<br/>Frequency</span>
                             <MathEquation equation={card.resonance.tex} size="text-4xl" color="text-yellow-400" />
                         </div>
 
                         {/* The Spirit Card (Top) */}
-                        <div className="relative z-20 transition-all duration-300" style={{ transform: isHovered ? 'translateY(-20px)' : 'translateY(0)' }}>
+                        {/* CHANGED: Pushed the top card further down on hover to increase the spread */}
+                        <div className="relative z-20 transition-all duration-300" style={{ transform: isHovered ? 'translateY(30px)' : 'translateY(0)' }}>
                             {cardBody}
                         </div>
                     </div>
