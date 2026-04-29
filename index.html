@@ -344,8 +344,8 @@
 
                         {/* The Glitch Card (Underneath) */}
                         <div 
-                            onClick={onClick} {/* <-- THE FIX: Added onClick here! */}
-                            className="absolute top-0 left-0 w-[190px] h-[270px] rounded-2xl border-2 border-yellow-500/50 bg-yellow-950/80 flex flex-col items-center justify-start pt-6 transition-all duration-300 z-10 shadow-[0_0_15px_rgba(234,179,8,0.3)] cursor-pointer" {/* <-- Added cursor-pointer */}
+                            onClick={onClick}
+                            className="absolute top-0 left-0 w-[190px] h-[270px] rounded-2xl border-2 border-yellow-500/50 bg-yellow-950/80 flex flex-col items-center justify-start pt-6 transition-all duration-300 z-10 shadow-[0_0_15px_rgba(234,179,8,0.3)] cursor-pointer"
                             style={{ 
                                 transform: isHovered ? 'translateY(-120px) scale(0.95)' : 'translateY(-15px) scale(0.98)',
                                 filter: isHovered ? 'brightness(1)' : 'brightness(0.5)'
@@ -2117,8 +2117,6 @@
                                 <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Machine</span><br/><span className="font-bold">Slice</span></button>
                                 <button onClick={() => { setActiveMode('bleed'); setActiveMat(null); addLog("Blood Needle equipped. Select a spirit to pierce."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='bleed'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Blood Needle</span></button>
                                 <button onClick={() => setActiveMode('stitch_1')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='stitch_1'||activeMode==='stitch_2'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Weaver's Needle</span></button>
-                                
-                                {/* NEW: The Tuning Fork Button! */}
                                 <button onClick={() => { setActiveMode('tune'); setActiveMat(null); addLog("Tuning Fork equipped. Strike a dissonant spirit to extract its frequency."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='tune'?'border-yellow-400 bg-yellow-900/30':'border-yellow-900 bg-gray-900 hover:border-yellow-500 hover:bg-gray-800'}`}><span className="text-yellow-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Tuning Fork</span></button>
 
                                 {activeMode ? (
