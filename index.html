@@ -1,4 +1,4 @@
-//pre-alpha v. 5.2 copyright JP Hansen 4-23-2026
+//pre-alpha v. 5.3 copyright JP Hansen 4-29-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -204,11 +204,14 @@
         };
 
         const BattleCard = ({ card, isActive, isSacrificeTarget, isStitchTarget, onClick, onCycle, isSlashing, isShattering, isConsumed, isBlowingAway, onBlowDust, scale = "scale-100" }) => {
+            // NEW: Add hover state for the resonance stack effect
+            const [isHovered, setIsHovered] = useState(false);
+
             const tex = card.baseTex || '';
             const name = card.name || '';
             
             // 1. Identify Logic & Theme
-            let isLeech = card.isLeech || name === 'dx' || name === 'dθ';
+            let isLeech = card.isLeech || name === 'dx' || name === 'dθ' || name === 'du';
             let isYellow = tex.includes('cos') || name === 'Fragment of Orxe';
             let isBlue = tex.includes('sin') || name === 'Fragment of Clor';
             let isGreen = tex.includes('sec') || name === 'Fragment of Exro';
@@ -241,8 +244,8 @@
                 if (name === 'Residue' || name === 'Compound') return CARD_REGISTRY['Residue'](theme.svg);
                 if (name === 'Expona') return CARD_REGISTRY['Expona']();
                 if (name === 'Dust') return CARD_REGISTRY['Dust']();
-                if (name === 'Cave Root' || card.baseTex?.includes('\\ln')) return CARD_REGISTRY['Cave Root']();
-                if (name.includes('State') || name === 'Refined Solution') return CARD_REGISTRY['State']();
+                if (name === 'Cave Root' || card.baseTex?.includes('\\ln')) return CARD_REGISTRY['Cave Root']();
+                if (name.includes('State') || name === 'Refined Solution') return CARD_REGISTRY['State']();
                 if (card.type === 'Derived' || card.type === 'Resonant' || card.type === 'Void') return CARD_REGISTRY['Derived']();
                 return <svg viewBox="0 0 100 100" className="w-full h-full"><circle cx="50" cy="50" r="20" fill="none" stroke="gray" strokeWidth="2" /></svg>;
             };
@@ -257,78 +260,117 @@
             if (isFragile) displayAbility = "Fragile, and ready to shatter.";
             if (card.isBleeding && !isLeech && card.name !== 'Compound') displayAbility = "Pierced and Bleeding.";
 
+            // NEW: Extract the main card body into a variable so we can wrap it easily
+            const cardBody = (
+                <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass} ${isFragile ? 'fragile-tremble' : ''}`}>
+                    
+                    {/* Shattered Glass Overlay */}
+                    {isFragile && (
+                        <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-2xl opacity-70 mix-blend-overlay">
+                            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full drop-shadow-md">
+                                <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
+                                <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#000000" strokeWidth="2" opacity="0.4" />
+                                <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
+                                <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#000000" strokeWidth="1" opacity="0.3" />
+                            </svg>
+                        </div>
+                    )}
+
+                    {isSlashing && <div className="animate-slash z-50"></div>}
+                    <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-400 uppercase z-50 drop-shadow-md">{card.type}</div>
+
+                    {/* The Negative Sigil (Upper Middle) */}
+                    {card.isNegative && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-950 border-[3px] border-white flex items-center justify-center text-white text-3xl font-black shadow-[0_0_15px_rgba(255,255,255,0.9)] z-50 animate-pulse">
+                            <span className="mb-1 drop-shadow-[0_0_8px_rgba(255,255,255,1)]">-</span>
+                        </div>
+                    )}
+
+                    {(card.canCycle || (card.type === 'Algebraic' && !card.baseTex?.includes('\\sqrt'))) && onCycle && (
+                        <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
+                            className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">⟳</div>
+                    )}
+
+                    {card.isBleeding && !isLeech && (
+                        <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center text-red-400 text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] z-50">🩸</div>
+                    )}
+
+                    {isLeech && (
+                        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-2 z-50 pointer-events-none">
+                            <svg viewBox="0 0 20 40" className="w-3 h-5 fang fill-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]"><path d="M0,0 L10,40 L20,0 Z"/></svg>
+                            <svg viewBox="0 0 20 40" className="w-3 h-5 fang fill-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" style={{animationDelay: '0.15s'}}><path d="M0,0 L10,40 L20,0 Z"/></svg>
+                        </div>
+                    )}
+
+                    {card.power > 1 && (
+                        <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">{card.power}</div>
+                    )}
+
+                    <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3 z-20">
+                        {isShattering && <ParticleBurst theme={theme} />}
+                        <div className={`w-full h-full scale-50 ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>{renderVisual()}</div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-center justify-center px-2 relative z-50 w-full">
+                        <span className="text-gray-300 text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-md">{isLeech ? 'Strange Leech' : card.name}</span>
+                        <div className="pointer-events-none scale-90 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"><MathEquation equation={card.baseTex} size="text-2xl" color="text-white" /></div>
+                    </div>
+
+                    <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative z-20">
+                        <p className="text-[10px] text-gray-300 text-center leading-tight italic px-1 z-10 drop-shadow-md">"{displayAbility}"</p>
+                        {(card.isBleeding && !isLeech) && (
+                            <>
+                                <div className="blood-drop drop-1"></div><div className="blood-drop drop-2"></div><div className="blood-drop drop-3"></div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+
+            // NEW: If the card has a resonance, render it with the stacked hover effect
+            if (card.resonance) {
+                return (
+                    <div 
+                        className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${isBlowingAway ? 'animate-blow-away' : ''} ${scale} origin-center transition-all duration-300`}
+                        onMouseEnter={() => setIsHovered(true)}
+                        onMouseLeave={() => setIsHovered(false)}
+                    >
+                        {/* Blow Away Dust button (just in case) */}
+                        {name === 'Dust' && onBlowDust && (
+                            <button onClick={(e) => { e.stopPropagation(); onBlowDust(card.id); }} className="absolute -bottom-12 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[9px] uppercase font-black tracking-widest px-4 py-2 rounded-full border border-gray-600 shadow-[0_0_15px_rgba(156,163,175,0.4)] z-50 transition-all pointer-events-auto animate-pulse">
+                                Blow Away Dust
+                            </button>
+                        )}
+
+                        {/* The Glitch Card (Underneath) */}
+                        <div 
+                            className="absolute top-0 left-0 w-[190px] h-[270px] rounded-2xl border-2 border-yellow-500/50 bg-yellow-950/80 flex flex-col items-center justify-center transition-all duration-300 z-10 shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+                            style={{ 
+                                transform: isHovered ? 'translateY(40px) scale(0.95)' : 'translateY(10px) scale(0.98)',
+                                filter: isHovered ? 'brightness(1)' : 'brightness(0.5)'
+                            }}
+                        >
+                            <span className="absolute top-4 text-yellow-500 font-black uppercase text-[10px] tracking-widest animate-pulse text-center leading-tight">Internal<br/>Frequency</span>
+                            <MathEquation equation={card.resonance.tex} size="text-4xl" color="text-yellow-400" />
+                        </div>
+
+                        {/* The Spirit Card (Top) */}
+                        <div className="relative z-20 transition-all duration-300" style={{ transform: isHovered ? 'translateY(-20px)' : 'translateY(0)' }}>
+                            {cardBody}
+                        </div>
+                    </div>
+                );
+            }
+
+            // Standard render for normal cards without resonance
             return (
                 <div className={`relative flex flex-col items-center ${isConsumed ? 'animate-consume' : ''} ${isBlowingAway ? 'animate-blow-away' : ''} ${scale} origin-center transition-all duration-300 hover:-translate-y-2`}>
-                    
                     {name === 'Dust' && onBlowDust && (
                         <button onClick={(e) => { e.stopPropagation(); onBlowDust(card.id); }} className="absolute -bottom-12 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[9px] uppercase font-black tracking-widest px-4 py-2 rounded-full border border-gray-600 shadow-[0_0_15px_rgba(156,163,175,0.4)] z-50 transition-all pointer-events-auto animate-pulse">
                             Blow Away Dust
                         </button>
                     )}
-                    <div onClick={onClick} className={`relative flex flex-col w-[190px] h-[270px] rounded-2xl border-2 transition-all overflow-visible cursor-pointer z-40 ${theme.bg} ${borderClass} ${isFragile ? 'fragile-tremble' : ''}`}>
-                        
-                        {/* Shattered Glass Overlay */}
-                        {isFragile && (
-                            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden rounded-2xl opacity-70 mix-blend-overlay">
-                                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full drop-shadow-md">
-                                    <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#ffffff" strokeWidth="1" opacity="0.8" />
-                                    <path d="M 40 -5 L 50 20 L 45 45 L 60 70 L 50 105" fill="none" stroke="#000000" strokeWidth="2" opacity="0.4" />
-                                    <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
-                                    <path d="M 50 20 L 80 10 M 50 20 L 15 30 M 45 45 L 90 50 M 45 45 L 5 60 M 60 70 L 95 90 M 60 70 L 20 85" fill="none" stroke="#000000" strokeWidth="1" opacity="0.3" />
-                                </svg>
-                            </div>
-                        )}
-
-                        {isSlashing && <div className="animate-slash z-50"></div>}
-                        <div className="absolute -top-3 left-4 px-2 py-0.5 bg-gray-900 border border-gray-700 rounded text-[9px] font-black tracking-tighter text-gray-400 uppercase z-50 drop-shadow-md">{card.type}</div>
-
-                        {/* NEW: The Negative Sigil (Upper Middle) */}
-                        {card.isNegative && (
-                            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gray-950 border-[3px] border-white flex items-center justify-center text-white text-3xl font-black shadow-[0_0_15px_rgba(255,255,255,0.9)] z-50 animate-pulse">
-                                <span className="mb-1 drop-shadow-[0_0_8px_rgba(255,255,255,1)]">-</span>
-                            </div>
-                        )}
-
-                        {(card.canCycle || (card.type === 'Algebraic' && !card.baseTex?.includes('\\sqrt'))) && onCycle && (
-                            <div onClick={(e) => { e.stopPropagation(); onCycle(card.id); }}
-                                className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center text-emerald-200 text-xl font-bold shadow-lg z-50 hover:bg-emerald-700 hover:scale-110 transition-transform">⟳</div>
-                        )}
-
-                        {card.isBleeding && !isLeech && (
-                            <div className="absolute -bottom-4 -left-4 w-10 h-10 rounded-full bg-red-950 border-2 border-red-500 flex items-center justify-center text-red-400 text-xl shadow-[0_0_15px_rgba(220,38,38,0.5)] z-50">🩸</div>
-                        )}
-
-                        {isLeech && (
-                            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-2 z-50 pointer-events-none">
-                                <svg viewBox="0 0 20 40" className="w-3 h-5 fang fill-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]"><path d="M0,0 L10,40 L20,0 Z"/></svg>
-                                <svg viewBox="0 0 20 40" className="w-3 h-5 fang fill-gray-200 drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]" style={{animationDelay: '0.15s'}}><path d="M0,0 L10,40 L20,0 Z"/></svg>
-                            </div>
-                        )}
-
-                        {card.power > 1 && (
-                            <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">{card.power}</div>
-                        )}
-
-                        <div className="h-[90px] w-full border-b border-white/5 flex items-center justify-center relative bg-gradient-to-b from-white/5 to-transparent rounded-t-2xl overflow-visible p-3 z-20">
-                            {isShattering && <ParticleBurst theme={theme} />}
-                            <div className={`w-full h-full scale-50 ${isShattering ? "opacity-0" : "opacity-100 transition-opacity duration-300"} flex items-center justify-center`}>{renderVisual()}</div>
-                        </div>
-
-                        {/* FIXED: Z-Index explicitly set to 50 to render text over the backgrounds */}
-                        <div className="flex-1 flex flex-col items-center justify-center px-2 relative z-50 w-full">
-                            <span className="text-gray-300 text-[10px] font-bold uppercase tracking-widest mb-1 drop-shadow-md">{isLeech ? 'Strange Leech' : card.name}</span>
-                            <div className="pointer-events-none scale-90 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]"><MathEquation equation={card.baseTex} size="text-2xl" color="text-white" /></div>
-                        </div>
-
-                        <div className="h-[65px] w-full bg-black/60 border-t border-white/5 rounded-b-2xl p-2 flex items-center justify-center relative z-20">
-                            <p className="text-[10px] text-gray-300 text-center leading-tight italic px-1 z-10 drop-shadow-md">"{displayAbility}"</p>
-                            {(card.isBleeding && !isLeech) && (
-                                <>
-                                    <div className="blood-drop drop-1"></div><div className="blood-drop drop-2"></div><div className="blood-drop drop-3"></div>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    {cardBody}
                 </div>
             );
         };
@@ -414,9 +456,9 @@
             // ==========================================
 
             // Utility to build a card quickly
-            const buildCard = (name, baseTex, baseMath, power, type = 'Core', canCycle = false, ability = '', isBleeding = false, isLeech = false) => {
-                return { id: `${name.toLowerCase()}-${Date.now()}-${Math.floor(Math.random()*1000)}`, name, type, baseTex, baseMath, power, canCycle, ability, isBleeding, isLeech };
-            };
+            const buildCard = (name, baseTex, baseMath, power, type = 'Core', canCycle = false, ability = '', isBleeding = false, isLeech = false, resonance = null) => {
+    return { id: `${name.toLowerCase()}-${Date.now()}-${Math.floor(Math.random()*1000)}`, name, type, baseTex, baseMath, power, canCycle, ability, isBleeding, isLeech, resonance };
+};
 //=======================
 //GENERATE SPELL
 //=======================
@@ -425,32 +467,74 @@
                 const newCards = [];
                 let logMsg = "";
 
+                // HELPER: Generates a shared resonance for the entire integral.
+                // We run this once per spell so that sin and cos share the SAME argument!
+                const createResonance = () => {
+                    const hasResonance = Math.random() > 0.5; // 50% chance
+                    if (!hasResonance) return { res: null, argTex: 'x', argMath: 'x' };
+
+                    if (Math.random() > 0.5) {
+                        // Generate a Fraction (e.g., 2/3x)
+                        const num = Math.floor(Math.random() * 4) + 1; // 1 to 4
+                        let den = Math.floor(Math.random() * 3) + 2; // 2 to 4
+                        if (num === den) den += 1; // Prevent 1/1 from spawning
+                        
+                        return {
+                            res: { tex: `\\frac{${num}}{${den}}`, argTex: `\\frac{${num}}{${den}}x`, argMath: `(${num}/${den})*x`, invertTex: `\\frac{${den}}{${num}}`, invertMath: `(${den}/${num})` },
+                            argTex: `\\frac{${num}}{${den}}x`,
+                            argMath: `(${num}/${den})*x`
+                        };
+                    } else {
+                        // Generate an Integer (e.g., 3x)
+                        const val = Math.floor(Math.random() * 4) + 2; // 2 to 5
+                        return {
+                            res: { tex: `${val}`, argTex: `${val}x`, argMath: `${val}*x`, invertTex: `\\frac{1}{${val}}`, invertMath: `(1/${val})` },
+                            argTex: `${val}x`,
+                            argMath: `${val}*x`
+                        };
+                    }
+                };
+
                 if (spellType === 0) {
-                    let sinPower = Math.floor(Math.random() * 3) + 1; 
-                    let cosPower = Math.floor(Math.random() * 3) + 1; 
+                    let sinPower = Math.floor(Math.random() * 3) + 1; 
+                    let cosPower = Math.floor(Math.random() * 3) + 1; 
 
-                    if (sinPower > 0) newCards.push(buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings."));
-                    if (cosPower > 0) newCards.push(buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones."));
-                    logMsg = `A wild spell appears! Refine sin^${sinPower}(x) cos^${cosPower}(x).`;
-                } else if (spellType === 1) {
-                    let secPower = Math.floor(Math.random() * 3) + 1; 
-                    let tanPower = Math.floor(Math.random() * 3) + 1; 
+                    // Grab the shared argument values for this spell
+                    const { res, argTex, argMath } = createResonance();
 
+                    if (sinPower > 0) newCards.push(buildCard('Fragment of Clor', `\\sin(${argTex})`, `sin(${argMath})`, sinPower, 'Core', (sinPower % 2 === 0), "Immortal spirit apparently associated with sunlight. Depicted in old stone-age carvings.", false, false, res));
+                    if (cosPower > 0) newCards.push(buildCard('Fragment of Orxe', `\\cos(${argTex})`, `cos(${argMath})`, cosPower, 'Core', (cosPower % 2 === 0), "Immortal spirit associated with moonlight.  Depicted in ochre paintings on old bones.", false, false, res));
+                    
+                    logMsg = `A wild spell appears! Refine sin^${sinPower}(${argTex}) cos^${cosPower}(${argTex}).`;
+                    
+                } else if (spellType === 1) {
+                    let secPower = Math.floor(Math.random() * 3) + 1; 
+                    let tanPower = Math.floor(Math.random() * 3) + 1;
 
-                    if (secPower > 0) newCards.push(buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.  It's said that if they ever touched, they would reduce each other to bones."));
-                    if (tanPower > 0) newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.")); 
-                    logMsg = `A wild spell appears! Refine sec^${secPower}(x) tan^${tanPower}(x).`;
-                } else if (spellType === 2) {
-                    const xPower = Math.floor(Math.random() * 3) + 1; 
-                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
+                    // Grab the shared argument values for this spell
+                    const { res, argTex, argMath } = createResonance();
+
+                    if (secPower > 0) newCards.push(buildCard('Fragment of Exro', `\\sec(${argTex})`, `sec(${argMath})`, secPower, 'Core', (secPower % 2 === 0), "The mortal enemy of the moonlight spirit. Constantly hunting his own shadow.", false, false, res));
+                    if (tanPower > 0) newCards.push(buildCard('Unstable Fragment of Clorexro', `\\tan(${argTex})`, `tan(${argMath})`, tanPower, 'Core', true, "Multiple voices echo in the mind of the twin spirit. Some say it was driven to madness long ago.", false, false, res)); 
+                    
+                    logMsg = `A wild spell appears! Refine sec^${secPower}(${argTex}) tan^${tanPower}(${argTex}).`;
+                    
+                } else if (spellType === 2) {
+                    const xPower = Math.floor(Math.random() * 3) + 1; 
+                    newCards.push(buildCard('Old Bones', xPower === 1 ? 'x' : `x^${xPower}`, xPower === 1 ? 'x' : `x^${xPower}`, xPower, 'Core', false, "Rumored to be the remains of a demigod, now they're just dusty, and brittle.", false));
 
                     const ibpType = Math.floor(Math.random() * 4);
-                    const trig = ibpType === 0 ? {n:'Expona', t:'e^x', m:'exp(x)'} : 
-                                 (ibpType === 1 ? {n:'Fragment of Orxe', t:'\\cos(x)', m:'cos(x)'} : 
-                                 (ibpType === 2 ? {n:'Fragment of Clor', t:'\\sin(x)', m:'sin(x)'} : 
-                                 {n:'Cave Root', t:'\\ln(x)', m:'log(x)'}));
-                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, trig.n === 'Cave Root' ? "A tangled, subterranean mathematical structure." : "Undying Spirit.", false));
-                    logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
+                    
+                    // We can apply resonance to Expona and the IBP Trig spirits too!
+                    const { res, argTex, argMath } = createResonance(); 
+
+                    const trig = ibpType === 0 ? {n:'Expona', t:`e^{${argTex}}`, m:`exp(${argMath})`, r: res} : 
+                                 (ibpType === 1 ? {n:'Fragment of Orxe', t:`\\cos(${argTex})`, m:`cos(${argMath})`, r: res} : 
+                                 (ibpType === 2 ? {n:'Fragment of Clor', t:`\\sin(${argTex})`, m:`sin(${argMath})`, r: res} : 
+                                 {n:'Cave Root', t:'\\ln(x)', m:'log(x)', r: null})); // Keep Natural Log clean for now
+                                 
+                    newCards.push(buildCard(trig.n, trig.t, trig.m, 1, 'Core', false, trig.n === 'Cave Root' ? "A tangled, subterranean mathematical structure." : "Undying Spirit.", false, false, trig.r));
+                    logMsg = `A wild spell appears! Descent or Dual-Weave required.`;
 
                 } else if (spellType === 3) {
                     const radType = Math.floor(Math.random() * 3); 
@@ -465,7 +549,7 @@
                     
                     logMsg = `A wild spell appears! A Radical calls out for the Rune Circle.`;
 
-                    } else if (spellType === 4) {
+                } else if (spellType === 4) {
                     newCards.push(buildCard('Old Bones', 'x^3+2x^2+x', 'x^3+2x^2+x', 1, 'Algebraic', false, "A heavy, complex skull. (Numerator)", false));
                     newCards.push(buildCard('Old Bones', 'x^2-1', 'x^2-1', 1, 'Algebraic', false, "A fractured pelvis. (Denominator)", false));
                     logMsg = `A wild spell appears! The bones are stacked. Time for Polynomial Division or Partial Fractions.`;
@@ -537,9 +621,12 @@
                     if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
+                    // Use dynamic arguments for shattering if resonance exists!
+                    const argTex = card.resonance ? card.resonance.argTex : 'x';
+                    const argMath = card.resonance ? card.resonance.argMath : 'x';
                     newCards.push(
-                        buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', 1, 'Core', false, "Shattered Numerator.", card.isBleeding),
-                        buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', 1, 'Core', false, "Shattered Denominator.", card.isBleeding)
+                        buildCard('Fragment of Clor', `\\sin(${argTex})`, `sin(${argMath})`, 1, 'Core', false, "Shattered Numerator.", card.isBleeding, false, card.resonance),
+                        buildCard('Fragment of Exro', `\\sec(${argTex})`, `sec(${argMath})`, 1, 'Core', false, "Shattered Denominator.", card.isBleeding, false, card.resonance)
                     );
                     setBossCards(newCards);
                     addLog(`Identity Cycled: Shattered Tangent into Clor and Exro!`);
@@ -566,11 +653,15 @@
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
                     
-                    if (card.baseTex === 'e^{2x}') {
-                        newCards.push(buildCard('Expona', 'e^x', 'exp(x)', 2, 'Core', true, "Morphed Exponential.", card.isBleeding));
+                    if (card.baseTex.includes('2x')) {
+                        // Assuming the frequency was 2x, restore to single x base raised to power 2
+                        const baseArg = card.baseTex.includes('2x') ? 'x' : 'u';
+                        newCards.push(buildCard('Expona', `e^${baseArg}`, `exp(${baseArg})`, 2, 'Core', true, "Morphed Exponential.", card.isBleeding, false, card.resonance));
                         addLog(`Identity Cycled: Morphed Exponential base!`);
                     } else {
-                        newCards.push(buildCard('Expona', 'e^{2x}', 'exp(2*x)', 1, 'Core', true, "Restored Exponential base.", card.isBleeding));
+                        // If it's a power of 2, multiply it back into the argument
+                        const baseArg = card.baseTex.includes('u') ? '2u' : '2x';
+                        newCards.push(buildCard('Expona', `e^{${baseArg}}`, `exp(${baseArg})`, 1, 'Core', true, "Restored Exponential base.", card.isBleeding, false, card.resonance));
                         addLog(`Identity Cycled: Restored Exponential base!`);
                     }
                     setBossCards(newCards);
@@ -589,6 +680,10 @@
                 setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
                         
+                        // NEW: Extract arguments for this specific card
+                        const argTex = c.resonance ? c.resonance.argTex : 'x';
+                        const argMath = c.resonance ? c.resonance.argMath : 'x';
+                        
                         // Core -> Residue (Mathematically Strict!)
                         if (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(c.name)) {
                             // The Gatekeeper: You cannot transmute an odd power!
@@ -599,15 +694,15 @@
                             
                             const newPower = c.power / 2; // e.g. sin^4(x) becomes (1-cos^2(x))^2
                             
-                            if (c.name === 'Fragment of Clor') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\cos^2(x))', baseMath: '(1-cos(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the spirit of moonlight." };
-                            else if (c.name === 'Fragment of Orxe') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1-\\sin^2(x))', baseMath: '(1-sin(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the spirit of sunlight." };
-                            else if (c.name === 'Unstable Fragment of Clorexro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(\\sec^2(x)-1)', baseMath: '(sec(x)^2-1)', power: newPower, canCycle: true, ability: "Transmuted into the hunter of the moonlight spirit." };
-                            else if (c.name === 'Fragment of Exro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: '(1+\\tan^2(x))', baseMath: '(1+tan(x)^2)', power: newPower, canCycle: true, ability: "Transmuted into the mad spirit amalgamate Clorexro." };
+                            if (c.name === 'Fragment of Clor') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: `(1-\\cos^2(${argTex}))`, baseMath: `(1-cos(${argMath})^2)`, power: newPower, canCycle: true, ability: "Transmuted into the spirit of moonlight.", resonance: c.resonance };
+                            else if (c.name === 'Fragment of Orxe') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: `(1-\\sin^2(${argTex}))`, baseMath: `(1-sin(${argMath})^2)`, power: newPower, canCycle: true, ability: "Transmuted into the spirit of sunlight.", resonance: c.resonance };
+                            else if (c.name === 'Unstable Fragment of Clorexro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: `(\\sec^2(${argTex})-1)`, baseMath: `(sec(${argMath})^2-1)`, power: newPower, canCycle: true, ability: "Transmuted into the hunter of the moonlight spirit.", resonance: c.resonance };
+                            else if (c.name === 'Fragment of Exro') return { ...c, name: 'Residue', type: 'Converted Core', baseTex: `(1+\\tan^2(${argTex}))`, baseMath: `(1+tan(${argMath})^2)`, power: newPower, canCycle: true, ability: "Transmuted into the mad spirit amalgamate Clorexro.", resonance: c.resonance };
                         }
                         
                         // Algebraic Rolodex
                         else if (c.type === 'Algebraic') {
-                            if (c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
+                            if (c.baseTex === `\\sin^2(${argTex})+\\cos^2(${argTex})` || c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
                                 return buildCard('Old Bones', '1', '1', 1, 'Algebraic', true, "The Monad.");
                             }
                         } 
@@ -616,10 +711,10 @@
                         else if (c.name === 'Residue') {
                             const restoredPower = c.power * 2; // e.g. (1-cos^2(x))^2 becomes sin^4(x)
                             
-                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Fragment of Clor', '\\sin(x)', 'sin(x)', restoredPower, 'Core', true, "Restored to the spirit of sunlight.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Fragment of Orxe', '\\cos(x)', 'cos(x)', restoredPower, 'Core', true, "Restored to the spirit of moonlight.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', restoredPower, 'Core', true, "Restored to its natural level of madness.", c.isBleeding);
-                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Fragment of Exro', '\\sec(x)', 'sec(x)', restoredPower, 'Core', true, "Restored to prepare for the hunt...", c.isBleeding);
+                            if (c.baseTex && c.baseTex.includes('cos')) return buildCard('Fragment of Clor', `\\sin(${argTex})`, `sin(${argMath})`, restoredPower, 'Core', true, "Restored to the spirit of sunlight.", c.isBleeding, false, c.resonance);
+                            else if (c.baseTex && c.baseTex.includes('sin')) return buildCard('Fragment of Orxe', `\\cos(${argTex})`, `cos(${argMath})`, restoredPower, 'Core', true, "Restored to the spirit of moonlight.", c.isBleeding, false, c.resonance);
+                            else if (c.baseTex && c.baseTex.includes('sec')) return buildCard('Unstable Fragment of Clorexro', `\\tan(${argTex})`, `tan(${argMath})`, restoredPower, 'Core', true, "Restored to its natural level of madness.", c.isBleeding, false, c.resonance);
+                            else if (c.baseTex && c.baseTex.includes('tan')) return buildCard('Fragment of Exro', `\\sec(${argTex})`, `sec(${argMath})`, restoredPower, 'Core', true, "Restored to prepare for the hunt...", c.isBleeding, false, c.resonance);
                         }
                     }
                     return c; 
@@ -654,13 +749,13 @@
                         else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
                     }
                     // The Dual-Weave (IBP) Path
-                    else if (integrationPath === 'ibp') {
-                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Sieve simplifies
-                        // NEW: Opened up Step 1 to accept the Flame (Power Rule) for Algebraic integrals!
-                        else if (integrationStep === 1 && (catId === 'wheel' || catId === 'flame')) action = 'action2'; 
-                        else if (integrationStep === 2 && (catId === 'wheel' || catId === 'flame' || catId === 'sieve')) action = 'action3';
-                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
-                    }
+                    else if (integrationPath === 'ibp') {
+                        if (integrationStep === 0 && catId === 'sieve') action = 'action1'; // Sieve simplifies
+                        // NEW: Opened up Step 1 to accept the Flame (Power Rule) for Algebraic integrals!
+                        else if (integrationStep === 1 && (catId === 'wheel' || catId === 'flame')) action = 'action2'; 
+                        else if (integrationStep === 2 && (catId === 'wheel' || catId === 'flame' || catId === 'sieve')) action = 'action3';
+                        else if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
+                    }
                     // The Tabular Path
                     else if (integrationPath === 'tabular') {
                         if (integrationStep === 3 && catId === 'anchor') action = 'plus_c';
@@ -686,6 +781,41 @@
 
                 // If not in setup phase, ignore standard clicks
                 if (gamePhase !== 'setup') return;
+
+                // --- NEW: TUNING FORK LOGIC ---
+                if (activeMode === 'tune') {
+                    if (!card.resonance) { 
+                        addLog("This spirit is already stable. The tuning fork doesn't resonate."); 
+                        return; 
+                    }
+                    if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
+                    setMana(m => m - 10);
+
+                    // 1. Detach the reciprocal constant
+                    const decoupled = buildCard('Decoupled Resonance', card.resonance.invertTex, card.resonance.invertMath, 1, 'Constant', false, "Extracted Frequency. Ready for the Sieve.");
+
+                    // 2. Normalize the top card to 'u'
+                    const newBaseTex = card.baseTex.replace(card.resonance.argTex, 'u');
+                    const newBaseMath = card.baseMath.replace(card.resonance.argMath, 'u');
+
+                    // 3. Shift the leech from dx to du automatically
+                    const newCards = bossCards.map(c => {
+                        if (c.id === card.id) {
+                            return { ...c, baseTex: newBaseTex, baseMath: newBaseMath, resonance: null, ability: "Purified to the u-state." };
+                        }
+                        if (c.isLeech && c.baseTex === 'dx') {
+                            return { ...c, name: 'du', baseTex: 'du', baseMath: 'du' };
+                        }
+                        return c;
+                    });
+                    newCards.push(decoupled);
+
+                    setBossCards(newCards);
+                    setActiveMode(null);
+                    addLog(`Tuning Fork strikes! The spirit normalizes to u, decoupling ${decoupled.baseTex}. The Leech shifts to du!`);
+                    return;
+                }
+                // ------------------------------
 
                 if (activeMode === 'slice') {
                     if (card.power > 1) {
@@ -819,32 +949,32 @@
                 }
 
                 if (activeMat === 'altar') {
-                    if (!altarCore) {
-                        if (card.baseTex?.includes('sin') || card.baseTex?.includes('cos') || card.baseTex?.includes('tan') || card.baseTex?.includes('sec') || card.baseTex?.includes('\\ln')) {
-                            let coreFamily = '';
-                            if (card.baseTex.includes('sin')) coreFamily = 'sin';
-                            else if (card.baseTex.includes('cos')) coreFamily = 'cos';
-                            else if (card.baseTex.includes('tan')) coreFamily = 'tan';
-                            else if (card.baseTex.includes('sec')) coreFamily = 'sec';
-                            else if (card.baseTex.includes('\\ln')) coreFamily = 'ln';
-                            
-                            setAltarCore({ ...card, family: coreFamily });
-                            setBossCards(prev => prev.filter(c => c.id !== card.id));
-                            addLog(`Slotted ${card.name} into the Core. Now provide an appropriate sacrifice.`);
-                        } else { addLog("The Altar only accepts Trigonometric or Logarithmic Cores."); }
-                        return;
-                    }
+                    if (!altarCore) {
+                        if (card.baseTex?.includes('sin') || card.baseTex?.includes('cos') || card.baseTex?.includes('tan') || card.baseTex?.includes('sec') || card.baseTex?.includes('\\ln')) {
+                            let coreFamily = '';
+                            if (card.baseTex.includes('sin')) coreFamily = 'sin';
+                            else if (card.baseTex.includes('cos')) coreFamily = 'cos';
+                            else if (card.baseTex.includes('tan')) coreFamily = 'tan';
+                            else if (card.baseTex.includes('sec')) coreFamily = 'sec';
+                            else if (card.baseTex.includes('\\ln')) coreFamily = 'ln';
+                            
+                            setAltarCore({ ...card, family: coreFamily });
+                            setBossCards(prev => prev.filter(c => c.id !== card.id));
+                            addLog(`Slotted ${card.name} into the Core. Now provide an appropriate sacrifice.`);
+                        } else { addLog("The Altar only accepts Trigonometric or Logarithmic Cores."); }
+                        return;
+                    }
                    if (altarCore && !altarSacrifice) {
                         let isValid = false;
                         const sacTex = card.baseTex || '';
                         
                         if (card.name === 'Compound') {
-                            if (altarCore.family === 'sin' && sacTex.includes('\\cos') && !sacTex.includes('^')) isValid = true;
-                            if (altarCore.family === 'cos' && sacTex.includes('\\sin') && !sacTex.includes('^')) isValid = true;
-                            if (altarCore.family === 'tan' && sacTex.includes('\\sec^2')) isValid = true;
-                            if (altarCore.family === 'sec' && sacTex.includes('\\sec') && sacTex.includes('\\tan') && !sacTex.includes('^')) isValid = true;
-                            if (altarCore.family === 'ln' && (sacTex.includes('x^{-1}') || sacTex.includes('\\frac{1}{x}'))) isValid = true;
-                        }
+                            if (altarCore.family === 'sin' && sacTex.includes('\\cos') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'cos' && sacTex.includes('\\sin') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'tan' && sacTex.includes('\\sec^2')) isValid = true;
+                            if (altarCore.family === 'sec' && sacTex.includes('\\sec') && sacTex.includes('\\tan') && !sacTex.includes('^')) isValid = true;
+                            if (altarCore.family === 'ln' && (sacTex.includes('x^{-1}') || sacTex.includes('\\frac{1}{x}'))) isValid = true;
+                        }
 
                         if (isValid) {
                             setAltarSacrifice(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
@@ -865,25 +995,25 @@
                 }
                 
                 if (activeMat === 'ibp') {
-                    if (!ibpU) { setIbpU(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
-                    setIbpDv(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
-                    
-                    // FIX 1: Ensure derivative applies to U, not dv!
-                    let du = 'du'; 
-                    try { du = math.derivative(ibpU.baseMath, 'x').toTex().replace(/~/g, ''); } catch(e){}
-                    
-                    // FIX 2: Actually integrate dv to find v!
-                    let vTex = '\\int dv';
-                    if (card.baseTex === 'e^x') vTex = 'e^x';
-                    else if (card.baseTex === '\\cos(x)') vTex = '\\sin(x)';
-                    else if (card.baseTex === '\\sin(x)') vTex = '-\\cos(x)';
-                    else if (card.baseTex === 'x') vTex = '\\frac{x^2}{2}';
-                    else if (card.baseTex === '1') vTex = 'x';
-                    else if (card.power > 1) vTex = `\\frac{x^{${card.power+1}}}{${card.power+1}}`;
+                    if (!ibpU) { setIbpU(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    setIbpDv(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
+                    
+                    // FIX 1: Ensure derivative applies to U, not dv!
+                    let du = 'du'; 
+                    try { du = math.derivative(ibpU.baseMath, 'x').toTex().replace(/~/g, ''); } catch(e){}
+                    
+                    // FIX 2: Actually integrate dv to find v!
+                    let vTex = '\\int dv';
+                    if (card.baseTex === 'e^x') vTex = 'e^x';
+                    else if (card.baseTex === '\\cos(x)') vTex = '\\sin(x)';
+                    else if (card.baseTex === '\\sin(x)') vTex = '-\\cos(x)';
+                    else if (card.baseTex === 'x') vTex = '\\frac{x^2}{2}';
+                    else if (card.baseTex === '1') vTex = 'x';
+                    else if (card.power > 1) vTex = `\\frac{x^{${card.power+1}}}{${card.power+1}}`;
 
-                    setIbpDerived({ duTex: du, vTex: vTex });
-                    return;
-                }
+                    setIbpDerived({ duTex: du, vTex: vTex });
+                    return;
+                }
                 
                 if (activeMat === 'trigsub') { setTrigSubCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
 
@@ -920,7 +1050,7 @@
                     }
                     return;
                 }
-                if (activeMat === 'shrine') {
+                if (activeMat === 'shrine') {
                     if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.name === 'Assembled Skeleton') {
                             setShrineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id));
