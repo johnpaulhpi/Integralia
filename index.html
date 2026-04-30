@@ -926,7 +926,6 @@
                         addLog("Stitched Sine squared and Cosine squared... The Monad is forged!");
                         return;
                     }
-
                     // 5. Standard Power Combine
                     if (target1.baseTex === target2.baseTex) {
                         if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
@@ -935,8 +934,14 @@
                         const newPower = target1.power + target2.power;
                         let resolvedType = target1.type;
                         if (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(target1.name)) resolvedType = 'Core';
+                        
+                        // NEW: Dynamically handle Old Bones so constants get wrapped in parens instead of turning into x^2
+                        const isSimpleX = target1.name === 'Old Bones' && target1.baseTex === 'x';
+                        const finalTex = isSimpleX ? `x^${newPower}` : (target1.name === 'Old Bones' ? `\\left(${target1.baseTex}\\right)^${newPower}` : target1.baseTex);
+                        const finalMath = isSimpleX ? `x^${newPower}` : (target1.name === 'Old Bones' ? `(${target1.baseMath})^${newPower}` : target1.baseMath);
+
                         const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseTex, baseMath: target1.name === 'Old Bones' ? `x^${newPower}` : target1.baseMath, canCycle: (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
+                        newCards.push({ ...target1, id: `stitched-${Date.now()}`, power: newPower, type: resolvedType, baseTex: finalTex, baseMath: finalMath, canCycle: (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(target1.name) && newPower % 2 === 0), isBleeding: false, ability: `Combined Exponent: The weave grows thicker.` });
                         setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                     } else {
                         addLog("Incompatible spirits. Stitching requires matching identities or compatible derivative parts.");
