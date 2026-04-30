@@ -682,9 +682,10 @@
                 setBossCards(prev => prev.map(c => {
                     if (c.id === cardId) {
                         
-                        // NEW: Extract arguments for this specific card
-                        const argTex = c.resonance ? c.resonance.argTex : 'x';
-                        const argMath = c.resonance ? c.resonance.argMath : 'x';
+                        // NEW: Extract arguments for this specific card, falling back to 'u' if already tuned!
+                        const fallbackVar = (c.baseMath && c.baseMath.includes('u')) ? 'u' : 'x';
+                        const argTex = c.resonance ? c.resonance.argTex : fallbackVar;
+                        const argMath = c.resonance ? c.resonance.argMath : fallbackVar;
                         
                         // Core -> Residue (Mathematically Strict!)
                         if (['Fragment of Clor', 'Fragment of Orxe', 'Unstable Fragment of Clorexro', 'Fragment of Exro'].includes(c.name)) {
