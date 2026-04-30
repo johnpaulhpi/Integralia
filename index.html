@@ -794,7 +794,7 @@
                     setMana(m => m - 10);
 
                     // 1. Detach the reciprocal constant
-                    const decoupled = buildCard('Old Bones', card.resonance.invertTex, card.resonance.invertMath, 1, 'Algebraic', false, "Extracted Frequency. Ready for the Sieve.");
+                    const decoupled = buildCard('Old Bones', card.resonance.invertTex, card.resonance.invertMath, 1, 'Algebraic', false, "Extracted Frequency. Ready to multiply.");
 
                     // 2. Normalize the top card to 'u'
                     const newBaseTex = card.baseTex.replace(card.resonance.argTex, 'u');
@@ -1238,9 +1238,9 @@
             };
 
            const collapseWeave = () => {
-                // 1. GATEKEEPER: Ensure the main board is completely empty!
-                if (bossCards.length > 0) {
-                    addLog("The Weave is incomplete! Move ALL remaining cards into the Expanded Weave before collapsing.");
+                // 1. GATEKEEPER: Ignore Algebraic cards so the Resonance can stay!
+                if (bossCards.filter(c => c.type !== 'Algebraic').length > 0) {
+                    addLog("The Weave is incomplete! Move ALL remaining non-constant cards into the Expanded Weave before collapsing.");
                     return;
                 }
 
@@ -1249,17 +1249,16 @@
                 let coreFamily = altarCore.family;
 
                 if (coreFamily === 'sin') { expectedExpandedName = 'Fragment of Clor'; expectedResidueTex = '(1-\\sin^2(x))'; }
-                else if (coreFamily === 'cos') { expectedExpandedName = 'Fragment of Orxe'; expectedResidueTex = '(1-\\cos^2(x))'; }
-                else if (coreFamily === 'tan') { expectedExpandedName = 'Unstable Fragment of Clorexro'; expectedResidueTex = '(\\sec^2(x)-1)'; }
-                else if (coreFamily === 'sec') { expectedExpandedName = 'Fragment of Exro'; expectedResidueTex = '(1+\\tan^2(x))'; }
-                else if (coreFamily === 'ln') { expectedExpandedName = 'Cave Root'; expectedResidueTex = 'N/A'; } // No residues for ln(x)
+                else if (coreFamily === 'cos') { expectedExpandedName = 'Fragment of Orxe'; expectedResidueTex = '(1-\\cos^2(x))'; }
+                else if (coreFamily === 'tan') { expectedExpandedName = 'Unstable Fragment of Clorexro'; expectedResidueTex = '(\\sec^2(x)-1)'; }
+                else if (coreFamily === 'sec') { expectedExpandedName = 'Fragment of Exro'; expectedResidueTex = '(1+\\tan^2(x))'; }
+                else if (coreFamily === 'ln') { expectedExpandedName = 'Cave Root'; expectedResidueTex = 'N/A'; } 
 
-                if (altarSacrifice.name !== 'Compound') {
+                if (altarSacrifice.name !== 'Compound') {
                     addLog("The Sacrifice is invalid! You must have a blood-gorged Leech to create a True Differential Compound."); 
                     return; 
                 }
 
-                // 2. VALIDATION: Check the Expanded Weave for stray, unconverted cards
                 const isInvalid = altarExpanded.some(c => {
                     const isBaseMatch = c.baseTex && (c.baseTex.includes(coreFamily) || c.baseTex === expectedResidueTex);
                     return !isBaseMatch; 
@@ -1284,11 +1283,12 @@
 
                 addLog("The Leech Goddess thanks you for your rad contribution! The Weave collapses into a U-State.");
                 setConsumeAll(true); 
-                
-                // Note: Add `ENABLE_MANA &&` before this if you have the mana toggle active!
                 setMana(m => m + 50);
 
                 setTimeout(() => {
+                    // NEW: Absorb any leftover 'Old Bones' constants sitting on the board!
+                    let prefix = bossCards.filter(c => c.type === 'Algebraic').map(c => c.baseTex).join('');
+
                     let sign = (coreFamily === 'cos') ? -1 : 1; 
                     let terms = [];
                     if (residueCount === 0) { terms.push({ c: sign, p: uPower }); } 
@@ -1304,9 +1304,9 @@
                         let rText = '(1-u^2)';
                         if (coreFamily === 'tan') rText = '(u^2-1)';
                         if (coreFamily === 'sec') rText = '(1+u^2)';
-                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}${rText} \\, du`; 
+                        initialEq = `${prefix}${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`}${rText} \\, du`; 
                     } else { 
-                        initialEq = `${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`; 
+                        initialEq = `${prefix}${sign === -1 ? '-' : ''}\\int ${uPower===1 ? 'u' : `u^${uPower}`} \\, du`; 
                     }
 
                     setBossCards([{ id: 'u-state', name: 'U-State', type: 'Unresolved', baseTex: initialEq, power: 1, canCycle: false, ability: residueCount === 1 ? "Needs Distribution." : "Needs Power Rule.", isBleeding: false, meta: { terms, hasResidue: residueCount === 1 } }]);
@@ -1403,6 +1403,9 @@
             const reapEchoes = () => {
                 setMana(m => m + 100); setConsumeAll(true);
                 setTimeout(() => {
+                    // NEW: Absorb any leftover 'Old Bones' constants sitting on the board!
+                    let prefix = bossCards.filter(c => c.type === 'Algebraic').map(c => c.baseTex).join('');
+
                     let finalTex = '';
                     for (let i = 0; i < tabularU.length - 1; i++) {
                         const sign = i % 2 === 0 ? '+' : '-';
@@ -1416,6 +1419,10 @@
                         if (i === 0 && termTex.trim().startsWith('+')) finalTex += termTex.replace('+', '').trim();
                         else finalTex += termTex;
                     }
+
+                    // Wrap the final string if a resonance prefix exists!
+                    if (prefix) finalTex = `${prefix} \\left( ${finalTex} \\right)`;
+
                     setBossCards([{ id: 'tabular-state', name: 'Tabular-State', type: 'Unresolved', baseTex: finalTex, power: 1, canCycle: false, ability: "Needs Constant of Integration.", isBleeding: false }]);
                     setConsumeAll(false); setActiveMat(null); setTabularU([]); setTabularDv([]); setTabularComplete(false);
                     setIntegrationPath('tabular'); setIntegrationStep(3); setGamePhase('integration');
