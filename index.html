@@ -1,4 +1,4 @@
-//pre-alpha v. 5.6 copyright JP Hansen 4-30-2026
+//pre-alpha v. 5.7 copyright JP Hansen 4-30-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1931,12 +1931,12 @@
                                {shrineCard && (
                                     <div className="flex gap-4 mt-8">
                                         {/* Standard Integration & Skeleton */}
-                                        {(shrineCard.name === 'Assembled Skeleton' || !shrineCard.baseTex.includes('\\frac')) && (
+                                        {(shrineCard.name === 'Assembled Skeleton' || !(shrineCard.baseTex.includes('\\frac') && !shrineCard.baseTex.match(/\\sin|\\cos|\\tan|\\sec|e\^|\\ln/))) && (
                                             <button onClick={ascendSpell} className="bg-indigo-600 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(79,70,229,0.5)] hover:bg-indigo-500 hover:scale-105 transition-all">Ascend Spell</button>
                                         )}
                                         
                                         {/* Pure Bone Reading (Standalone Partial Fractions) */}
-                                        {shrineCard.type === 'Algebraic' && shrineCard.baseTex.includes('\\frac') && shrineCard.name !== 'Assembled Skeleton' && (
+                                        {(shrineCard.baseTex.includes('\\frac') && !shrineCard.baseTex.match(/\\sin|\\cos|\\tan|\\sec|e\^|\\ln/) && shrineCard.name !== 'Assembled Skeleton') && (
                                             <button onClick={readTheBones} className="bg-emerald-600 border-2 border-emerald-400 px-10 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all text-white">Read the Bones</button>
                                         )}
                                     </div>
