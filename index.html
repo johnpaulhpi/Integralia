@@ -216,7 +216,7 @@
             let isBlue = tex.includes('sin') || name === 'Fragment of Clor';
             let isGreen = tex.includes('sec') || name === 'Fragment of Exro';
             let isOrange = tex.includes('tan') || name === 'Unstable Fragment of Clorexro';
-            let isEmerald = tex.includes('x') && (card.type === 'Algebraic' || name === 'Old Bones') && !isYellow && !isBlue && !isGreen && !isOrange;
+            let isEmerald = (card.type === 'Algebraic' || name === 'Old Bones') && !isYellow && !isBlue && !isGreen && !isOrange;
 
             // Define Fragility Constraints
             const isFragile = (name === 'Unstable Fragment of Clorexro' && card.power === 1) || (card.type === 'Algebraic' && card.baseTex === '1');
@@ -794,7 +794,7 @@
                     setMana(m => m - 10);
 
                     // 1. Detach the reciprocal constant
-                    const decoupled = buildCard('Decoupled Resonance', card.resonance.invertTex, card.resonance.invertMath, 1, 'Constant', false, "Extracted Frequency. Ready for the Sieve.");
+                    const decoupled = buildCard('Old Bones', card.resonance.invertTex, card.resonance.invertMath, 1, 'Algebraic', false, "Extracted Frequency. Ready for the Sieve.");
 
                     // 2. Normalize the top card to 'u'
                     const newBaseTex = card.baseTex.replace(card.resonance.argTex, 'u');
