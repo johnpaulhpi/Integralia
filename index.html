@@ -794,13 +794,13 @@
                     setMana(m => m - 10);
 
                     // 1. Detach the reciprocal constant
-                    const decoupled = buildCard('Old Bones', card.resonance.invertTex, card.resonance.invertMath, 1, 'Algebraic', false, "Extracted Frequency. Ready to multiply.");
+                    const decoupled = buildCard('Old Bones', card.resonance.invertTex, card.resonance.invertMath, 1, 'Algebraic', false, "Extracted Frequency.");
 
                     // 2. Normalize the top card to 'u'
                     const newBaseTex = card.baseTex.replace(card.resonance.argTex, 'u');
                     const newBaseMath = card.baseMath.replace(card.resonance.argMath, 'u');
 
-                    // 3. Shift the leech from dx to du automatically
+                    // 3. Shift the leech and AOE tune any other algebraic 'x' variables
                     const newCards = bossCards.map(c => {
                         if (c.id === card.id) {
                             return { ...c, baseTex: newBaseTex, baseMath: newBaseMath, resonance: null, ability: "Purified to the u-state." };
@@ -808,13 +808,19 @@
                         if (c.isLeech && c.baseTex === 'dx') {
                             return { ...c, name: 'du', baseTex: 'du', baseMath: 'du' };
                         }
+                        // Target loose 'x' bones (like x^2 or x)
+                        if (c.name === 'Old Bones' && c.baseTex.includes('x') && !c.baseTex.includes('\\sqrt') && !c.baseTex.includes('\\frac')) {
+                            const tunedTex = c.baseTex.replace('x', `\\left(${card.resonance.invertTex} u\\right)`);
+                            const tunedMath = c.baseMath.replace('x', `(${card.resonance.invertMath}*u)`);
+                            return { ...c, baseTex: tunedTex, baseMath: tunedMath, ability: "Bones forcibly tuned to u-frequency." };
+                        }
                         return c;
                     });
                     newCards.push(decoupled);
 
                     setBossCards(newCards);
                     setActiveMode(null);
-                    addLog(`Tuning Fork strikes! The spirit normalizes to u, decoupling ${decoupled.baseTex}. The Leech shifts to du!`);
+                    addLog(`Tuning Fork strikes! Frequencies normalize to u, decoupling ${decoupled.baseTex}.`);
                     return;
                 }
                 // ------------------------------
@@ -1259,6 +1265,7 @@
                     return; 
                 }
 
+                // 2. VALIDATION: Check the Expanded Weave for stray, unconverted cards
                 const isInvalid = altarExpanded.some(c => {
                     const isBaseMatch = c.baseTex && (c.baseTex.includes(coreFamily) || c.baseTex === expectedResidueTex);
                     return !isBaseMatch; 
@@ -1283,7 +1290,8 @@
 
                 addLog("The Leech Goddess thanks you for your rad contribution! The Weave collapses into a U-State.");
                 setConsumeAll(true); 
-                setMana(m => m + 50);
+                
+                if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA) setMana(m => m + 50);
 
                 setTimeout(() => {
                     // NEW: Absorb any leftover 'Old Bones' constants sitting on the board!
