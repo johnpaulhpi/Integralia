@@ -1380,29 +1380,33 @@
             };
 
             const stepIntoAbyss = () => {
-                const lastU = tabularU[tabularU.length - 1];
-                const lastDv = tabularDv[tabularDv.length - 1];
+                const lastU = tabularU[tabularU.length - 1];
+                const lastDv = tabularDv[tabularDv.length - 1];
 
-                // UPDATED: The Tabular Trap catches the Root in either column!
-                if (lastU.baseMath.includes('log(x)') || lastDv.baseMath.includes('log(x)')) {
-                    addLog("CRITICAL ERROR: The grinder jams! The Cave Root tangles in the bone gears. Maybe use the boiling water (IBP) instead.");
-                    return;
-                }
+                if (lastU.baseMath.includes('log(x)') || lastDv.baseMath.includes('log(x)')) {
+                    addLog("CRITICAL ERROR: The grinder jams! The Cave Root tangles in the bone gears. Maybe use the boiling water (IBP) instead.");
+                    return;
+                }
 
-                let nU = { ...lastU, id: `u-${Date.now()}` };
+                let nU = { ...lastU, id: `u-${Date.now()}` };
                 try {
-                    const node = math.derivative(lastU.baseMath, 'x');
+                    // NEW: Dynamically detect if we are deriving with respect to 'u' or 'x'
+                    const activeVar = lastU.baseMath.includes('u') ? 'u' : 'x';
+                    const node = math.derivative(lastU.baseMath, activeVar);
                     nU.baseMath = node.toString(); nU.baseTex = node.toTex().replace(/~/g, '');
                     if (nU.baseMath === '0') { nU.name = 'Dust'; nU.type = 'Void'; nU.isBleeding = false; setTabularComplete(true); }
                     else { nU.name = 'Bleeding Coil'; nU.type = 'Derived'; nU.isBleeding = true; }
                 } catch(e) {}
                 
                 let nDv = { ...lastDv, id: `dv-${Date.now()}`, name: 'Echo', type: 'Resonant' };
-                if (lastDv.baseMath.includes('exp')) { nDv.baseTex = 'e^x'; nDv.baseMath = 'exp(x)'; }
-                else if (lastDv.baseMath === 'sin(x)') { nDv.baseTex = '-\\cos(x)'; nDv.baseMath = '-cos(x)'; }
-                else if (lastDv.baseMath === '-cos(x)') { nDv.baseTex = '-\\sin(x)'; nDv.baseMath = '-sin(x)'; }
-                else if (lastDv.baseMath === '-sin(x)') { nDv.baseTex = '\\cos(x)'; nDv.baseMath = 'cos(x)'; }
-                else { nDv.baseTex = '\\sin(x)'; nDv.baseMath = 'sin(x)'; }
+                
+                // NEW: Dynamically apply the correct variable to the integration steps
+                const dvVar = lastDv.baseMath.includes('u') ? 'u' : 'x';
+                if (lastDv.baseMath.includes('exp')) { nDv.baseTex = `e^{${dvVar}}`; nDv.baseMath = `exp(${dvVar})`; }
+                else if (lastDv.baseMath === `sin(${dvVar})`) { nDv.baseTex = `-\\cos(${dvVar})`; nDv.baseMath = `-cos(${dvVar})`; }
+                else if (lastDv.baseMath === `-cos(${dvVar})`) { nDv.baseTex = `-\\sin(${dvVar})`; nDv.baseMath = `-sin(${dvVar})`; }
+                else if (lastDv.baseMath === `-sin(${dvVar})`) { nDv.baseTex = `\\cos(${dvVar})`; nDv.baseMath = `cos(${dvVar})`; }
+                else { nDv.baseTex = `\\sin(${dvVar})`; nDv.baseMath = `sin(${dvVar})`; }
 
                 setTabularU([...tabularU, nU]); setTabularDv([...tabularDv, nDv]);
                 addLog(nU.name === 'Dust' ? "The Coil turns to dust." : "The Stairway descends.");
@@ -1411,7 +1415,6 @@
             const reapEchoes = () => {
                 setMana(m => m + 100); setConsumeAll(true);
                 setTimeout(() => {
-                    // NEW: Absorb any leftover 'Old Bones' constants sitting on the board!
                     let prefix = bossCards.filter(c => c.type === 'Algebraic').map(c => c.baseTex).join('');
 
                     let finalTex = '';
@@ -1420,15 +1423,17 @@
                         let uTerm = tabularU[i].baseTex; let dvTerm = tabularDv[i+1].baseTex;
                         if (uTerm === '1') uTerm = '';
                         let termTex = '';
-                        if (dvTerm === '-\\cos(x)' || dvTerm === '-\\sin(x)') {
+                        
+                        // NEW: Make the negative extraction dynamic so it works for both -cos(x) and -cos(u)
+                        if (dvTerm.startsWith('-\\cos') || dvTerm.startsWith('-\\sin')) {
                             dvTerm = dvTerm.replace('-', '');
                             termTex = ` ${sign === '+' ? '-' : '+'} ${uTerm}${dvTerm}`;
                         } else { termTex = ` ${sign} ${uTerm}${dvTerm}`; }
+                        
                         if (i === 0 && termTex.trim().startsWith('+')) finalTex += termTex.replace('+', '').trim();
                         else finalTex += termTex;
                     }
 
-                    // Wrap the final string if a resonance prefix exists!
                     if (prefix) finalTex = `${prefix} \\left( ${finalTex} \\right)`;
 
                     setBossCards([{ id: 'tabular-state', name: 'Tabular-State', type: 'Unresolved', baseTex: finalTex, power: 1, canCycle: false, ability: "Needs Constant of Integration.", isBleeding: false }]);
@@ -1437,7 +1442,7 @@
                     addLog("PHASE 2: The spell is now a Tabular State. Finalize the refinement.");
                 }, 1000);
             };
-
+            
             const applyIntegrationRule = (t) => {
                 if (integrationPath === 'tabular' && t === 'plus_c') {
                     setMana(m => m - 10 + 300); setIntegrationStep(4);
