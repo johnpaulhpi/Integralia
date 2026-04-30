@@ -1,4 +1,4 @@
-//pre-alpha v. 5.5 copyright JP Hansen 4-30-2026
+//pre-alpha v. 5.6 copyright JP Hansen 4-30-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -623,9 +623,12 @@
                     if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); return; }
                     setMana(m => m - 10);
                     const newCards = bossCards.filter(c => c.id !== cardId);
-                    // Use dynamic arguments for shattering if resonance exists!
-                    const argTex = card.resonance ? card.resonance.argTex : 'x';
-                    const argMath = card.resonance ? card.resonance.argMath : 'x';
+                    
+                    // NEW: Fall back to 'u' if the card has already been tuned!
+                    const fallbackVar = (card.baseMath && card.baseMath.includes('u')) ? 'u' : 'x';
+                    const argTex = card.resonance ? card.resonance.argTex : fallbackVar;
+                    const argMath = card.resonance ? card.resonance.argMath : fallbackVar;
+                    
                     newCards.push(
                         buildCard('Fragment of Clor', `\\sin(${argTex})`, `sin(${argMath})`, 1, 'Core', false, "Shattered Numerator.", card.isBleeding, false, card.resonance),
                         buildCard('Fragment of Exro', `\\sec(${argTex})`, `sec(${argMath})`, 1, 'Core', false, "Shattered Denominator.", card.isBleeding, false, card.resonance)
@@ -893,8 +896,14 @@
                         if (target1.power === 1 && target2.power === 1) {
                             if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
                             setMana(m => m - 10);
+                            
+                            // NEW: Dynamically grab the inner argument
+                            const isU = target1.baseMath.includes('u');
+                            const argTex = target1.resonance ? target1.resonance.argTex : (isU ? 'u' : 'x');
+                            const argMath = target1.resonance ? target1.resonance.argMath : (isU ? 'u' : 'x');
+
                             const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                            newCards.push(buildCard('Fragment', '\\sec(x)\\tan(x)', 'sec(x)*tan(x)', 1, 'Fragment', false, "Fused Derivative Ghost.", true));
+                            newCards.push(buildCard('Fragment', `\\sec(${argTex})\\tan(${argTex})`, `sec(${argMath})*tan(${argMath})`, 1, 'Fragment', false, "Fused Derivative Ghost.", true, false, target1.resonance));
                             setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                             addLog("Stitched distinct spirits... A Secant/Tangent Ghost created! Feed it to a Leech next.");
                             return;
@@ -906,8 +915,14 @@
                         if (target1.power === 1 && target2.power === 1) {
                             if (typeof ENABLE_MANA !== 'undefined' && ENABLE_MANA && mana < 10) { addLog("Not enough Mana!"); setActiveMode(null); setStitchTargetId(null); return; }
                             setMana(m => m - 10);
+                            
+                            // NEW: Dynamically grab the inner argument
+                            const isU = target1.baseMath.includes('u');
+                            const argTex = target1.resonance ? target1.resonance.argTex : (isU ? 'u' : 'x');
+                            const argMath = target1.resonance ? target1.resonance.argMath : (isU ? 'u' : 'x');
+                            
                             const newCards = bossCards.filter(c => c.id !== target1.id && c.id !== target2.id);
-                            newCards.push(buildCard('Unstable Fragment of Clorexro', '\\tan(x)', 'tan(x)', 1, 'Core', true, "Stitched Quotient Spirit.", false));
+                            newCards.push(buildCard('Unstable Fragment of Clorexro', `\\tan(${argTex})`, `tan(${argMath})`, 1, 'Core', true, "Stitched Quotient Spirit.", false, false, target1.resonance));
                             setBossCards(newCards); setStitchTargetId(null); setActiveMode(null);
                             addLog("Stitched Sine and Secant... A Tangent Core is forged!");
                             return;
