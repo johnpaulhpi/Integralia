@@ -302,7 +302,7 @@
                         </div>
                     )}
 
-                    {card.power > 1 && (
+                    {(card.power > 1 || card.power < 0) && (
                         <div className="absolute -top-4 -right-4 w-10 h-10 rounded-full bg-red-600 border-2 border-gray-900 flex items-center justify-center text-white font-bold text-xl shadow-lg z-50">{card.power}</div>
                     )}
 
@@ -561,7 +561,7 @@
 
                 } else if (spellType === 4) {
                     newCards.push(buildCard('Old Bones', 'x^3+2x^2+x', 'x^3+2x^2+x', 1, 'Algebraic', false, "A heavy, complex skull. (Numerator)", false));
-                    newCards.push(buildCard('Old Bones', 'x^2-1', 'x^2-1', 1, 'Algebraic', false, "A fractured pelvis. (Denominator)", false));
+                    newCards.push(buildCard('Old Bones', 'x^2-1', 'x^2-1', -1, 'Algebraic', false, "A fractured pelvis. (Denominator)", false));
                     logMsg = `A wild spell appears! The bones are stacked. Time for Polynomial Division or Partial Fractions.`;
                 }
 
@@ -803,9 +803,19 @@
                 }
 
                 if (activeSlate === 'div') {
-                    if (divTop) setBossCards(p => [...p, divTop]);
-                    if (divBottom) setBossCards(p => [...p, divBottom]);
-                    setDivTop(null); setDivBottom(null); setActiveSlate(null);
+                    if (card.baseTex?.includes('\\frac')) { shatterFraction(card); return; }
+                    
+                    // SMART ROUTING: If it has a negative power, force it to the bottom slot!
+                    if (card.power < 0 && !divBottom) {
+                        setDivBottom({ ...card, power: Math.abs(card.power) });
+                        setBossCards(prev => prev.filter(c => c.id !== card.id));
+                        return;
+                    }
+                    
+                    // Standard routing for positive/neutral cards
+                    if (!divTop) { setDivTop(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    if (!divBottom) { setDivBottom(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    return;
                 }
 
                 // --- NEW: TUNING FORK LOGIC ---
@@ -1872,7 +1882,7 @@
                 if (skeletonLeech) refundedCards.push(skeletonLeech);
                 if (shrineCard) refundedCards.push(shrineCard);
                 if (divTop) refundedCards.push(divTop);
-                if (divBottom) refundedCards.push(divBottom);
+                if (divBottom) refundedCards.push({...divBottom, power: -Math.abs(divBottom.power)});
 
                 // Return them to the board
                 if (refundedCards.length > 0) {
@@ -1958,7 +1968,7 @@
                                     <>
                                         <div className="w-full flex justify-between items-center mb-8">
                                             <h2 className="text-stone-500 font-black uppercase tracking-[0.2em] text-xs">Div Slate</h2>
-                                            <button onClick={() => { setActiveSlate(null); if(divTop) setBossCards(p=>[...p, divTop]); if(divBottom) setBossCards(p=>[...p, divBottom]); setDivTop(null); setDivBottom(null); }} className="text-stone-600 hover:text-red-400 font-black">✕</button>
+                                            <button onClick={() => { setActiveSlate(null); if(divTop) setBossCards(p=>[...p, divTop]); if(divBottom) setBossCards(p=>[...p, {...divBottom, power: -Math.abs(divBottom.power)}]); setDivTop(null); setDivBottom(null); }} className="text-stone-600 hover:text-red-400 font-black">✕</button>
                                         </div>
                                         <div className="flex flex-col items-center gap-4 w-full justify-center flex-1">
                                             <div className="w-[160px] h-[120px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
@@ -1966,7 +1976,7 @@
                                             </div>
                                             <div className="w-48 h-2 bg-stone-800 rounded-full"></div>
                                             <div className="w-[160px] h-[120px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
-                                                {divBottom ? <BattleCard card={divBottom} scale="scale-[0.5]" onClick={() => {setBossCards(p=>[...p, divBottom]); setDivBottom(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Denominator<br/>(Bottom)</span>}
+                                                {divBottom ? <BattleCard card={divBottom} scale="scale-[0.5]" onClick={() => {setBossCards(p=>[...p, {...divBottom, power: -Math.abs(divBottom.power)}]); setDivBottom(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Denominator<br/>(Bottom)</span>}
                                             </div>
                                         </div>
                                         <div className="h-16 mt-4 flex items-center justify-center">
