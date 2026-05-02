@@ -409,6 +409,8 @@
             const [addSubLeft, setAddSubLeft] = useState(null);
             const [addSubRight, setAddSubRight] = useState(null);
             const [addSubSign, setAddSubSign] = useState('+');
+            const [divTop, setDivTop] = useState(null);
+            const [divBottom, setDivBottom] = useState(null);
             
             // --- NEW: FOIL MAT STATES ---
             const [foilLeft, setFoilLeft] = useState(null);
@@ -798,6 +800,12 @@
                     if (!addSubLeft) { setAddSubLeft(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
                     if (!addSubRight) { setAddSubRight(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
                     return;
+                }
+
+                if (activeSlate === 'div') {
+                    if (divTop) setBossCards(p => [...p, divTop]);
+                    if (divBottom) setBossCards(p => [...p, divBottom]);
+                    setDivTop(null); setDivBottom(null); setActiveSlate(null);
                 }
 
                 // --- NEW: TUNING FORK LOGIC ---
@@ -1765,6 +1773,29 @@
                 setAddSubLeft(null); setAddSubRight(null); setActiveSlate(null);
                 addLog(`The stone grinds. The terms are bound!`);
             };
+
+            const combineDivSlate = () => {
+                if (!divTop || !divBottom) return;
+                setMana(m => m - 5);
+                const newTex = `\\frac{${divTop.baseTex}}{${divBottom.baseTex}}`;
+                const newMath = `(${divTop.baseMath})/(${divBottom.baseMath})`;
+                setBossCards(prev => [...prev, buildCard('Expanded Core', newTex, newMath, 1, 'Algebraic', false, `Terms bound by Division.`, false)]);
+                setDivTop(null); setDivBottom(null); setActiveSlate(null);
+                addLog(`The stone grinds. The fraction is forged!`);
+            };
+
+            const shatterFraction = (card) => {
+                const match = card.baseTex.match(/\\frac{([^{}]+)}{([^{}]+)}/);
+                if (match) {
+                    setMana(m => m - 5);
+                    setDivTop(buildCard('Fragment', match[1], match[1], 1, 'Algebraic', false, "Shattered Numerator"));
+                    setDivBottom(buildCard('Fragment', match[2], match[2], 1, 'Algebraic', false, "Shattered Denominator"));
+                    setBossCards(prev => prev.filter(c => c.id !== card.id));
+                    addLog("The slate forces the fraction apart!");
+                } else {
+                    addLog("This card doesn't look like a standard fraction. Drop pieces into the slots manually.");
+                }
+            };
             
 // ==========================================
 // NEW UI HELPERS
@@ -1831,7 +1862,6 @@
                 if (tabularDv.length > 0) refundedCards.push(tabularDv[0]); 
                 if (leechMatTarget) refundedCards.push(leechMatTarget);
                 if (leechMatBlood) refundedCards.push(leechMatBlood);
-                if (shrineCard) refundedCards.push(shrineCard);
                 if (foilLeft) refundedCards.push(foilLeft);
                 if (foilRight) refundedCards.push(foilRight);
                 if (fractionNum.length > 0) refundedCards.push(...fractionNum);
@@ -1841,6 +1871,8 @@
                 if (skeletonEssence) refundedCards.push(skeletonEssence);
                 if (skeletonLeech) refundedCards.push(skeletonLeech);
                 if (shrineCard) refundedCards.push(shrineCard);
+                if (divTop) refundedCards.push(divTop);
+                if (divBottom) refundedCards.push(divBottom);
 
                 // Return them to the board
                 if (refundedCards.length > 0) {
@@ -1883,47 +1915,73 @@
                     {/* --- TOP HALF: MAIN BOARD & MATS --- */}
                     <div className="w-full flex gap-6 mb-6 min-h-[550px] mt-8 transition-all">
                         
-                        {/* --- NEW: LEFT SIDEBAR (SLATES) --- */}
+                        {/* --- NEW: VERTICAL SLATE TOOLBAR --- */}
+                        {gamePhase === 'setup' && !activeMat && (
+                            <div className="w-20 flex flex-col gap-4 shrink-0">
+                                <button onClick={() => { if(activeMat) cancelMat(); setActiveSlate(activeSlate === 'addsub' ? null : 'addsub'); setActiveMat(null); setActiveMode(null); }} className={`w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center transition-all shadow-lg hover:-translate-y-1 ${activeSlate==='addsub'?'border-stone-400 bg-stone-800':'border-stone-800 bg-stone-950 hover:border-stone-500 hover:bg-stone-900'}`}>
+                                    <span className="text-xl font-black text-stone-300">±</span>
+                                    <span className="text-[8px] font-bold text-stone-500 uppercase mt-1 tracking-widest">Slate</span>
+                                </button>
+                                <button onClick={() => { if(activeMat) cancelMat(); setActiveSlate(activeSlate === 'div' ? null : 'div'); setActiveMat(null); setActiveMode(null); }} className={`w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center transition-all shadow-lg hover:-translate-y-1 ${activeSlate==='div'?'border-stone-400 bg-stone-800':'border-stone-800 bg-stone-950 hover:border-stone-500 hover:bg-stone-900'}`}>
+                                    <span className="text-xl font-black text-stone-300">÷</span>
+                                    <span className="text-[8px] font-bold text-stone-500 uppercase mt-1 tracking-widest">Slate</span>
+                                </button>
+                            </div>
+                        )}
+
+                        {/* --- LEFT SIDEBAR (SLATES WORKSPACE) --- */}
                         {activeSlate && (
-                            <div className="w-5/12 bg-stone-950 border-r-4 border-y-4 border-stone-800 rounded-r-3xl p-6 flex flex-col items-center animate-slide-left shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-40">
+                            <div className="w-5/12 bg-stone-950 border-r-4 border-y-4 border-stone-800 rounded-3xl p-6 flex flex-col items-center animate-slide-left shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-40">
+                                
                                 {activeSlate === 'addsub' && (
                                     <>
                                         <div className="w-full flex justify-between items-center mb-8">
                                             <h2 className="text-stone-500 font-black uppercase tracking-[0.2em] text-xs">Add / Sub Slate</h2>
                                             <button onClick={() => { setActiveSlate(null); if(addSubLeft) setBossCards(p=>[...p, addSubLeft]); if(addSubRight) setBossCards(p=>[...p, addSubRight]); setAddSubLeft(null); setAddSubRight(null); }} className="text-stone-600 hover:text-red-400 font-black">✕</button>
                                         </div>
-                                        
                                         <div className="flex items-center gap-4 w-full justify-center flex-1">
                                             <div className="w-[160px] h-[220px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
                                                 {addSubLeft ? <BattleCard card={addSubLeft} scale="scale-75" onClick={() => {setBossCards(p=>[...p, addSubLeft]); setAddSubLeft(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Left Term</span>}
                                             </div>
-
-                                            {/* Interactive Sign Toggle */}
-                                            <button onClick={() => setAddSubSign(s => s === '+' ? '-' : '+')} className="w-12 h-12 rounded-full bg-stone-800 border-2 border-stone-600 flex items-center justify-center text-stone-300 text-2xl font-black hover:bg-stone-700 hover:scale-110 transition-all shadow-md z-10">
-                                                {addSubSign}
-                                            </button>
-
+                                            <button onClick={() => setAddSubSign(s => s === '+' ? '-' : '+')} className="w-12 h-12 rounded-full bg-stone-800 border-2 border-stone-600 flex items-center justify-center text-stone-300 text-2xl font-black hover:bg-stone-700 hover:scale-110 transition-all shadow-md z-10">{addSubSign}</button>
                                             <div className="w-[160px] h-[220px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
                                                 {addSubRight ? <BattleCard card={addSubRight} scale="scale-75" onClick={() => {setBossCards(p=>[...p, addSubRight]); setAddSubRight(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Right Term</span>}
                                             </div>
                                         </div>
-
                                         <div className="h-16 mt-4 flex items-center justify-center">
-                                            {addSubLeft && addSubRight && (
-                                                <button onClick={combineAddSubSlate} className="bg-stone-700 border-2 border-stone-500 px-8 py-3 rounded-full font-black uppercase text-xs text-stone-200 hover:bg-stone-600 hover:scale-105 transition-all shadow-[0_0_15px_rgba(120,113,108,0.4)]">
-                                                    Bind Terms
-                                                </button>
-                                            )}
+                                            {addSubLeft && addSubRight && <button onClick={combineAddSubSlate} className="bg-stone-700 border-2 border-stone-500 px-8 py-3 rounded-full font-black uppercase text-xs text-stone-200 hover:bg-stone-600 hover:scale-105 transition-all shadow-[0_0_15px_rgba(120,113,108,0.4)]">Bind Terms</button>}
+                                        </div>
+                                    </>
+                                )}
+
+                                {activeSlate === 'div' && (
+                                    <>
+                                        <div className="w-full flex justify-between items-center mb-8">
+                                            <h2 className="text-stone-500 font-black uppercase tracking-[0.2em] text-xs">Div Slate</h2>
+                                            <button onClick={() => { setActiveSlate(null); if(divTop) setBossCards(p=>[...p, divTop]); if(divBottom) setBossCards(p=>[...p, divBottom]); setDivTop(null); setDivBottom(null); }} className="text-stone-600 hover:text-red-400 font-black">✕</button>
+                                        </div>
+                                        <div className="flex flex-col items-center gap-4 w-full justify-center flex-1">
+                                            <div className="w-[160px] h-[120px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
+                                                {divTop ? <BattleCard card={divTop} scale="scale-[0.5]" onClick={() => {setBossCards(p=>[...p, divTop]); setDivTop(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Numerator<br/>(Top)</span>}
+                                            </div>
+                                            <div className="w-48 h-2 bg-stone-800 rounded-full"></div>
+                                            <div className="w-[160px] h-[120px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
+                                                {divBottom ? <BattleCard card={divBottom} scale="scale-[0.5]" onClick={() => {setBossCards(p=>[...p, divBottom]); setDivBottom(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Denominator<br/>(Bottom)</span>}
+                                            </div>
+                                        </div>
+                                        <div className="h-16 mt-4 flex items-center justify-center">
+                                            {divTop && divBottom && <button onClick={combineDivSlate} className="bg-stone-700 border-2 border-stone-500 px-8 py-3 rounded-full font-black uppercase text-xs text-stone-200 hover:bg-stone-600 hover:scale-105 transition-all shadow-[0_0_15px_rgba(120,113,108,0.4)]">Bind Fraction</button>}
                                         </div>
                                     </>
                                 )}
                             </div>
                         )}
 
-                        <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-visible transition-all duration-700 ${activeMat ? 'w-4/12' : (activeSlate ? 'w-7/12' : 'w-full')} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
+                        {/* --- MAIN BOARD --- */}
+                        <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-visible transition-all duration-700 ${activeMat ? 'w-4/12' : (activeSlate ? 'w-7/12' : 'flex-1')} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
                             <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
                                 {bossCards.length > 0 && gamePhase === 'setup' && <div className="text-6xl text-white/10 font-serif">∫</div>}
-                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget) || (activeSlate === 'addsub' && (!addSubLeft || !addSubRight))} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} isBlowingAway={blowingDustId === c.id} onBlowDust={blowAwayDust} />)}
+                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget) || (activeSlate === 'addsub' && (!addSubLeft || !addSubRight)) || (activeSlate === 'div' && (!divTop || !divBottom))} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} isBlowingAway={blowingDustId === c.id} onBlowDust={blowAwayDust} />)}
                             </div>
                         </div>
 
