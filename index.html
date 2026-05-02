@@ -1,4 +1,4 @@
-//pre-alpha v. 6.2 copyright JP Hansen 5-1-2026
+//pre-alpha v. 6.3 copyright JP Hansen 5-1-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -418,8 +418,7 @@
             const [activeCatalyst, setActiveCatalyst] = useState(null);
 
             // --- NEW: RATIONAL EXPRESSION MAT STATES ---
-            const [fractionNum, setFractionNum] = useState([]);
-            const [fractionDen, setFractionDen] = useState([]);
+            const [guillotineCard, setGuillotineCard] = useState(null);
             const [fractionDecomp, setFractionDecomp] = useState([]);
             const [skeletonQuotient, setSkeletonQuotient] = useState(null);
             const [skeletonEssence, setSkeletonEssence] = useState(null);
@@ -1098,20 +1097,22 @@
                     }
                     
                     // 2. Guillotine / Anvil Sorters
+                    // 2. Guillotine / Anvil Sorters
                     if (card.baseTex?.includes('\\frac')) {
-                        if (fractionDecomp.length === 0) {
-                            setFractionDecomp([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Proper fraction secured on the Shattering Anvil."); return;
+                        // Smart Routing: If it has x^3, it's the heavy improper fraction for the Guillotine
+                        if (card.baseTex.includes('x^3')) {
+                            if (!guillotineCard) {
+                                setGuillotineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Improper fraction locked into the Guillotine."); return;
+                            }
+                        } else {
+                            if (fractionDecomp.length === 0) {
+                                setFractionDecomp([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Proper fraction secured on the Shattering Anvil."); return;
+                            }
                         }
                     } else {
-                        if (fractionNum.length === 0) {
-                            setFractionNum([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Bones hoisted to the Numerator position."); return;
-                        }
-                        if (fractionDen.length === 0) {
-                            setFractionDen([card]); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Bones locked into the Denominator position."); return;
-                        }
+                        addLog("The Guillotine requires a single, combined fraction card. Use the Div Slate first!");
+                        return;
                     }
-                    return;
-                }
                 if (activeMat === 'shrine') {
                     if (!shrineCard) {
                         if (card.name === 'Compound' || card.baseTex?.includes('dx') || card.baseTex?.includes('d\\theta') || card.name === 'Assembled Skeleton') {
@@ -1701,7 +1702,7 @@
                                 buildCard('Expanded Core', 'x+2', 'x+2', 1, 'Algebraic', false, "Quotient.", false),
                                 buildCard('Expanded Core', '\\frac{2x+2}{x^2-1}', '(2x+2)/(x^2-1)', 1, 'Algebraic', false, "Remainder.", false)
                             ]);
-                            setFractionNum([]); setFractionDen([]); setActiveMat(null); setIsCarving(false);
+                            setGuillotineCard(null); setActiveMat(null); setIsCarving(false);
                             addLog("Polynomial Division complete! Prepare for Partial Fractions.");
                         }, 2000);
                     } else {
@@ -1847,8 +1848,7 @@
                 setLeechMatTarget(null);
                 setLeechMatBlood(null);
                 setShrineCard(null);
-                setFractionNum([]);
-                setFractionDen([]);
+                setGuillotineCard(null);
                 setFractionDecomp([]);
                 setSkeletonQuotient(null);
                 setSkeletonEssence(null);
@@ -1890,8 +1890,7 @@
                 if (leechMatBlood) refundedCards.push(leechMatBlood);
                 if (foilLeft) refundedCards.push(foilLeft);
                 if (foilRight) refundedCards.push(foilRight);
-                if (fractionNum.length > 0) refundedCards.push(...fractionNum);
-                if (fractionDen.length > 0) refundedCards.push(...fractionDen);
+                if (guillotineCard) refundedCards.push(guillotineCard);
                 if (fractionDecomp.length > 0) refundedCards.push(...fractionDecomp);
                 if (skeletonQuotient) refundedCards.push(skeletonQuotient);
                 if (skeletonEssence) refundedCards.push(skeletonEssence);
@@ -1915,7 +1914,7 @@
                 setTabularU([]); setTabularDv([]); setTabularComplete(false);
                 setLeechMatTarget(null); setLeechMatBlood(null);
                 setShrineCard(null);
-                setFractionNum([]); setFractionDen([]);
+                setGuillotineCard(null);
                 setFractionDecomp([]);
                 setIsDecomposing(false);
                 setDecompStep(0);
@@ -2122,12 +2121,8 @@
                                     <>
                                         {/* TOP ROW: The Chopping Block (Division) */}
                                         <div className="w-full flex justify-center items-center gap-6 border-b border-emerald-900/30 pb-6 mb-6">
-                                            <div className="w-[160px] h-[220px] border-2 border-dashed border-emerald-500/50 rounded-2xl flex items-center justify-center relative">
-                                                {fractionNum.length > 0 ? fractionNum.map(c => <BattleCard key={c.id} card={c} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, c]); setFractionNum(prev => prev.filter(x => x.id !== c.id)); }} />) : <span className="text-emerald-900/40 text-[10px] uppercase font-bold tracking-widest text-center">Numerator<br/>(Top)</span>}
-                                            </div>
-                                            <span className="text-emerald-500/50 text-4xl font-black">/</span>
-                                            <div className="w-[160px] h-[220px] border-2 border-dashed border-emerald-500/50 rounded-2xl flex items-center justify-center relative">
-                                                {fractionDen.length > 0 ? fractionDen.map(c => <BattleCard key={c.id} card={c} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, c]); setFractionDen(prev => prev.filter(x => x.id !== c.id)); }} />) : <span className="text-emerald-900/40 text-[10px] uppercase font-bold tracking-widest text-center">Denominator<br/>(Bottom)</span>}
+                                            <div className="w-[160px] h-[220px] border-2 border-dashed border-emerald-500/50 rounded-2xl flex items-center justify-center relative shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]">
+                                                {guillotineCard ? <BattleCard card={guillotineCard} scale="scale-75" onClick={() => { setBossCards(prev => [...prev, guillotineCard]); setGuillotineCard(null); }} /> : <span className="text-emerald-900/40 text-[10px] uppercase font-bold tracking-widest text-center">Improper Fraction<br/>(Heavy Skull)</span>}
                                             </div>
                                         </div>
 
@@ -2155,7 +2150,7 @@
 
                                         {/* Contextual Action Buttons */}
                                         <div className="flex gap-4 mt-2">
-                                            {fractionNum.length > 0 && fractionDen.length > 0 && (
+                                            {guillotineCard && (
                                                 <button onClick={executeDivision} className="bg-emerald-600 px-6 py-3 rounded-full font-black uppercase text-xs shadow-[0_0_20px_rgba(16,185,129,0.5)] hover:bg-emerald-500 hover:scale-105 transition-all">Start Carving (Divide)</button>
                                             )}
                                             {fractionDecomp.length > 0 && (
