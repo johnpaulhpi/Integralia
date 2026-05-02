@@ -1,4 +1,4 @@
-//pre-alpha v. 5.91 copyright JP Hansen 5-1-2026
+//pre-alpha v. 6.0 copyright JP Hansen 5-1-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2281,7 +2281,6 @@
 
                         {gamePhase === 'setup' && !activeMat && (
                             <div className="grid grid-cols-4 gap-4 w-full">
-                                <button onClick={() => { if(activeMat) cancelMat(); setActiveSlate('addsub'); setActiveMat(null); setActiveMode(null); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeSlate==='addsub'?'border-stone-400 bg-stone-900/30':'border-stone-900 bg-gray-900 hover:border-stone-500 hover:bg-gray-800'}`}><span className="text-stone-500 text-[10px] font-black uppercase">Slate</span><br/><span className="font-bold text-stone-300">Add / Sub</span></button>
                                 <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Machine</span><br/><span className="font-bold">Slice</span></button>
                                 <button onClick={() => { setActiveMode('bleed'); setActiveMat(null); addLog("Blood Needle equipped. Select a spirit to pierce."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='bleed'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Blood Needle</span></button>
                                 <button onClick={() => setActiveMode('stitch_1')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='stitch_1'||activeMode==='stitch_2'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Weaver's Needle</span></button>
