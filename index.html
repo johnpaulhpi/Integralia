@@ -1,4 +1,4 @@
-//pre-alpha v. 5.7 copyright JP Hansen 4-30-2026
+//pre-alpha v. 5.8 copyright JP Hansen 5-1-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -403,7 +403,13 @@
             const [leechMatTarget, setLeechMatTarget] = useState(null);
             const [leechMatBlood, setLeechMatBlood] = useState(null);
 
-            const [shrineCard, setShrineCard] = useState(null); 
+            const [shrineCard, setShrineCard] = useState(null);
+            // --- NEW: ALGEBRA SLATE STATES ---
+            const [activeSlate, setActiveSlate] = useState(null);
+            const [addSubLeft, setAddSubLeft] = useState(null);
+            const [addSubRight, setAddSubRight] = useState(null);
+            const [addSubSign, setAddSubSign] = useState('+');
+            
             // --- NEW: FOIL MAT STATES ---
             const [foilLeft, setFoilLeft] = useState(null);
             const [foilRight, setFoilRight] = useState(null);
@@ -787,6 +793,12 @@
 
                 // If not in setup phase, ignore standard clicks
                 if (gamePhase !== 'setup') return;
+
+                if (activeSlate === 'addsub') {
+                    if (!addSubLeft) { setAddSubLeft(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    if (!addSubRight) { setAddSubRight(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); return; }
+                    return;
+                }
 
                 // --- NEW: TUNING FORK LOGIC ---
                 if (activeMode === 'tune') {
@@ -1740,12 +1752,23 @@
                     addLog("The Shrine hums! The Assembled Skeleton enters the Eldritch Forge.");
                 }, 1000);
             };
-        
 
-            // ==========================================
-            // NEW UI HELPERS
-            // ==========================================
-
+            const combineAddSubSlate = () => {
+                if (!addSubLeft || !addSubRight) return;
+                setMana(m => m - 5);
+                
+                // Wrap in parens so the main board treats it as a single unit
+                const newTex = `\\left(${addSubLeft.baseTex} ${addSubSign} ${addSubRight.baseTex}\\right)`;
+                const newMath = `(${addSubLeft.baseMath}) ${addSubSign} (${addSubRight.baseMath})`;
+                
+                setBossCards(prev => [...prev, buildCard('Expanded Core', newTex, newMath, 1, 'Algebraic', false, `Terms bound by ${addSubSign === '+' ? 'Addition' : 'Subtraction'}.`, false)]);
+                setAddSubLeft(null); setAddSubRight(null); setActiveSlate(null);
+                addLog(`The stone grinds. The terms are bound!`);
+            };
+            
+// ==========================================
+// NEW UI HELPERS
+// ==========================================
             const resetSpell = () => {
                 setBossCards([...initialCards]);
                 setGamePhase('setup');
@@ -1780,6 +1803,13 @@
             };
 
            const selectMat = (matName) => {
+                // NEW: Refund slate cards if they swap directly to a Mat
+                if (activeSlate === 'addsub') {
+                    if (addSubLeft) setBossCards(p => [...p, addSubLeft]);
+                    if (addSubRight) setBossCards(p => [...p, addSubRight]);
+                    setAddSubLeft(null); setAddSubRight(null); setActiveSlate(null);
+                }
+                
                 setActiveMat(matName);
                 setActiveMode(null); // Clear any active needle/slice tools when switching mats
             };
@@ -1852,13 +1882,45 @@
 
                     {/* --- TOP HALF: MAIN BOARD & MATS --- */}
                     <div className="w-full flex gap-6 mb-6 min-h-[550px] mt-8 transition-all">
-                        <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-visible transition-all duration-700 ${activeMat ? 'w-4/12' : 'w-full'} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
-                            <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
-                                {bossCards.length > 0 && gamePhase === 'setup' && <div className="text-6xl text-white/10 font-serif">∫</div>}
-                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget)} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} isBlowingAway={blowingDustId === c.id} onBlowDust={blowAwayDust} />)}
-                            </div>
-                        </div>
+                        
+                        {/* --- NEW: LEFT SIDEBAR (SLATES) --- */}
+                        {activeSlate && (
+                            <div className="w-5/12 bg-stone-950 border-r-4 border-y-4 border-stone-800 rounded-r-3xl p-6 flex flex-col items-center animate-slide-left shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-40">
+                                {activeSlate === 'addsub' && (
+                                    <>
+                                        <div className="w-full flex justify-between items-center mb-8">
+                                            <h2 className="text-stone-500 font-black uppercase tracking-[0.2em] text-xs">Add / Sub Slate</h2>
+                                            <button onClick={() => { setActiveSlate(null); if(addSubLeft) setBossCards(p=>[...p, addSubLeft]); if(addSubRight) setBossCards(p=>[...p, addSubRight]); setAddSubLeft(null); setAddSubRight(null); }} className="text-stone-600 hover:text-red-400 font-black">✕</button>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-4 w-full justify-center flex-1">
+                                            <div className="w-[160px] h-[220px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
+                                                {addSubLeft ? <BattleCard card={addSubLeft} scale="scale-75" onClick={() => {setBossCards(p=>[...p, addSubLeft]); setAddSubLeft(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Left Term</span>}
+                                            </div>
 
+                                            {/* Interactive Sign Toggle */}
+                                            <button onClick={() => setAddSubSign(s => s === '+' ? '-' : '+')} className="w-12 h-12 rounded-full bg-stone-800 border-2 border-stone-600 flex items-center justify-center text-stone-300 text-2xl font-black hover:bg-stone-700 hover:scale-110 transition-all shadow-md z-10">
+                                                {addSubSign}
+                                            </button>
+
+                                            <div className="w-[160px] h-[220px] border-2 border-dashed border-stone-700 rounded-2xl flex items-center justify-center bg-stone-900/50">
+                                                {addSubRight ? <BattleCard card={addSubRight} scale="scale-75" onClick={() => {setBossCards(p=>[...p, addSubRight]); setAddSubRight(null);}} /> : <span className="text-stone-600 text-[10px] uppercase font-bold text-center">Right Term</span>}
+                                            </div>
+                                        </div>
+
+                                        <div className="h-16 mt-4 flex items-center justify-center">
+                                            {addSubLeft && addSubRight && (
+                                                <button onClick={combineAddSubSlate} className="bg-stone-700 border-2 border-stone-500 px-8 py-3 rounded-full font-black uppercase text-xs text-stone-200 hover:bg-stone-600 hover:scale-105 transition-all shadow-[0_0_15px_rgba(120,113,108,0.4)]">
+                                                    Bind Terms
+                                                </button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+
+                        <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-visible transition-all duration-700 ${activeMat ? 'w-4/12' : (activeSlate ? 'w-7/12' : 'w-full')} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
                        {activeMat === 'altar' && (
                             <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left">
                                 <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Jalena's Leech Altar</h2>
@@ -2155,6 +2217,7 @@
 
                         {gamePhase === 'setup' && !activeMat && (
                             <div className="grid grid-cols-4 gap-4 w-full">
+                                <button onClick={() => { if(activeMat) cancelMat(); setActiveSlate('addsub'); setActiveMat(null); setActiveMode(null); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeSlate==='addsub'?'border-stone-400 bg-stone-900/30':'border-stone-900 bg-gray-900 hover:border-stone-500 hover:bg-gray-800'}`}><span className="text-stone-500 text-[10px] font-black uppercase">Slate</span><br/><span className="font-bold text-stone-300">Add / Sub</span></button>
                                 <button onClick={() => setActiveMode('slice')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='slice'?'border-blue-400 bg-blue-900/30':'border-blue-900 bg-gray-900 hover:border-blue-500 hover:bg-gray-800'}`}><span className="text-blue-500 text-[10px] font-black uppercase">Machine</span><br/><span className="font-bold">Slice</span></button>
                                 <button onClick={() => { setActiveMode('bleed'); setActiveMat(null); addLog("Blood Needle equipped. Select a spirit to pierce."); }} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='bleed'?'border-red-400 bg-red-900/30':'border-red-900 bg-gray-900 hover:border-red-500 hover:bg-gray-800'}`}><span className="text-red-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Blood Needle</span></button>
                                 <button onClick={() => setActiveMode('stitch_1')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMode==='stitch_1'||activeMode==='stitch_2'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Artifact</span><br/><span className="font-bold">Weaver's Needle</span></button>
