@@ -1,4 +1,4 @@
-//pre-alpha v. 6.1 copyright JP Hansen 5-1-2026
+//pre-alpha v. 6.2 copyright JP Hansen 5-1-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1260,8 +1260,9 @@
             // NEW: Shrine Ascension
             // ==========================================
             const ascendSpell = () => {
-                if (bossCards.length > 0) {
-                    addLog("The Weave is incomplete! The main board must be empty to ascend the spell.");
+                // 1. GATEKEEPER: Ignore Algebraic cards so constants can stay on the board!
+                if (bossCards.filter(c => c.type !== 'Algebraic').length > 0) {
+                    addLog("The Weave is incomplete! All non-constant cards must be attached before ascending.");
                     return;
                 }
                 addLog("The Mana Extractor 9000 hums with power... The spell enters the Eldritch Forge!");
@@ -1274,26 +1275,36 @@
                     let iStep = 2;
                     let abilityText = "Needs Direct Evaluation.";
                     
+                    // NEW: Absorb any leftover 'Old Bones' (Constants) sitting on the board!
+                    let prefix = bossCards.filter(c => c.type === 'Algebraic').map(c => {
+                        if (c.power === -1) return `\\frac{1}{${c.baseTex}}`;
+                        if (c.power < -1) return `\\frac{1}{${c.baseTex}^${Math.abs(c.power)}}`;
+                        if (c.power > 1) return `${c.baseTex}^${c.power}`;
+                        return c.baseTex;
+                    }).join(' \\cdot ');
+                    
                     if (shrineCard.name === 'Assembled Skeleton') {
                         initialEq = shrineCard.baseTex;
                         iPath = 'skeleton';
                         iStep = 0;
                         abilityText = "Needs Constants Extracted.";
                     } else {
-                        initialEq = `\\int ${shrineCard.baseTex}`;
+                        // Prepend the constants to the integral
+                        initialEq = prefix ? `${prefix} \\int ${shrineCard.baseTex}` : `\\int ${shrineCard.baseTex}`;
                     }
 
                     setBossCards([{ 
                         id: `${iPath}-state`, name: `${iPath.toUpperCase()}-State`, type: 'Unresolved', 
                         baseTex: initialEq, power: 1, canCycle: false, 
                         ability: abilityText, isBleeding: false,
-                        meta: { originalTex: shrineCard.baseTex } 
+                        meta: { originalTex: shrineCard.baseTex, prefix: prefix } 
                     }]);
                     setConsumeAll(false); setActiveMat(null); setShrineCard(null);
                     setIntegrationPath(iPath); setIntegrationStep(iStep); setGamePhase('integration');
                 }, 1000);
             };
 
+            
            const collapseWeave = () => {
                 // 1. GATEKEEPER: Ignore Algebraic cards so the Resonance can stay!
                 if (bossCards.filter(c => c.type !== 'Algebraic').length > 0) {
@@ -1569,33 +1580,38 @@
                     else if (t === 'plus_c') { setMana(m=>m+200); setIntegrationStep(4); setBossCards([{...bossCards[0], name: 'Refined Solution', type: 'Refined', baseTex: bossCards[0].baseTex + ' + C'}]); }
                 
                 // --- NEW: Add this block right here ---
+                // --- NEW: Add this block right here ---
                 } else if (integrationPath === 'direct') {
                     if (t === 'action3') {
                         setIntegrationStep(3);
                         // Optional chaining (?.) added to prevent undefined crashes
                         let tex = bossCards[0]?.meta?.originalTex || bossCards[0]?.baseTex || '';
+                        let prefix = bossCards[0]?.meta?.prefix || '';
                         let result = 'F(x)';
                         
                         // NEW: Teach the Wheel to process Resonant Cores (Half-Angles) FIRST!
-                        if (tex.includes('1 - \\cos(2x)')) result = '\\frac{x}{2} - \\frac{\\sin(2x)}{4}';
-                        else if (tex.includes('1 + \\cos(2x)')) result = '\\frac{x}{2} + \\frac{\\sin(2x)}{4}';
+                        if (tex.includes('1 - \\cos(2x)')) result = '\\frac{x}{2} - \\frac{\\sin(2x)}{4}';
+                        else if (tex.includes('1 + \\cos(2x)')) result = '\\frac{x}{2} + \\frac{\\sin(2x)}{4}';
 
                         // FOIL Mat (The Loom) Final Evaluations!
                         else if (tex.includes('1 - \\cos^2(2x)')) result = '\\frac{x}{8} - \\frac{\\sin(4x)}{32}';
                         else if (tex.includes('1 - 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} - \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
                         else if (tex.includes('1 + 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} + \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
-                        
-                        // Standard Base Evaluations
+                        
+                        // Standard Base Evaluations
                         else if (tex.includes('\\cos')) result = '\\sin(x)';
                         else if (tex.includes('\\sin')) result = '-\\cos(x)';
                         else if (tex.includes('\\sec^2')) result = '\\tan(x)';
-                        else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
-                        else if (tex.includes('e^x')) result = 'e^x';
+                        else if (tex.includes('\\sec(x)\\tan(x)')) result = '\\sec(x)';
+                        else if (tex.includes('e^x')) result = 'e^x';
                         else if (tex.includes('\\tan(x)') && !tex.includes('^') && !tex.includes('\\sec')) result = '\\ln|\\sec(x)|';
                         else if (tex.includes('\\sec(x)') && !tex.includes('^') && !tex.includes('\\tan')) result = '\\ln|\\sec(x) + \\tan(x)|';
                         else if (tex === 'x^{-1}' || tex === '\\frac{1}{x}') result = '\\ln|x|';
-                        
-                        setBossCards([{...bossCards[0], baseTex: result, ability: "Needs Constant of Integration."}]);
+                        
+                        // NEW: Wrap the result in the prefix if we absorbed constants!
+                        const finalTex = prefix ? `${prefix} \\left( ${result} \\right)` : result;
+
+                        setBossCards([{...bossCards[0], baseTex: finalTex, ability: "Needs Constant of Integration."}]);
                         addLog("Integral evaluated! Finalize the refinement.");
                     } else if (t === 'plus_c') {
                         setMana(m=>m+200); setIntegrationStep(4); 
