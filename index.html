@@ -1,4 +1,4 @@
-//pre-alpha v. 5.8 copyright JP Hansen 5-1-2026
+//pre-alpha v. 5.9 copyright JP Hansen 5-1-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1921,6 +1921,12 @@
                         )}
 
                         <div className={`border rounded-[2rem] p-6 flex flex-col items-center relative overflow-visible transition-all duration-700 ${activeMat ? 'w-4/12' : (activeSlate ? 'w-7/12' : 'w-full')} ${gamePhase === 'integration' ? 'bg-red-950/10 border-red-900/60 shadow-[inset_0_0_100px_rgba(127,29,29,0.15)]' : 'bg-gray-950 ' + boardBorder}`}>
+                            <div className="flex flex-row items-center justify-center gap-4 flex-wrap z-20 w-full h-full">
+                                {bossCards.length > 0 && gamePhase === 'setup' && <div className="text-6xl text-white/10 font-serif">∫</div>}
+                                {bossCards.map(c => <BattleCard key={c.id} card={c} scale={activeMat ? 'scale-75' : 'scale-95'} onClick={() => handleBossCardClick(c)} onCycle={handleCycle} isSlashing={slashingId === c.id} isShattering={shatteringId === c.id} isConsumed={consumeAll} isActive={activeMode==='slice' || activeMode==='bleed' || activeMode==='stitch_1' || (activeMat==='altar' && !altarCore) || (activeMat==='tabular' && !tabularU.length) || (activeMat==='ibp' && !ibpU) || (activeMat==='trigsub' && !trigSubCard) || (activeMat==='leech' && !leechMatTarget) || (activeSlate === 'addsub' && (!addSubLeft || !addSubRight))} isStitchTarget={stitchTargetId === c.id || activeMode === 'stitch_2'} isBlowingAway={blowingDustId === c.id} onBlowDust={blowAwayDust} />)}
+                            </div>
+                        </div>
+
                        {activeMat === 'altar' && (
                             <div className="w-8/12 bg-red-950/10 border-2 border-red-900/40 rounded-[2rem] p-6 flex flex-col animate-slide-left">
                                 <h2 className="text-red-500/50 text-xs font-black uppercase text-center mb-4">Jalena's Leech Altar</h2>
