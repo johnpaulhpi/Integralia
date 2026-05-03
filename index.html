@@ -1,4 +1,4 @@
-//pre-alpha v. 6.5 copyright JP Hansen 5-2-2026
+//pre-alpha v. 6.6 copyright JP Hansen 5-3-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1111,7 +1111,7 @@
                         // Smart Routing: If it has x^3, it's the heavy improper fraction for the Guillotine
                         if (card.baseTex.includes('x^3')) {
                             if (!guillotineCard) {
-                                setGuillotineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Improper fraction locked into the Guillotine."); return;
+                                setGuillotineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Improper fraction locked into the Skeleton Revivifier."); return;
                             }
                         } else {
                             if (fractionDecomp.length === 0) {
@@ -1119,7 +1119,7 @@
                             }
                         }
                     } else {
-                        addLog("The Guillotine requires a single, combined fraction card. Use the Div Slate first!");
+                        addLog("The Skeleton Revivifier requires a single, combined fraction card. Use the Div Slate first!");
                         return;
                     }
                     }
@@ -1690,7 +1690,7 @@
                 setActiveQuotient('');
                 setCarvingStep(0);
                 setIsCarving(true);
-                addLog("The Guillotine locks into place. Select the correct chisel to match the leading term.");
+                addLog("The Skeleton Revivifier locks into place. Select the correct leading term.");
             };
 
             const handleChiselStrike = (term) => {
@@ -2335,7 +2335,7 @@
                                 <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Boiling Pot</span></button>
                                 <button onClick={() => selectMat('foil')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='foil'?'border-pink-400 bg-pink-900/30':'border-pink-900 bg-gray-900 hover:border-pink-500 hover:bg-gray-800'}`}><span className="text-pink-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Loom (FOIL)</span></button>
-                                <button onClick={() => selectMat('rational')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='rational'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Skeleton Revivifer</span></button>
+                                <button onClick={() => selectMat('rational')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='rational'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Skeleton Revivifier</span></button>
                             </div>
                         )}
 
