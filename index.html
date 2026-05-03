@@ -718,6 +718,15 @@
                             if (c.baseTex === `\\sin^2(${argTex})+\\cos^2(${argTex})` || c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
                                 return buildCard('Old Bones', '1', '1', 1, 'Algebraic', true, "The Monad.");
                             }
+                            
+                            // NEW: Pythagorean shifts for shattered trigonometric fractions!
+                            const arg2 = c.baseTex.includes('2u') ? '2u' : '2x';
+                            if (c.baseTex === `1 - \\cos^2(${arg2})` || c.baseTex === `1-\\cos^2(${arg2})`) {
+                                return buildCard('Fragment of Clor', `\\sin(${arg2})`, `sin(${arg2.replace('u','*u').replace('x','*x')})`, 2, 'Core', true, "Shifted via Pythagorean Identity.", false, false, c.resonance);
+                            }
+                            if (c.baseTex === `1 - \\sin^2(${arg2})` || c.baseTex === `1-\\sin^2(${arg2})`) {
+                                return buildCard('Fragment of Orxe', `\\cos(${arg2})`, `cos(${arg2.replace('u','*u').replace('x','*x')})`, 2, 'Core', true, "Shifted via Pythagorean Identity.", false, false, c.resonance);
+                            }
                         } 
                         
                         // Residue -> Core (Mathematically Strict!)
@@ -1252,7 +1261,8 @@
             const transmuteRune = () => {
                 if (!trigSubCard) return;
                 setMana(m => m + 30);
-                const newKaTeX = trigSubCard.name === 'Fragment of Clor' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                const arg = trigSubCard.baseTex.includes('u') ? 'u' : 'x';
+                const newKaTeX = trigSubCard.name === 'Fragment of Clor' ? `\\frac{1 - \\cos(2${arg})}{2}` : `\\frac{1 + \\cos(2${arg})}{2}`;
                 setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
                 setTrigSubCard(null); setActiveMat(null);
                 addLog("Transmutation complete! The Rune Circle fades.");
@@ -1591,14 +1601,18 @@
                         let prefix = bossCards[0]?.meta?.prefix || '';
                         let result = 'F(x)';
                         
+                        const arg = tex.includes('u') ? 'u' : 'x';
+                        const arg2 = tex.includes('2u') ? '2u' : '2x';
+                        const arg4 = tex.includes('2u') ? '4u' : '4x';
+                        
                         // NEW: Teach the Wheel to process Resonant Cores (Half-Angles) FIRST!
-                        if (tex.includes('1 - \\cos(2x)')) result = '\\frac{x}{2} - \\frac{\\sin(2x)}{4}';
-                        else if (tex.includes('1 + \\cos(2x)')) result = '\\frac{x}{2} + \\frac{\\sin(2x)}{4}';
+                        if (tex.includes(`1 - \\cos(2${arg})`)) result = `\\frac{${arg}}{2} - \\frac{\\sin(2${arg})}{4}`;
+                        else if (tex.includes(`1 + \\cos(2${arg})`)) result = `\\frac{${arg}}{2} + \\frac{\\sin(2${arg})}{4}`;
 
                         // FOIL Mat (The Loom) Final Evaluations!
-                        else if (tex.includes('1 - \\cos^2(2x)')) result = '\\frac{x}{8} - \\frac{\\sin(4x)}{32}';
-                        else if (tex.includes('1 - 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} - \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
-                        else if (tex.includes('1 + 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} + \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
+                        else if (tex.includes(`1 - \\cos^2(${arg2})`)) result = `\\frac{${arg}}{8} - \\frac{\\sin(${arg4})}{32}`;
+                        else if (tex.includes(`1 - 2\\cos(${arg2}) + \\cos^2(${arg2})`)) result = `\\frac{3${arg}}{8} - \\frac{\\sin(${arg2})}{4} + \\frac{\\sin(${arg4})}{32}`;
+                        else if (tex.includes(`1 + 2\\cos(${arg2}) + \\cos^2(${arg2})`)) result = `\\frac{3${arg}}{8} + \\frac{\\sin(${arg2})}{4} + \\frac{\\sin(${arg4})}{32}`;
                         
                         // Standard Base Evaluations
                         else if (tex.includes('\\cos')) result = '\\sin(x)';
@@ -1651,13 +1665,14 @@
                 let newAbility = "Expanded Polynomial.";
                 
                 // Specific logic for Half-Angle Resonance expansion!
-                if (foilLeft.baseTex.includes('cos(2x)') && foilRight.baseTex.includes('cos(2x)')) {
+                const arg2 = foilLeft.baseTex.includes('2u') ? '2u' : '2x';
+                if (foilLeft.baseTex.includes(`cos(${arg2})`) && foilRight.baseTex.includes(`cos(${arg2})`)) {
                     const lSign = foilLeft.baseTex.includes('1 -') ? '-' : '+';
                     const rSign = foilRight.baseTex.includes('1 -') ? '-' : '+';
                     
-                    if (lSign !== rSign) newTex = '\\frac{1 - \\cos^2(2x)}{4}'; // Difference of squares
-                    else if (lSign === '-') newTex = '\\frac{1 - 2\\cos(2x) + \\cos^2(2x)}{4}';
-                    else newTex = '\\frac{1 + 2\\cos(2x) + \\cos^2(2x)}{4}';
+                    if (lSign !== rSign) newTex = `\\frac{1 - \\cos^2(${arg2})}{4}`; // Difference of squares
+                    else if (lSign === '-') newTex = `\\frac{1 - 2\\cos(${arg2}) + \\cos^2(${arg2})}{4}`;
+                    else newTex = `\\frac{1 + 2\\cos(${arg2}) + \\cos^2(${arg2})}{4}`;
                     newAbility = "Expanded Half-Angle Core.";
                 }
 
