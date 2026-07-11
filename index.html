@@ -1,4 +1,4 @@
-//pre-alpha v. 6.4 copyright JP Hansen 5-2-2026
+//pre-alpha v. 6.6 copyright JP Hansen 5-3-2026
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -718,6 +718,15 @@
                             if (c.baseTex === `\\sin^2(${argTex})+\\cos^2(${argTex})` || c.baseTex === '\\sin^2(x)+\\cos^2(x)') {
                                 return buildCard('Old Bones', '1', '1', 1, 'Algebraic', true, "The Monad.");
                             }
+                            
+                            // NEW: Pythagorean shifts for shattered trigonometric fractions!
+                            const arg2 = c.baseTex.includes('2u') ? '2u' : '2x';
+                            if (c.baseTex === `1 - \\cos^2(${arg2})` || c.baseTex === `1-\\cos^2(${arg2})`) {
+                                return buildCard('Fragment of Clor', `\\sin(${arg2})`, `sin(${arg2.replace('u','*u').replace('x','*x')})`, 2, 'Core', true, "Shifted via Pythagorean Identity.", false, false, c.resonance);
+                            }
+                            if (c.baseTex === `1 - \\sin^2(${arg2})` || c.baseTex === `1-\\sin^2(${arg2})`) {
+                                return buildCard('Fragment of Orxe', `\\cos(${arg2})`, `cos(${arg2.replace('u','*u').replace('x','*x')})`, 2, 'Core', true, "Shifted via Pythagorean Identity.", false, false, c.resonance);
+                            }
                         } 
                         
                         // Residue -> Core (Mathematically Strict!)
@@ -1102,7 +1111,7 @@
                         // Smart Routing: If it has x^3, it's the heavy improper fraction for the Guillotine
                         if (card.baseTex.includes('x^3')) {
                             if (!guillotineCard) {
-                                setGuillotineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Improper fraction locked into the Guillotine."); return;
+                                setGuillotineCard(card); setBossCards(prev => prev.filter(c => c.id !== card.id)); addLog("Improper fraction locked into the Skeleton Revivifier."); return;
                             }
                         } else {
                             if (fractionDecomp.length === 0) {
@@ -1110,7 +1119,7 @@
                             }
                         }
                     } else {
-                        addLog("The Guillotine requires a single, combined fraction card. Use the Div Slate first!");
+                        addLog("The Skeleton Revivifier requires a single, combined fraction card. Use the Div Slate first!");
                         return;
                     }
                     }
@@ -1252,7 +1261,8 @@
             const transmuteRune = () => {
                 if (!trigSubCard) return;
                 setMana(m => m + 30);
-                const newKaTeX = trigSubCard.name === 'Fragment of Clor' ? '\\frac{1 - \\cos(2x)}{2}' : '\\frac{1 + \\cos(2x)}{2}';
+                const arg = trigSubCard.baseTex.includes('u') ? 'u' : 'x';
+                const newKaTeX = trigSubCard.name === 'Fragment of Clor' ? `\\frac{1 - \\cos(2${arg})}{2}` : `\\frac{1 + \\cos(2${arg})}{2}`;
                 setBossCards(prev => [ ...prev, buildCard('Resonant Core', newKaTeX, '', trigSubCard.power / 2, 'Resonant', false, "Transmuted via Half-Angle Identity.", false) ]);
                 setTrigSubCard(null); setActiveMat(null);
                 addLog("Transmutation complete! The Rune Circle fades.");
@@ -1591,14 +1601,18 @@
                         let prefix = bossCards[0]?.meta?.prefix || '';
                         let result = 'F(x)';
                         
+                        const arg = tex.includes('u') ? 'u' : 'x';
+                        const arg2 = tex.includes('2u') ? '2u' : '2x';
+                        const arg4 = tex.includes('2u') ? '4u' : '4x';
+                        
                         // NEW: Teach the Wheel to process Resonant Cores (Half-Angles) FIRST!
-                        if (tex.includes('1 - \\cos(2x)')) result = '\\frac{x}{2} - \\frac{\\sin(2x)}{4}';
-                        else if (tex.includes('1 + \\cos(2x)')) result = '\\frac{x}{2} + \\frac{\\sin(2x)}{4}';
+                        if (tex.includes(`1 - \\cos(2${arg})`)) result = `\\frac{${arg}}{2} - \\frac{\\sin(2${arg})}{4}`;
+                        else if (tex.includes(`1 + \\cos(2${arg})`)) result = `\\frac{${arg}}{2} + \\frac{\\sin(2${arg})}{4}`;
 
                         // FOIL Mat (The Loom) Final Evaluations!
-                        else if (tex.includes('1 - \\cos^2(2x)')) result = '\\frac{x}{8} - \\frac{\\sin(4x)}{32}';
-                        else if (tex.includes('1 - 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} - \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
-                        else if (tex.includes('1 + 2\\cos(2x) + \\cos^2(2x)')) result = '\\frac{3x}{8} + \\frac{\\sin(2x)}{4} + \\frac{\\sin(4x)}{32}';
+                        else if (tex.includes(`1 - \\cos^2(${arg2})`)) result = `\\frac{${arg}}{8} - \\frac{\\sin(${arg4})}{32}`;
+                        else if (tex.includes(`1 - 2\\cos(${arg2}) + \\cos^2(${arg2})`)) result = `\\frac{3${arg}}{8} - \\frac{\\sin(${arg2})}{4} + \\frac{\\sin(${arg4})}{32}`;
+                        else if (tex.includes(`1 + 2\\cos(${arg2}) + \\cos^2(${arg2})`)) result = `\\frac{3${arg}}{8} + \\frac{\\sin(${arg2})}{4} + \\frac{\\sin(${arg4})}{32}`;
                         
                         // Standard Base Evaluations
                         else if (tex.includes('\\cos')) result = '\\sin(x)';
@@ -1651,13 +1665,14 @@
                 let newAbility = "Expanded Polynomial.";
                 
                 // Specific logic for Half-Angle Resonance expansion!
-                if (foilLeft.baseTex.includes('cos(2x)') && foilRight.baseTex.includes('cos(2x)')) {
+                const arg2 = foilLeft.baseTex.includes('2u') ? '2u' : '2x';
+                if (foilLeft.baseTex.includes(`cos(${arg2})`) && foilRight.baseTex.includes(`cos(${arg2})`)) {
                     const lSign = foilLeft.baseTex.includes('1 -') ? '-' : '+';
                     const rSign = foilRight.baseTex.includes('1 -') ? '-' : '+';
                     
-                    if (lSign !== rSign) newTex = '\\frac{1 - \\cos^2(2x)}{4}'; // Difference of squares
-                    else if (lSign === '-') newTex = '\\frac{1 - 2\\cos(2x) + \\cos^2(2x)}{4}';
-                    else newTex = '\\frac{1 + 2\\cos(2x) + \\cos^2(2x)}{4}';
+                    if (lSign !== rSign) newTex = `\\frac{1 - \\cos^2(${arg2})}{4}`; // Difference of squares
+                    else if (lSign === '-') newTex = `\\frac{1 - 2\\cos(${arg2}) + \\cos^2(${arg2})}{4}`;
+                    else newTex = `\\frac{1 + 2\\cos(${arg2}) + \\cos^2(${arg2})}{4}`;
                     newAbility = "Expanded Half-Angle Core.";
                 }
 
@@ -1675,7 +1690,7 @@
                 setActiveQuotient('');
                 setCarvingStep(0);
                 setIsCarving(true);
-                addLog("The Guillotine locks into place. Select the correct chisel to match the leading term.");
+                addLog("The Skeleton Revivifier locks into place. Select the correct leading term.");
             };
 
             const handleChiselStrike = (term) => {
@@ -2116,7 +2131,7 @@
 
                         {activeMat === 'rational' && (
                             <div className="w-8/12 bg-emerald-950/10 border-2 border-emerald-900/40 rounded-[2rem] p-6 flex flex-col items-center animate-slide-left relative overflow-hidden">
-                                <h2 className="text-emerald-500/50 text-xs font-black uppercase mb-4">The Guillotine (Rational Scale)</h2>
+                                <h2 className="text-emerald-500/50 text-xs font-black uppercase mb-4">Skeleton Revivifier (Rational Scale)</h2>
                                 
                                 {!isCarving && !isDecomposing && (
                                     <>
@@ -2320,7 +2335,7 @@
                                 <button onClick={() => selectMat('shrine')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='shrine'?'border-indigo-400 bg-indigo-900/30':'border-indigo-900 bg-gray-900 hover:border-indigo-500 hover:bg-gray-800'}`}><span className="text-indigo-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Mana Extractor 9000</span></button>
                                 <button onClick={() => selectMat('ibp')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='ibp'?'border-fuchsia-400 bg-fuchsia-900/30':'border-fuchsia-900 bg-gray-900 hover:border-fuchsia-500 hover:bg-gray-800'}`}><span className="text-fuchsia-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Boiling Pot</span></button>
                                 <button onClick={() => selectMat('foil')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='foil'?'border-pink-400 bg-pink-900/30':'border-pink-900 bg-gray-900 hover:border-pink-500 hover:bg-gray-800'}`}><span className="text-pink-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Loom (FOIL)</span></button>
-                                <button onClick={() => selectMat('rational')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='rational'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">The Guillotine</span></button>
+                                <button onClick={() => selectMat('rational')} className={`p-4 rounded-xl border-2 text-left transition-all ${activeMat==='rational'?'border-emerald-400 bg-emerald-900/30':'border-emerald-900 bg-gray-900 hover:border-emerald-500 hover:bg-gray-800'}`}><span className="text-emerald-500 text-[10px] font-black uppercase">Mat</span><br/><span className="font-bold">Skeleton Revivifier</span></button>
                             </div>
                         )}
 
